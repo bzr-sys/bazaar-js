@@ -7,6 +7,19 @@ import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
+ *
+ * @example
+ * ```
+ * import { RethinkID } from "@mostlytyped/rethinkid-js-sdk";
+ *
+ * const config = {
+ *   appId: process.env.VUE_APP_APP_ID,
+ *   signUpRedirectUri: process.env.VUE_APP_SIGN_UP_REDIRECT_URI,
+ *   logInRedirectUri: process.env.VUE_APP_LOG_IN_REDIRECT_URI,
+ * };
+ *
+ * export const rid = new RethinkID(config);
+ * ```
  */
 export class RethinkID {
   #signUpBaseUri: string = "http://localhost:3000/sign-up";
