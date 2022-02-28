@@ -1,3 +1,7 @@
 # The RethinkID JavaScript SDK
 
-Touch after failed workflow authentication.
+## Install GitHub package
+
+Authenticate with `npm login --scope=@mostlytyped --registry=https://npm.pkg.github.com`.
+
+Then just `npm install`.
