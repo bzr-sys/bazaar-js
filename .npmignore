@@ -1,5 +1,5 @@
 .github
 .prettierrc.js
-.tsconfig.json
+tsconfig.json
 rollup.config.js
 src
