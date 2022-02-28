@@ -1,5 +1,6 @@
+# Include dist folder intentionally so it's available for the published GitHub Packages package.
+
 node_modules
-dist
 
 # OS Specific Files
 .DS_Store

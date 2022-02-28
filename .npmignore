@@ -1,1 +1,5 @@
-dist
+.github
+.prettierrc.js
+.tsconfig.json
+rollup.config.js
+src
