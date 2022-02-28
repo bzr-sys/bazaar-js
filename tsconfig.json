@@ -4,7 +4,7 @@
     "module": "esnext",
     "outDir": "dist",
     "declaration": true,
-    "declarationDir": ".",
+    "declarationDir": "types",
     "noEmit": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true
