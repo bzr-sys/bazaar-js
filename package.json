@@ -1,12 +1,13 @@
 {
-  "name": "rethinkid-js-sdk",
+  "name": "@mostlytyped/rethinkid-js-sdk",
   "version": "1.0.0",
   "description": "Conveniently use RethinkID with your app in the browser.",
   "main": "dist/index.cjs.js",
   "types": "",
   "github": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "main": "dist/index.js",
+    "test": "exit 0",
     "build": "npm run clean && rollup -c",
     "watch": "npm run clean && rollup -c -w",
     "clean": "rm -rf dist",
