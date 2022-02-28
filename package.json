@@ -1,6 +1,6 @@
 {
   "name": "@mostlytyped/rethinkid-js-sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Conveniently use RethinkID with your app in the browser.",
   "main": "dist/index.cjs.js",
   "types": "",
@@ -25,6 +25,7 @@
     "typescript": "^4.5.5"
   },
   "dependencies": {
+    "@mostlytyped/rethinkid-js-sdk": "^1.0.0",
     "client-oauth2": "^4.3.3",
     "jwt-decode": "^3.1.2",
     "socket.io-client": "^4.4.1"
