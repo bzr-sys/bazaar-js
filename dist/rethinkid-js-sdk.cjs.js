@@ -12,6 +12,44 @@ var ClientOAuth2__default = /*#__PURE__*/_interopDefaultLegacy(ClientOAuth2);
 var jwt_decode__default = /*#__PURE__*/_interopDefaultLegacy(jwt_decode);
 var io__default = /*#__PURE__*/_interopDefaultLegacy(io);
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+function __classPrivateFieldGet(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+}
+
+function __classPrivateFieldSet(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+}
+
 /**
  * Generates a secure random string using the browser crypto functions
  */
@@ -47,11 +85,14 @@ function base64UrlEncode(arrayBuffer) {
  * Return the base64-url encoded sha256 hash for the PKCE challenge
  * @param codeVerifier A random string
  */
-async function pkceChallengeFromVerifier(codeVerifier) {
-    const hashed = await sha256(codeVerifier);
-    return base64UrlEncode(hashed);
+function pkceChallengeFromVerifier(codeVerifier) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const hashed = yield sha256(codeVerifier);
+        return base64UrlEncode(hashed);
+    });
 }
 
+var _RethinkID_signUpBaseUri, _RethinkID_tokenUri, _RethinkID_authUri, _RethinkID_socketioUri, _RethinkID_signUpRedirectUri, _RethinkID_oAuthClient;
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  *
@@ -69,22 +110,59 @@ async function pkceChallengeFromVerifier(codeVerifier) {
  * ```
  */
 class RethinkID {
-    #signUpBaseUri = "http://localhost:3000/sign-up";
-    #tokenUri = "http://localhost:4444/oauth2/token";
-    #authUri = "http://localhost:4444/oauth2/auth";
-    #socketioUri = "http://localhost:4000";
-    #signUpRedirectUri = "";
-    #oAuthClient;
-    socket;
     constructor(options) {
-        this.#signUpRedirectUri = options.signUpRedirectUri;
-        this.#oAuthClient = new ClientOAuth2__default["default"]({
+        _RethinkID_signUpBaseUri.set(this, "http://localhost:3000/sign-up");
+        _RethinkID_tokenUri.set(this, "http://localhost:4444/oauth2/token");
+        _RethinkID_authUri.set(this, "http://localhost:4444/oauth2/auth");
+        _RethinkID_socketioUri.set(this, "http://localhost:4000");
+        _RethinkID_signUpRedirectUri.set(this, "");
+        _RethinkID_oAuthClient.set(this, void 0);
+        // Data API
+        /**
+         * Makes sure a socket has connected.
+         */
+        this._waitForConnection = () => {
+            return new Promise((resolve, reject) => {
+                if (this.socket.connected) {
+                    resolve(true);
+                }
+                else {
+                    this.socket.on("connect", () => {
+                        resolve(true);
+                    });
+                    // Don't wait for connection indefinitely
+                    setTimeout(() => {
+                        reject(new Error("Timeout waiting for on connect"));
+                    }, 1000);
+                }
+            });
+        };
+        /**
+         * Promisifies a socket.io emit event
+         * @param event A socket.io event name, like `tables:create`
+         * @param payload
+         */
+        this._asyncEmit = (event, payload) => __awaiter(this, void 0, void 0, function* () {
+            yield this._waitForConnection();
+            return new Promise((resolve, reject) => {
+                this.socket.emit(event, payload, (response) => {
+                    if (response.error) {
+                        reject(new Error(response.error));
+                    }
+                    else {
+                        resolve(response);
+                    }
+                });
+            });
+        });
+        __classPrivateFieldSet(this, _RethinkID_signUpRedirectUri, options.signUpRedirectUri, "f");
+        __classPrivateFieldSet(this, _RethinkID_oAuthClient, new ClientOAuth2__default["default"]({
             clientId: options.appId,
             redirectUri: options.logInRedirectUri,
-            accessTokenUri: this.#tokenUri,
-            authorizationUri: this.#authUri,
+            accessTokenUri: __classPrivateFieldGet(this, _RethinkID_tokenUri, "f"),
+            authorizationUri: __classPrivateFieldGet(this, _RethinkID_authUri, "f"),
             scopes: ["openid", "profile", "email"],
-        });
+        }), "f");
         this.socketConnect();
     }
     /**
@@ -95,7 +173,7 @@ class RethinkID {
         if (!token) {
             return;
         }
-        this.socket = io__default["default"](this.#socketioUri, {
+        this.socket = io__default["default"](__classPrivateFieldGet(this, _RethinkID_socketioUri, "f"), {
             auth: { token },
         });
         this.socket.on("connect", () => {
@@ -113,29 +191,31 @@ class RethinkID {
      */
     signUpUri() {
         const params = new URLSearchParams();
-        params.append("redirect_uri", this.#signUpRedirectUri);
-        return `${this.#signUpBaseUri}?${params.toString()}`;
+        params.append("redirect_uri", __classPrivateFieldGet(this, _RethinkID_signUpRedirectUri, "f"));
+        return `${__classPrivateFieldGet(this, _RethinkID_signUpBaseUri, "f")}?${params.toString()}`;
     }
     /**
      * Generate a URI to log in a user to RethinkID and authorize your app.
      * Uses the Authorization Code Flow for single page apps with PKCE code verification.
      * Requests an authorization code.
      */
-    async logInUri() {
-        // Create and store a random "state" value
-        const state = generateRandomString();
-        localStorage.setItem("pkce_state", state);
-        // Create and store a new PKCE code_verifier (the plaintext random secret)
-        const codeVerifier = generateRandomString();
-        localStorage.setItem("pkce_code_verifier", codeVerifier);
-        // Hash and base64-urlencode the secret to use as the challenge
-        const codeChallenge = await pkceChallengeFromVerifier(codeVerifier);
-        return this.#oAuthClient.code.getUri({
-            state: state,
-            query: {
-                code_challenge: codeChallenge,
-                code_challenge_method: "S256",
-            },
+    logInUri() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Create and store a random "state" value
+            const state = generateRandomString();
+            localStorage.setItem("pkce_state", state);
+            // Create and store a new PKCE code_verifier (the plaintext random secret)
+            const codeVerifier = generateRandomString();
+            localStorage.setItem("pkce_code_verifier", codeVerifier);
+            // Hash and base64-urlencode the secret to use as the challenge
+            const codeChallenge = yield pkceChallengeFromVerifier(codeVerifier);
+            return __classPrivateFieldGet(this, _RethinkID_oAuthClient, "f").code.getUri({
+                state: state,
+                query: {
+                    code_challenge: codeChallenge,
+                    code_challenge_method: "S256",
+                },
+            });
         });
     }
     /**
@@ -144,69 +224,71 @@ class RethinkID {
      * approving the log in request.
      * Stores the access token and ID token in local storage as `token` and `idToken` respectively.
      */
-    async getTokens() {
-        const params = new URLSearchParams(window.location.search);
-        // Check if the auth server returned an error string
-        const error = params.get("error");
-        if (error) {
-            return {
-                error: error,
-                errorDescription: params.get("error_description") || "",
-            };
-        }
-        // Make sure the auth server returned a code
-        const code = params.get("code");
-        if (!code) {
-            return {
-                error: "No query param code",
-            };
-        }
-        // Verify state matches what we set at the beginning
-        if (localStorage.getItem("pkce_state") !== params.get("state")) {
-            return {
-                error: "State did not match. Possible CSRF attack",
-            };
-        }
-        let getTokenResponse;
-        try {
-            getTokenResponse = await this.#oAuthClient.code.getToken(window.location.href, {
-                body: {
-                    code_verifier: localStorage.getItem("pkce_code_verifier") || "",
-                },
-            });
-        }
-        catch (error) {
-            return {
-                error: `Error getting token: ${error.message}`,
-            };
-        }
-        if (!getTokenResponse) {
-            return {
-                error: "No token response",
-            };
-        }
-        // Clean these up since we don't need them anymore
-        localStorage.removeItem("pkce_state");
-        localStorage.removeItem("pkce_code_verifier");
-        // Store tokens and sign user in locally
-        const token = getTokenResponse.data.access_token;
-        const idToken = getTokenResponse.data.id_token;
-        localStorage.setItem("token", token);
-        localStorage.setItem("idToken", idToken);
-        try {
-            const tokenDecoded = jwt_decode__default["default"](token);
-            const idTokenDecoded = jwt_decode__default["default"](idToken);
-            this.socketConnect();
-            return {
-                tokenDecoded,
-                idTokenDecoded,
-            };
-        }
-        catch (error) {
-            return {
-                error: `Error decoding token: ${error.message}`,
-            };
-        }
+    getTokens() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = new URLSearchParams(window.location.search);
+            // Check if the auth server returned an error string
+            const error = params.get("error");
+            if (error) {
+                return {
+                    error: error,
+                    errorDescription: params.get("error_description") || "",
+                };
+            }
+            // Make sure the auth server returned a code
+            const code = params.get("code");
+            if (!code) {
+                return {
+                    error: "No query param code",
+                };
+            }
+            // Verify state matches what we set at the beginning
+            if (localStorage.getItem("pkce_state") !== params.get("state")) {
+                return {
+                    error: "State did not match. Possible CSRF attack",
+                };
+            }
+            let getTokenResponse;
+            try {
+                getTokenResponse = yield __classPrivateFieldGet(this, _RethinkID_oAuthClient, "f").code.getToken(window.location.href, {
+                    body: {
+                        code_verifier: localStorage.getItem("pkce_code_verifier") || "",
+                    },
+                });
+            }
+            catch (error) {
+                return {
+                    error: `Error getting token: ${error.message}`,
+                };
+            }
+            if (!getTokenResponse) {
+                return {
+                    error: "No token response",
+                };
+            }
+            // Clean these up since we don't need them anymore
+            localStorage.removeItem("pkce_state");
+            localStorage.removeItem("pkce_code_verifier");
+            // Store tokens and sign user in locally
+            const token = getTokenResponse.data.access_token;
+            const idToken = getTokenResponse.data.id_token;
+            localStorage.setItem("token", token);
+            localStorage.setItem("idToken", idToken);
+            try {
+                const tokenDecoded = jwt_decode__default["default"](token);
+                const idTokenDecoded = jwt_decode__default["default"](idToken);
+                this.socketConnect();
+                return {
+                    tokenDecoded,
+                    idTokenDecoded,
+                };
+            }
+            catch (error) {
+                return {
+                    error: `Error decoding token: ${error.message}`,
+                };
+            }
+        });
     }
     /**
      * A utility function to check if the user is logged in.
@@ -245,85 +327,61 @@ class RethinkID {
             location.reload();
         }
     }
-    // Data API
-    /**
-     * Makes sure a socket has connected.
-     */
-    _waitForConnection = () => {
-        return new Promise((resolve, reject) => {
-            if (this.socket.connected) {
-                resolve(true);
-            }
-            else {
-                this.socket.on("connect", () => {
-                    resolve(true);
-                });
-                // Don't wait for connection indefinitely
-                setTimeout(() => {
-                    reject(new Error("Timeout waiting for on connect"));
-                }, 1000);
-            }
-        });
-    };
-    /**
-     * Promisifies a socket.io emit event
-     * @param event A socket.io event name, like `tables:create`
-     * @param payload
-     */
-    _asyncEmit = async (event, payload) => {
-        await this._waitForConnection();
-        return new Promise((resolve, reject) => {
-            this.socket.emit(event, payload, (response) => {
-                if (response.error) {
-                    reject(new Error(response.error));
-                }
-                else {
-                    resolve(response);
-                }
-            });
-        });
-    };
     /**
      * Creates a table
      */
-    async tablesCreate(tableName) {
-        return this._asyncEmit("tables:create", { tableName });
+    tablesCreate(tableName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("tables:create", { tableName });
+        });
     }
     /**
      * Drops, or deletes, a table
      */
-    async tablesDrop(tableName) {
-        return this._asyncEmit("tables:drop", { tableName });
+    tablesDrop(tableName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("tables:drop", { tableName });
+        });
     }
     /**
      * Lists all table names
      */
-    async tablesList() {
-        return this._asyncEmit("tables:list", null);
+    tablesList() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("tables:list", null);
+        });
     }
     /**
      * Gets permissions for a user. At least one of the parameters must be provided.
      */
-    async permissionsGet(tableName, userId, permission) {
-        return this._asyncEmit("permissions:get", { tableName, userId, permission });
+    permissionsGet(tableName, userId, permission) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("permissions:get", { tableName, userId, permission });
+        });
     }
     /**
      * Sets permissions for a user
      */
-    async permissionsSet(permissions) {
-        return this._asyncEmit("permissions:set", permissions);
+    permissionsSet(permissions) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("permissions:set", permissions);
+        });
     }
     /**
      * Sets permissions for a user
      */
-    async permissionsDelete(rowId) {
-        return this._asyncEmit("permissions:delete", { rowId });
+    permissionsDelete(rowId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("permissions:delete", { rowId });
+        });
     }
     /**
      * Get all rows from a table, or a single row if rowId is provided
      */
-    async tableRead(tableName, rowId) {
-        return this._asyncEmit("table:read", { tableName, rowId });
+    tableRead(tableName, rowId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:read", { tableName, rowId });
+        });
     }
     /**
      * Subscribe to table changes. Returns a handle to receive for changes,
@@ -346,40 +404,53 @@ class RethinkID {
      * });
      * ```
      */
-    async tableSubscribe(tableName, userId) {
-        return this._asyncEmit("table:subscribe", { tableName, userId }); // data: socket table handle
+    tableSubscribe(tableName, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:subscribe", { tableName, userId }); // data: socket table handle
+        });
     }
     /**
      * Unsubscribe from table changes
      * After having subscribed with {@link tableSubscribe}
      */
-    async tableUnsubscribe(tableName, userId) {
-        return this._asyncEmit("table:unsubscribe", { tableName, userId });
+    tableUnsubscribe(tableName, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:unsubscribe", { tableName, userId });
+        });
     }
     /**
      * Inserts a row into a table
      */
-    async tableInsert(tableName, row, userId) {
-        return this._asyncEmit("table:insert", { tableName, row, userId });
+    tableInsert(tableName, row, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:insert", { tableName, row, userId });
+        });
     }
     /**
      * Updates a row in a table
      */
-    async tableUpdate(tableName, row, userId) {
-        return this._asyncEmit("table:update", { tableName, row, userId });
+    tableUpdate(tableName, row, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:update", { tableName, row, userId });
+        });
     }
     /**
      * Replaces a row in a table
      */
-    async tableReplace(tableName, row, userId) {
-        return this._asyncEmit("table:replace", { tableName, row, userId });
+    tableReplace(tableName, row, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:replace", { tableName, row, userId });
+        });
     }
     /**
      * Deletes a row from a table
      */
-    async tableDelete(tableName, rowId, userId) {
-        return this._asyncEmit("table:delete", { tableName, rowId, userId });
+    tableDelete(tableName, rowId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._asyncEmit("table:delete", { tableName, rowId, userId });
+        });
     }
 }
+_RethinkID_signUpBaseUri = new WeakMap(), _RethinkID_tokenUri = new WeakMap(), _RethinkID_authUri = new WeakMap(), _RethinkID_socketioUri = new WeakMap(), _RethinkID_signUpRedirectUri = new WeakMap(), _RethinkID_oAuthClient = new WeakMap();
 
 exports.RethinkID = RethinkID;
