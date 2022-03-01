@@ -5,6 +5,13 @@ import io from "socket.io-client";
 import { Options, TokenDecoded, IdTokenDecoded, Permission } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
+const signUpBaseUri: string = "http://localhost:3000/sign-up";
+const tokenUri: string = "http://localhost:4444/oauth2/token";
+const authUri: string = "http://localhost:4444/oauth2/auth";
+const socketioUri: string = "http://localhost:4000";
+let signUpRedirectUri: string = "";
+let oAuthClient = null;
+
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  *
@@ -22,23 +29,16 @@ import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
  * ```
  */
 export class RethinkID {
-  #signUpBaseUri: string = "http://localhost:3000/sign-up";
-  #tokenUri: string = "http://localhost:4444/oauth2/token";
-  #authUri: string = "http://localhost:4444/oauth2/auth";
-  #socketioUri: string = "http://localhost:4000";
-  #signUpRedirectUri: string = "";
-
-  #oAuthClient;
   socket;
 
   constructor(options: Options) {
-    this.#signUpRedirectUri = options.signUpRedirectUri;
+    signUpRedirectUri = options.signUpRedirectUri;
 
-    this.#oAuthClient = new ClientOAuth2({
+    oAuthClient = new ClientOAuth2({
       clientId: options.appId,
       redirectUri: options.logInRedirectUri,
-      accessTokenUri: this.#tokenUri,
-      authorizationUri: this.#authUri,
+      accessTokenUri: tokenUri,
+      authorizationUri: authUri,
       scopes: ["openid", "profile", "email"],
     });
 
@@ -55,7 +55,7 @@ export class RethinkID {
       return;
     }
 
-    this.socket = io(this.#socketioUri, {
+    this.socket = io(socketioUri, {
       auth: { token },
     });
 
@@ -76,8 +76,8 @@ export class RethinkID {
    */
   signUpUri(): string {
     const params = new URLSearchParams();
-    params.append("redirect_uri", this.#signUpRedirectUri);
-    return `${this.#signUpBaseUri}?${params.toString()}`;
+    params.append("redirect_uri", signUpRedirectUri);
+    return `${signUpBaseUri}?${params.toString()}`;
   }
 
   /**
@@ -97,7 +97,7 @@ export class RethinkID {
     // Hash and base64-urlencode the secret to use as the challenge
     const codeChallenge = await pkceChallengeFromVerifier(codeVerifier);
 
-    return this.#oAuthClient.code.getUri({
+    return oAuthClient.code.getUri({
       state: state,
       query: {
         code_challenge: codeChallenge,
@@ -146,7 +146,7 @@ export class RethinkID {
 
     let getTokenResponse;
     try {
-      getTokenResponse = await this.#oAuthClient.code.getToken(window.location.href, {
+      getTokenResponse = await oAuthClient.code.getToken(window.location.href, {
         body: {
           code_verifier: localStorage.getItem("pkce_code_verifier") || "",
         },
