@@ -7,16 +7,15 @@ import { Options, TokenDecoded, IdTokenDecoded, Permission } from "./types";
  * import { RethinkID } from "@mostlytyped/rethinkid-js-sdk";
  *
  * const config = {
- *   appId: process.env.VUE_APP_APP_ID,
- *   signUpRedirectUri: process.env.VUE_APP_SIGN_UP_REDIRECT_URI,
- *   logInRedirectUri: process.env.VUE_APP_LOG_IN_REDIRECT_URI,
+ *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
+ *   signUpRedirectUri: https://example.com/callback,
+ *   logInRedirectUri: https://example.com/sign-in,
  * };
  *
  * export const rid = new RethinkID(config);
  * ```
  */
 export declare class RethinkID {
-    #private;
     socket: any;
     constructor(options: Options);
     /**
@@ -28,9 +27,12 @@ export declare class RethinkID {
      */
     signUpUri(): string;
     /**
-     * Generate a URI to log in a user to RethinkID and authorize your app.
+     * Generate a URI to log in a user to RethinkID and authorize an app.
      * Uses the Authorization Code Flow for single page apps with PKCE code verification.
      * Requests an authorization code.
+     *
+     * Use {@link getTokens} to exchange the authorization code for an access token and ID token
+     * at the `logInRedirectUri` URI specified when creating a RethinkID instance.
      */
     logInUri(): Promise<string>;
     /**

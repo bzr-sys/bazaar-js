@@ -27,19 +27,6 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
-function __classPrivateFieldGet(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-}
-
-function __classPrivateFieldSet(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
-}
-
 /**
  * Generates a secure random string using the browser crypto functions
  */
@@ -82,7 +69,17 @@ function pkceChallengeFromVerifier(codeVerifier) {
     });
 }
 
-var _RethinkID_signUpBaseUri, _RethinkID_tokenUri, _RethinkID_authUri, _RethinkID_socketioUri, _RethinkID_signUpRedirectUri, _RethinkID_oAuthClient;
+const signUpBaseUri = "http://localhost:3000/sign-up";
+const tokenUri = "http://localhost:4444/oauth2/token";
+const authUri = "http://localhost:4444/oauth2/auth";
+const socketioUri = "http://localhost:4000";
+let signUpRedirectUri = "";
+let oAuthClient = null;
+// Local storage key names
+let tokenKeyName = "";
+let idTokenKeyName = "";
+let pkceStateKeyName = "";
+let pkceCodeVerifierKeyName = "";
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  *
@@ -91,9 +88,9 @@ var _RethinkID_signUpBaseUri, _RethinkID_tokenUri, _RethinkID_authUri, _RethinkI
  * import { RethinkID } from "@mostlytyped/rethinkid-js-sdk";
  *
  * const config = {
- *   appId: process.env.VUE_APP_APP_ID,
- *   signUpRedirectUri: process.env.VUE_APP_SIGN_UP_REDIRECT_URI,
- *   logInRedirectUri: process.env.VUE_APP_LOG_IN_REDIRECT_URI,
+ *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
+ *   signUpRedirectUri: https://example.com/callback,
+ *   logInRedirectUri: https://example.com/sign-in,
  * };
  *
  * export const rid = new RethinkID(config);
@@ -101,12 +98,6 @@ var _RethinkID_signUpBaseUri, _RethinkID_tokenUri, _RethinkID_authUri, _RethinkI
  */
 class RethinkID {
     constructor(options) {
-        _RethinkID_signUpBaseUri.set(this, "http://localhost:3000/sign-up");
-        _RethinkID_tokenUri.set(this, "http://localhost:4444/oauth2/token");
-        _RethinkID_authUri.set(this, "http://localhost:4444/oauth2/auth");
-        _RethinkID_socketioUri.set(this, "http://localhost:4000");
-        _RethinkID_signUpRedirectUri.set(this, "");
-        _RethinkID_oAuthClient.set(this, void 0);
         // Data API
         /**
          * Makes sure a socket has connected.
@@ -145,25 +136,31 @@ class RethinkID {
                 });
             });
         });
-        __classPrivateFieldSet(this, _RethinkID_signUpRedirectUri, options.signUpRedirectUri, "f");
-        __classPrivateFieldSet(this, _RethinkID_oAuthClient, new ClientOAuth2({
+        signUpRedirectUri = options.signUpRedirectUri;
+        // Namespace local storage key names
+        const namespace = `rethinkid_${options.appId}`;
+        tokenKeyName = `${namespace}_token`;
+        idTokenKeyName = `${namespace}_id_token`;
+        pkceStateKeyName = `${namespace}_pkce_state`;
+        pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
+        oAuthClient = new ClientOAuth2({
             clientId: options.appId,
             redirectUri: options.logInRedirectUri,
-            accessTokenUri: __classPrivateFieldGet(this, _RethinkID_tokenUri, "f"),
-            authorizationUri: __classPrivateFieldGet(this, _RethinkID_authUri, "f"),
+            accessTokenUri: tokenUri,
+            authorizationUri: authUri,
             scopes: ["openid", "profile", "email"],
-        }), "f");
+        });
         this.socketConnect();
     }
     /**
      * Creates a SocketIO connection with an auth token
      */
     socketConnect() {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem(tokenKeyName);
         if (!token) {
             return;
         }
-        this.socket = io(__classPrivateFieldGet(this, _RethinkID_socketioUri, "f"), {
+        this.socket = io(socketioUri, {
             auth: { token },
         });
         this.socket.on("connect", () => {
@@ -181,25 +178,28 @@ class RethinkID {
      */
     signUpUri() {
         const params = new URLSearchParams();
-        params.append("redirect_uri", __classPrivateFieldGet(this, _RethinkID_signUpRedirectUri, "f"));
-        return `${__classPrivateFieldGet(this, _RethinkID_signUpBaseUri, "f")}?${params.toString()}`;
+        params.append("redirect_uri", signUpRedirectUri);
+        return `${signUpBaseUri}?${params.toString()}`;
     }
     /**
-     * Generate a URI to log in a user to RethinkID and authorize your app.
+     * Generate a URI to log in a user to RethinkID and authorize an app.
      * Uses the Authorization Code Flow for single page apps with PKCE code verification.
      * Requests an authorization code.
+     *
+     * Use {@link getTokens} to exchange the authorization code for an access token and ID token
+     * at the `logInRedirectUri` URI specified when creating a RethinkID instance.
      */
     logInUri() {
         return __awaiter(this, void 0, void 0, function* () {
             // Create and store a random "state" value
             const state = generateRandomString();
-            localStorage.setItem("pkce_state", state);
+            localStorage.setItem(pkceStateKeyName, state);
             // Create and store a new PKCE code_verifier (the plaintext random secret)
             const codeVerifier = generateRandomString();
-            localStorage.setItem("pkce_code_verifier", codeVerifier);
+            localStorage.setItem(pkceCodeVerifierKeyName, codeVerifier);
             // Hash and base64-urlencode the secret to use as the challenge
             const codeChallenge = yield pkceChallengeFromVerifier(codeVerifier);
-            return __classPrivateFieldGet(this, _RethinkID_oAuthClient, "f").code.getUri({
+            return oAuthClient.code.getUri({
                 state: state,
                 query: {
                     code_challenge: codeChallenge,
@@ -233,16 +233,16 @@ class RethinkID {
                 };
             }
             // Verify state matches what we set at the beginning
-            if (localStorage.getItem("pkce_state") !== params.get("state")) {
+            if (localStorage.getItem(pkceStateKeyName) !== params.get("state")) {
                 return {
                     error: "State did not match. Possible CSRF attack",
                 };
             }
             let getTokenResponse;
             try {
-                getTokenResponse = yield __classPrivateFieldGet(this, _RethinkID_oAuthClient, "f").code.getToken(window.location.href, {
+                getTokenResponse = yield oAuthClient.code.getToken(window.location.href, {
                     body: {
-                        code_verifier: localStorage.getItem("pkce_code_verifier") || "",
+                        code_verifier: localStorage.getItem(pkceCodeVerifierKeyName) || "",
                     },
                 });
             }
@@ -257,13 +257,13 @@ class RethinkID {
                 };
             }
             // Clean these up since we don't need them anymore
-            localStorage.removeItem("pkce_state");
-            localStorage.removeItem("pkce_code_verifier");
+            localStorage.removeItem(pkceStateKeyName);
+            localStorage.removeItem(pkceCodeVerifierKeyName);
             // Store tokens and sign user in locally
             const token = getTokenResponse.data.access_token;
             const idToken = getTokenResponse.data.id_token;
-            localStorage.setItem("token", token);
-            localStorage.setItem("idToken", idToken);
+            localStorage.setItem(tokenKeyName, token);
+            localStorage.setItem(idTokenKeyName, idToken);
             try {
                 const tokenDecoded = jwt_decode(token);
                 const idTokenDecoded = jwt_decode(idToken);
@@ -286,8 +286,8 @@ class RethinkID {
      * Returns the decoded ID token for convenient access to user information.
      */
     isLoggedIn() {
-        const token = localStorage.getItem("token");
-        const idToken = localStorage.getItem("idToken");
+        const token = localStorage.getItem(tokenKeyName);
+        const idToken = localStorage.getItem(idTokenKeyName);
         if (token && idToken) {
             try {
                 const idTokenDecoded = jwt_decode(idToken);
@@ -297,8 +297,8 @@ class RethinkID {
             }
             catch (error) {
                 // clean up
-                localStorage.removeItem("token");
-                localStorage.removeItem("idToken");
+                localStorage.removeItem(tokenKeyName);
+                localStorage.removeItem(idTokenKeyName);
                 return {
                     error: `ID token decode error: ${error}`,
                 };
@@ -311,9 +311,9 @@ class RethinkID {
      * Deletes the access token and ID token from local storage and reloads the page.
      */
     logOut() {
-        if (localStorage.getItem("token") || localStorage.getItem("idToken")) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("idToken");
+        if (localStorage.getItem(tokenKeyName) || localStorage.getItem(idTokenKeyName)) {
+            localStorage.removeItem(tokenKeyName);
+            localStorage.removeItem(idTokenKeyName);
             location.reload();
         }
     }
@@ -441,6 +441,5 @@ class RethinkID {
         });
     }
 }
-_RethinkID_signUpBaseUri = new WeakMap(), _RethinkID_tokenUri = new WeakMap(), _RethinkID_authUri = new WeakMap(), _RethinkID_socketioUri = new WeakMap(), _RethinkID_signUpRedirectUri = new WeakMap(), _RethinkID_oAuthClient = new WeakMap();
 
 export { RethinkID };
