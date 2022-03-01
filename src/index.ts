@@ -9,8 +9,15 @@ const signUpBaseUri: string = "http://localhost:3000/sign-up";
 const tokenUri: string = "http://localhost:4444/oauth2/token";
 const authUri: string = "http://localhost:4444/oauth2/auth";
 const socketioUri: string = "http://localhost:4000";
+
 let signUpRedirectUri: string = "";
 let oAuthClient = null;
+
+// Local storage key names
+let tokenKeyName: string = "";
+let idTokenKeyName: string = "";
+let pkceStateKeyName = "";
+let pkceCodeVerifierKeyName = "";
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
@@ -20,9 +27,9 @@ let oAuthClient = null;
  * import { RethinkID } from "@mostlytyped/rethinkid-js-sdk";
  *
  * const config = {
- *   appId: process.env.VUE_APP_APP_ID,
- *   signUpRedirectUri: process.env.VUE_APP_SIGN_UP_REDIRECT_URI,
- *   logInRedirectUri: process.env.VUE_APP_LOG_IN_REDIRECT_URI,
+ *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
+ *   signUpRedirectUri: https://example.com/callback,
+ *   logInRedirectUri: https://example.com/sign-in,
  * };
  *
  * export const rid = new RethinkID(config);
@@ -33,6 +40,14 @@ export class RethinkID {
 
   constructor(options: Options) {
     signUpRedirectUri = options.signUpRedirectUri;
+
+    // Namespace local storage key names
+    const namespace = `rethinkid_${options.appId}`;
+
+    tokenKeyName = `${namespace}_token`;
+    idTokenKeyName = `${namespace}_id_token`;
+    pkceStateKeyName = `${namespace}_pkce_state`;
+    pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
 
     oAuthClient = new ClientOAuth2({
       clientId: options.appId,
@@ -49,7 +64,7 @@ export class RethinkID {
    * Creates a SocketIO connection with an auth token
    */
   private socketConnect(): void {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(tokenKeyName);
 
     if (!token) {
       return;
@@ -81,18 +96,21 @@ export class RethinkID {
   }
 
   /**
-   * Generate a URI to log in a user to RethinkID and authorize your app.
+   * Generate a URI to log in a user to RethinkID and authorize an app.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
+   *
+   * Use {@link getTokens} to exchange the authorization code for an access token and ID token
+   * at the `logInRedirectUri` URI specified when creating a RethinkID instance.
    */
   async logInUri(): Promise<string> {
     // Create and store a random "state" value
     const state = generateRandomString();
-    localStorage.setItem("pkce_state", state);
+    localStorage.setItem(pkceStateKeyName, state);
 
     // Create and store a new PKCE code_verifier (the plaintext random secret)
     const codeVerifier = generateRandomString();
-    localStorage.setItem("pkce_code_verifier", codeVerifier);
+    localStorage.setItem(pkceCodeVerifierKeyName, codeVerifier);
 
     // Hash and base64-urlencode the secret to use as the challenge
     const codeChallenge = await pkceChallengeFromVerifier(codeVerifier);
@@ -138,7 +156,7 @@ export class RethinkID {
     }
 
     // Verify state matches what we set at the beginning
-    if (localStorage.getItem("pkce_state") !== params.get("state")) {
+    if (localStorage.getItem(pkceStateKeyName) !== params.get("state")) {
       return {
         error: "State did not match. Possible CSRF attack",
       };
@@ -148,7 +166,7 @@ export class RethinkID {
     try {
       getTokenResponse = await oAuthClient.code.getToken(window.location.href, {
         body: {
-          code_verifier: localStorage.getItem("pkce_code_verifier") || "",
+          code_verifier: localStorage.getItem(pkceCodeVerifierKeyName) || "",
         },
       });
     } catch (error) {
@@ -164,15 +182,15 @@ export class RethinkID {
     }
 
     // Clean these up since we don't need them anymore
-    localStorage.removeItem("pkce_state");
-    localStorage.removeItem("pkce_code_verifier");
+    localStorage.removeItem(pkceStateKeyName);
+    localStorage.removeItem(pkceCodeVerifierKeyName);
 
     // Store tokens and sign user in locally
     const token: string = getTokenResponse.data.access_token;
     const idToken: string = getTokenResponse.data.id_token;
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("idToken", idToken);
+    localStorage.setItem(tokenKeyName, token);
+    localStorage.setItem(idTokenKeyName, idToken);
 
     try {
       const tokenDecoded: TokenDecoded = jwt_decode(token);
@@ -201,8 +219,8 @@ export class RethinkID {
         error?: string;
       }
     | false {
-    const token = localStorage.getItem("token");
-    const idToken = localStorage.getItem("idToken");
+    const token = localStorage.getItem(tokenKeyName);
+    const idToken = localStorage.getItem(idTokenKeyName);
 
     if (token && idToken) {
       try {
@@ -213,8 +231,8 @@ export class RethinkID {
         };
       } catch (error) {
         // clean up
-        localStorage.removeItem("token");
-        localStorage.removeItem("idToken");
+        localStorage.removeItem(tokenKeyName);
+        localStorage.removeItem(idTokenKeyName);
 
         return {
           error: `ID token decode error: ${error}`,
@@ -230,9 +248,9 @@ export class RethinkID {
    * Deletes the access token and ID token from local storage and reloads the page.
    */
   logOut(): void {
-    if (localStorage.getItem("token") || localStorage.getItem("idToken")) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("idToken");
+    if (localStorage.getItem(tokenKeyName) || localStorage.getItem(idTokenKeyName)) {
+      localStorage.removeItem(tokenKeyName);
+      localStorage.removeItem(idTokenKeyName);
       location.reload();
     }
   }
