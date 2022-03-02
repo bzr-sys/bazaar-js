@@ -50,12 +50,8 @@ export declare class RethinkID {
     /**
      * A utility function to check if the user is logged in.
      * i.e. if an access token and ID token are in local storage.
-     * Returns the decoded ID token for convenient access to user information.
      */
-    isLoggedIn(): {
-        idTokenDecoded?: IdTokenDecoded;
-        error?: string;
-    } | false;
+    isLoggedIn(): boolean;
     /**
      * A utility function to log a user out.
      * Deletes the access token and ID token from local storage and reloads the page.

@@ -211,32 +211,20 @@ export class RethinkID {
   /**
    * A utility function to check if the user is logged in.
    * i.e. if an access token and ID token are in local storage.
-   * Returns the decoded ID token for convenient access to user information.
    */
-  isLoggedIn():
-    | {
-        idTokenDecoded?: IdTokenDecoded;
-        error?: string;
-      }
-    | false {
+  isLoggedIn(): boolean {
     const token = localStorage.getItem(tokenKeyName);
     const idToken = localStorage.getItem(idTokenKeyName);
 
     if (token && idToken) {
       try {
-        const idTokenDecoded: IdTokenDecoded = jwt_decode(idToken);
+        jwt_decode(idToken);
 
-        return {
-          idTokenDecoded,
-        };
+        return true;
       } catch (error) {
-        // clean up
+        // Error decoding ID token, assume tokens are invalid and remove
         localStorage.removeItem(tokenKeyName);
         localStorage.removeItem(idTokenKeyName);
-
-        return {
-          error: `ID token decode error: ${error}`,
-        };
       }
     }
 
