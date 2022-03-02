@@ -28,8 +28,8 @@ let pkceCodeVerifierKeyName = "";
  *
  * const config = {
  *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
- *   signUpRedirectUri: https://example.com/callback,
- *   logInRedirectUri: https://example.com/sign-in,
+ *   signUpRedirectUri: "https://example.com/callback",
+ *   logInRedirectUri: "https://example.com/sign-in",
  * };
  *
  * export const rid = new RethinkID(config);
