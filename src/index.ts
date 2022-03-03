@@ -2,7 +2,7 @@ import ClientOAuth2 from "client-oauth2";
 import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
-import { Options, TokenDecoded, IdTokenDecoded, Permission } from "./types";
+import { Options, IdTokenDecoded, Permission } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
 const signUpBaseUri: string = "http://localhost:3000/sign-up";
@@ -101,7 +101,7 @@ export class RethinkID {
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    *
-   * Use {@link getTokens} to exchange the authorization code for an access token and ID token
+   * Use {@link completeLogIn} to exchange the authorization code for an access token and ID token
    * at the `logInRedirectUri` URI specified when creating a RethinkID instance.
    */
   async logInUri(): Promise<string> {
@@ -126,41 +126,34 @@ export class RethinkID {
   }
 
   /**
-   * Takes an authorization code and exchanges it for an access token and ID token
-   * An authorization code is received after a successfully calling logInUri() and
-   * approving the log in request.
-   * Stores the access token and ID token in local storage as `token` and `idToken` respectively.
+   * Takes an authorization code and exchanges it for an access token and ID token.
+   * Should be called after the user has been redirected back from the `logInRedirectUri` URI.
+   * An authorization code is received as a URL param after a successfully calling {@link logInUri}
+   * and approving the log in request.
+   *
+   * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
+   * param if something went wrong.
+   *
+   * Stores the access token and ID token in local storage.
    */
-  async getTokens(): Promise<{
-    error?: string;
-    errorDescription?: string;
-    tokenDecoded?: TokenDecoded;
-    idTokenDecoded?: IdTokenDecoded;
-  }> {
+  async completeLogIn(): Promise<void> {
     const params = new URLSearchParams(window.location.search);
 
     // Check if the auth server returned an error string
     const error = params.get("error");
     if (error) {
-      return {
-        error: error,
-        errorDescription: params.get("error_description") || "",
-      };
+      throw new Error(`An error occurred: ${error}`);
     }
 
     // Make sure the auth server returned a code
     const code = params.get("code");
     if (!code) {
-      return {
-        error: "No query param code",
-      };
+      throw new Error(`No query param code`);
     }
 
     // Verify state matches what we set at the beginning
     if (localStorage.getItem(pkceStateKeyName) !== params.get("state")) {
-      return {
-        error: "State did not match. Possible CSRF attack",
-      };
+      throw new Error(`State did not match. Possible CSRF attack`);
     }
 
     let getTokenResponse;
@@ -171,42 +164,26 @@ export class RethinkID {
         },
       });
     } catch (error) {
-      return {
-        error: `Error getting token: ${error.message}`,
-      };
+      throw new Error(`Error getting token: ${error.message}`);
     }
 
     if (!getTokenResponse) {
-      return {
-        error: "No token response",
-      };
+      throw new Error(`No token response`);
     }
 
     // Clean these up since we don't need them anymore
     localStorage.removeItem(pkceStateKeyName);
     localStorage.removeItem(pkceCodeVerifierKeyName);
 
-    // Store tokens and sign user in locally
+    // Store tokens in local storage
     const token: string = getTokenResponse.data.access_token;
     const idToken: string = getTokenResponse.data.id_token;
 
     localStorage.setItem(tokenKeyName, token);
     localStorage.setItem(idTokenKeyName, idToken);
 
-    try {
-      const tokenDecoded: TokenDecoded = jwt_decode(token);
-      const idTokenDecoded: IdTokenDecoded = jwt_decode(idToken);
-
-      this.socketConnect();
-      return {
-        tokenDecoded,
-        idTokenDecoded,
-      };
-    } catch (error) {
-      return {
-        error: `Error decoding token: ${error.message}`,
-      };
-    }
+    // Make a socket connection now that we have an access token
+    this.socketConnect();
   }
 
   /**
