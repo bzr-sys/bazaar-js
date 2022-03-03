@@ -225,7 +225,7 @@ export class RethinkID {
    * A utility function to get user info, i.e. user ID and the scope-based claims of an
    * authenticated user's ID token.
    */
-  userInfo(): null | { userId: string; email: string; name: string } {
+  userInfo(): null | { id: string; email: string; name: string } {
     const idToken = localStorage.getItem(idTokenKeyName);
 
     if (idToken) {
@@ -233,7 +233,7 @@ export class RethinkID {
         const idTokenDecoded: IdTokenDecoded = jwt_decode(idToken);
 
         return {
-          userId: idTokenDecoded.sub || "",
+          id: idTokenDecoded.sub || "",
           email: idTokenDecoded.email || "", // emailVerified is redundant because log in requires verification
           name: idTokenDecoded.name || "",
         };
