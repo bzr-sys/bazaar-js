@@ -330,8 +330,8 @@ export class RethinkID {
   /**
    * Get all rows from a table, or a single row if rowId is provided
    */
-  async tableRead(tableName: string, rowId?: string): Promise<{ data: object }> {
-    return this._asyncEmit("table:read", { tableName, rowId }) as Promise<{ data: object }>;
+  async tableRead(tableName: string, rowId?: string, userId?: string): Promise<{ data: object }> {
+    return this._asyncEmit("table:read", { tableName, rowId, userId }) as Promise<{ data: object }>;
   }
 
   /**
