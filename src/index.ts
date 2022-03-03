@@ -12,6 +12,7 @@ const socketioUri: string = "http://localhost:4000";
 
 let signUpRedirectUri: string = "";
 let oAuthClient = null;
+let socket = null;
 
 // Local storage key names, namespaced in the constructor
 let tokenKeyName: string = "";
@@ -36,8 +37,6 @@ let pkceCodeVerifierKeyName = "";
  * ```
  */
 export class RethinkID {
-  socket;
-
   constructor(options: Options) {
     // The URI to redirect to after a successful sign up
     signUpRedirectUri = options.signUpRedirectUri;
@@ -71,15 +70,15 @@ export class RethinkID {
       return;
     }
 
-    this.socket = io(socketioUri, {
+    socket = io(socketioUri, {
       auth: { token },
     });
 
-    this.socket.on("connect", () => {
-      console.log("sdk: connected. this.socket.id:", this.socket.id);
+    socket.on("connect", () => {
+      console.log("sdk: connected. socket.id:", socket.id);
     });
 
-    this.socket.on("connect_error", (err) => {
+    socket.on("connect_error", (err) => {
       console.error("sdk connect err.message", err.message);
       if (err.message.includes("Unauthorized")) {
         console.log("Unauthorized!");
@@ -253,10 +252,10 @@ export class RethinkID {
    */
   private _waitForConnection: () => Promise<true> = () => {
     return new Promise((resolve, reject) => {
-      if (this.socket.connected) {
+      if (socket.connected) {
         resolve(true);
       } else {
-        this.socket.on("connect", () => {
+        socket.on("connect", () => {
           resolve(true);
         });
         // Don't wait for connection indefinitely
@@ -275,7 +274,7 @@ export class RethinkID {
   private _asyncEmit = async (event: string, payload: any) => {
     await this._waitForConnection();
     return new Promise((resolve, reject) => {
-      this.socket.emit(event, payload, (response: any) => {
+      socket.emit(event, payload, (response: any) => {
         if (response.error) {
           reject(new Error(response.error));
         } else {
@@ -335,36 +334,23 @@ export class RethinkID {
   }
 
   /**
-   * Subscribe to table changes. Returns a handle to receive for changes,
-   * to be used with {@link socket}.
-   *
-   * @example
-   * ```js
-   *   const rid = new RethinkID(options);
-   *   rid.socket.on(socketTableHandle, (changes) => {
-   *     console.log("Received emitted changes", changes);
-   *     if (changes.new_val && changes.old_val === null) {
-   *         console.log("Received new message");
-   *     }
-   *     if (changes.new_val === null && changes.old_val) {
-   *         console.log("Received deleted message");
-   *     }
-   *     if (changes.new_val && changes.old_val) {
-   *         console.log("Received updated message");
-   *     }
-   * });
-   * ```
+   * Subscribe to table changes.
    */
-  async tableSubscribe(tableName: string, userId?: string) {
-    return this._asyncEmit("table:subscribe", { tableName, userId }) as Promise<{ data: string }>; // data: socket table handle
-  }
+  async tableSubscribe(
+    listener: (changes: { new_val: object; old_val: object }) => void,
+    tableName: string,
+    userId?: string,
+  ) {
+    const { data } = (await this._asyncEmit("table:subscribe", { tableName, userId })) as { data: string }; // data: socket table handle
+    const socketTableHandle = data;
 
-  /**
-   * Unsubscribe from table changes
-   * After having subscribed with {@link tableSubscribe}
-   */
-  async tableUnsubscribe(tableName: string, userId?: string) {
-    return this._asyncEmit("table:unsubscribe", { tableName, userId }) as Promise<{ message: string }>;
+    socket.on(socketTableHandle, listener);
+
+    return {
+      unsubscribe: async () => {
+        return this._asyncEmit("table:unsubscribe", { tableName, userId }) as Promise<{ message: string }>;
+      },
+    };
   }
 
   /**
