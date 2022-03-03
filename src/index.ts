@@ -13,7 +13,7 @@ const socketioUri: string = "http://localhost:4000";
 let signUpRedirectUri: string = "";
 let oAuthClient = null;
 
-// Local storage key names
+// Local storage key names, namespaced in the constructor
 let tokenKeyName: string = "";
 let idTokenKeyName: string = "";
 let pkceStateKeyName = "";
@@ -28,8 +28,8 @@ let pkceCodeVerifierKeyName = "";
  *
  * const config = {
  *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
- *   signUpRedirectUri: "https://example.com/callback",
- *   logInRedirectUri: "https://example.com/sign-in",
+ *   signUpRedirectUri: "https://example.com/sign-in",
+ *   logInRedirectUri: "https://example.com/callback",
  * };
  *
  * export const rid = new RethinkID(config);
@@ -39,6 +39,7 @@ export class RethinkID {
   socket;
 
   constructor(options: Options) {
+    // The URI to redirect to after a successful sign up
     signUpRedirectUri = options.signUpRedirectUri;
 
     // Namespace local storage key names
