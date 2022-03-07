@@ -86,7 +86,7 @@ export class RethinkID {
       scopes: ["openid", "profile", "email"],
     });
 
-    this.socketConnect();
+    this._socketConnect();
 
     // Set the app's custom post log in callback
     onLogInComplete = options.onLogInComplete;
@@ -100,7 +100,7 @@ export class RethinkID {
   /**
    * Creates a SocketIO connection with an auth token
    */
-  private socketConnect(): void {
+  private _socketConnect(): void {
     const token = localStorage.getItem(tokenKeyName);
 
     if (!token) {
@@ -237,7 +237,7 @@ export class RethinkID {
     // if we trust the sender and the source is our pop-up
     if (event.source === logInWindowReference) {
       // Make a socket connection now that we have an access token and are back in the main window
-      this.socketConnect();
+      this._socketConnect();
 
       // Run the app's post log in callback
       onLogInComplete();
