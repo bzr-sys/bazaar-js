@@ -1,4 +1,9 @@
-export type Options = { appId: string; signUpRedirectUri: string; logInRedirectUri: string };
+export type Options = {
+  appId: string;
+  signUpRedirectUri: string;
+  logInRedirectUri: string;
+  onLogInComplete: () => void;
+};
 
 export type Permission = {
   id: string;
