@@ -452,11 +452,14 @@ export class RethinkID {
 
   /**
    * Subscribe to table changes.
+   * @param tableName
+   * @param userId Pass a user ID to operate on a table owned by the corresponding user. Otherwise pass an empty string to operate on a table owned by the authenticated user.
+   * @param listener A callback function to handle table changes.
    */
   async tableSubscribe(
-    listener: (changes: { new_val: object; old_val: object }) => void,
     tableName: string,
-    userId?: string,
+    userId: string,
+    listener: (changes: { new_val: object; old_val: object }) => void,
   ) {
     const { data } = (await this._asyncEmit("table:subscribe", { tableName, userId })) as { data: string }; // data: socket table handle
     const socketTableHandle = data;
