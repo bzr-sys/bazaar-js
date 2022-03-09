@@ -423,10 +423,18 @@ export class RethinkID {
   }
 
   /**
-   * Gets permissions for a user. At least one of the parameters must be provided.
+   * Gets permissions for a user.
+   * @param options - An optional object for specifying which permissions to get.
+   * @returns All permissions are returned if no options are passed.
    */
-  async permissionsGet(tableName?: string, userId?: string, permission?: "read" | "insert" | "update" | "delete") {
-    return this._asyncEmit("permissions:get", { tableName, userId, permission }) as Promise<{ data: Permission[] }>;
+  async permissionsGet(
+    options: {
+      tableName?: string;
+      userId?: string;
+      permission?: "read" | "insert" | "update" | "delete";
+    } = {},
+  ) {
+    return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
   }
 
   /**
@@ -437,10 +445,10 @@ export class RethinkID {
   }
 
   /**
-   * Sets permissions for a user
+   * Deletes permissions for a user. Deletes all permissions if no options are passed.
    */
-  async permissionsDelete(rowId: string) {
-    return this._asyncEmit("permissions:delete", { rowId }) as Promise<{ message: string }>;
+  async permissionsDelete(options?: { permissionId: string }) {
+    return this._asyncEmit("permissions:delete", options || null) as Promise<{ message: string }>;
   }
 
   /**
