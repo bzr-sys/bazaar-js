@@ -535,7 +535,13 @@ export class RethinkID {
   /**
    * Deletes a row from a table
    */
-  async tableDelete(tableName: string, rowId: string, userId?: string) {
-    return this._asyncEmit("table:delete", { tableName, rowId, userId }) as Promise<{ message: string }>;
+  async tableDelete(tableName: string, options: { rowId?: string; userId?: string } = {}) {
+    const payload = { tableName };
+
+    if (options) {
+      Object.assign(payload, options);
+    }
+
+    return this._asyncEmit("table:delete", payload) as Promise<{ message: string }>;
   }
 }
