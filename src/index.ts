@@ -470,22 +470,23 @@ export class RethinkID {
   /**
    * Subscribe to table changes.
    * @param tableName
-   * @param userId Pass a user ID to operate on a table owned by the corresponding user. Otherwise will operate on a table owned by the authenticated user.
-   * @param listener A callback function to handle table changes.
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  async tableSubscribe(
-    tableName: string,
-    userId: string,
-    listener: (changes: { new_val: object; old_val: object }) => void,
-  ) {
-    const { data } = (await this._asyncEmit("table:subscribe", { tableName, userId })) as { data: string }; // data: socket table handle
-    const socketTableHandle = data;
+  async tableSubscribe(tableName: string, options: { userId?: string } = {}) {
+    const payload = { tableName };
 
-    socket.on(socketTableHandle, listener);
+    if (options) {
+      Object.assign(payload, options);
+    }
 
     return {
+      on: async (listener: (changes: { new_val: object; old_val: object }) => void) => {
+        const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // data: socket table handle
+        const socketTableHandle = response.data;
+        socket.on(socketTableHandle, listener);
+      },
       unsubscribe: async () => {
-        return this._asyncEmit("table:unsubscribe", { tableName, userId }) as Promise<{ message: string }>;
+        return this._asyncEmit("table:unsubscribe", payload) as Promise<{ message: string }>;
       },
     };
   }
