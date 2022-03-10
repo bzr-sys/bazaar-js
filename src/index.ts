@@ -473,14 +473,15 @@ export class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
+    const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // data: socket table handle
+    const socketTableHandle = response.data;
+
     return {
-      on: async (listener: (changes: { new_val: object; old_val: object }) => void) => {
-        const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // data: socket table handle
-        const socketTableHandle = response.data;
+      do: async (listener: (changes: { new_val: object; old_val: object }) => void) => {
         socket.on(socketTableHandle, listener);
       },
       unsubscribe: async () => {
-        return this._asyncEmit("table:unsubscribe", payload) as Promise<{ message: string }>;
+        return this._asyncEmit("table:unsubscribe", socketTableHandle) as Promise<{ message: string }>;
       },
     };
   }
