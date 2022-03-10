@@ -459,10 +459,7 @@ export class RethinkID {
    */
   async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}): Promise<{ data: object }> {
     const payload = { tableName };
-
-    if (options) {
-      Object.assign(payload, options);
-    }
+    Object.assign(payload, options);
 
     return this._asyncEmit("table:read", payload) as Promise<{ data: object }>;
   }
@@ -474,10 +471,7 @@ export class RethinkID {
    */
   async tableSubscribe(tableName: string, options: { userId?: string } = {}) {
     const payload = { tableName };
-
-    if (options) {
-      Object.assign(payload, options);
-    }
+    Object.assign(payload, options);
 
     return {
       on: async (listener: (changes: { new_val: object; old_val: object }) => void) => {
@@ -499,10 +493,7 @@ export class RethinkID {
    */
   async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
-
-    if (options) {
-      Object.assign(payload, options);
-    }
+    Object.assign(payload, options);
 
     return this._asyncEmit("table:insert", payload) as Promise<{ message: string }>;
   }
@@ -515,10 +506,7 @@ export class RethinkID {
    */
   async tableUpdate(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
-
-    if (options) {
-      Object.assign(payload, options);
-    }
+    Object.assign(payload, options);
 
     return this._asyncEmit("table:update", payload) as Promise<{ message: string }>;
   }
@@ -531,10 +519,7 @@ export class RethinkID {
    */
   async tableReplace(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
-
-    if (options) {
-      Object.assign(payload, options);
-    }
+    Object.assign(payload, options);
 
     return this._asyncEmit("table:replace", payload) as Promise<{ message: string }>;
   }
@@ -546,10 +531,7 @@ export class RethinkID {
    */
   async tableDelete(tableName: string, options: { rowId?: string; userId?: string } = {}) {
     const payload = { tableName };
-
-    if (options) {
-      Object.assign(payload, options);
-    }
+    Object.assign(payload, options);
 
     return this._asyncEmit("table:delete", payload) as Promise<{ message: string }>;
   }
