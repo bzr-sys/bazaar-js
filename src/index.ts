@@ -445,10 +445,12 @@ export class RethinkID {
   }
 
   /**
-   * Deletes permissions for a user. Deletes all permissions if no options are passed.
+   * Deletes permissions for a user.
+   * @param options - An optional object for specifying a permission ID to delete.
+   * @returns All permissions are deleted if no permission ID option is passed.
    */
-  async permissionsDelete(options?: { permissionId: string }) {
-    return this._asyncEmit("permissions:delete", options || null) as Promise<{ message: string }>;
+  async permissionsDelete(options: { permissionId?: string } = {}) {
+    return this._asyncEmit("permissions:delete", options) as Promise<{ message: string }>;
   }
 
   /**
