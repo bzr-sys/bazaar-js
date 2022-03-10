@@ -424,7 +424,7 @@ export class RethinkID {
 
   /**
    * Gets permissions for a user.
-   * @param options - An optional object for specifying which permissions to get.
+   * @param options An optional object for specifying which permissions to get.
    * @returns All permissions are returned if no options are passed.
    */
   async permissionsGet(
@@ -446,8 +446,7 @@ export class RethinkID {
 
   /**
    * Deletes permissions for a user.
-   * @param options - An optional object for specifying a permission ID to delete.
-   * @returns All permissions are deleted if no permission ID option is passed.
+   * @param options An optional object for specifying a permission ID to delete. All permissions are deleted if no permission ID option is passed.
    */
   async permissionsDelete(options: { permissionId?: string } = {}) {
     return this._asyncEmit("permissions:delete", options) as Promise<{ message: string }>;
@@ -455,8 +454,7 @@ export class RethinkID {
 
   /**
    * Get data from a table.
-   * @param tableName
-   * @param options - An optional object for specifying a row ID and/or user ID.
+   * @param options An optional object for specifying a row ID and/or user ID.
    * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}): Promise<{ data: object }> {
@@ -472,7 +470,7 @@ export class RethinkID {
   /**
    * Subscribe to table changes.
    * @param tableName
-   * @param userId Pass a user ID to operate on a table owned by the corresponding user. Otherwise pass an empty string to operate on a table owned by the authenticated user.
+   * @param userId Pass a user ID to operate on a table owned by the corresponding user. Otherwise will operate on a table owned by the authenticated user.
    * @param listener A callback function to handle table changes.
    */
   async tableSubscribe(
@@ -494,7 +492,7 @@ export class RethinkID {
 
   /**
    * Inserts a row into a table
-   * @param options - An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
@@ -508,6 +506,9 @@ export class RethinkID {
 
   /**
    * Updates a row in a table
+   * @param tableName The name of the table to operate on.
+   * @param row Must contain a row ID.
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableUpdate(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
@@ -521,6 +522,9 @@ export class RethinkID {
 
   /**
    * Replaces a row in a table
+   * @param tableName The name of the table to operate on.
+   * @param row Must contain a row ID.
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableReplace(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
@@ -533,7 +537,9 @@ export class RethinkID {
   }
 
   /**
-   * Deletes a row from a table
+   * Deletes from a table
+   * @param tableName The name of the table to operate on.
+   * @param options An optional object for specifying a row ID and/or user ID. Specify a row ID to delete a specific row, otherwise all rows are deleted. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableDelete(tableName: string, options: { rowId?: string; userId?: string } = {}) {
     const payload = { tableName };
