@@ -494,9 +494,16 @@ export class RethinkID {
 
   /**
    * Inserts a row into a table
+   * @param options - An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  async tableInsert(tableName: string, row: object, userId?: string) {
-    return this._asyncEmit("table:insert", { tableName, row, userId }) as Promise<{ message: string }>;
+  async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
+    const payload = { tableName, row };
+
+    if (options) {
+      Object.assign(payload, options);
+    }
+
+    return this._asyncEmit("table:insert", payload) as Promise<{ message: string }>;
   }
 
   /**
