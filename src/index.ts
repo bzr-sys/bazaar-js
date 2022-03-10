@@ -509,15 +509,27 @@ export class RethinkID {
   /**
    * Updates a row in a table
    */
-  async tableUpdate(tableName: string, row: object, userId?: string) {
-    return this._asyncEmit("table:update", { tableName, row, userId }) as Promise<{ message: string }>;
+  async tableUpdate(tableName: string, row: object, options: { userId?: string } = {}) {
+    const payload = { tableName, row };
+
+    if (options) {
+      Object.assign(payload, options);
+    }
+
+    return this._asyncEmit("table:update", payload) as Promise<{ message: string }>;
   }
 
   /**
    * Replaces a row in a table
    */
-  async tableReplace(tableName: string, row: object, userId?: string) {
-    return this._asyncEmit("table:replace", { tableName, row, userId }) as Promise<{ message: string }>;
+  async tableReplace(tableName: string, row: object, options: { userId?: string } = {}) {
+    const payload = { tableName, row };
+
+    if (options) {
+      Object.assign(payload, options);
+    }
+
+    return this._asyncEmit("table:replace", payload) as Promise<{ message: string }>;
   }
 
   /**
