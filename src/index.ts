@@ -454,10 +454,19 @@ export class RethinkID {
   }
 
   /**
-   * Get all rows from a table, or a single row if rowId is provided
+   * Get data from a table.
+   * @param tableName
+   * @param options - An optional object for specifying a row ID and/or user ID.
+   * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  async tableRead(tableName: string, rowId?: string, userId?: string): Promise<{ data: object }> {
-    return this._asyncEmit("table:read", { tableName, rowId, userId }) as Promise<{ data: object }>;
+  async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}): Promise<{ data: object }> {
+    const payload = { tableName };
+
+    if (options) {
+      Object.assign(payload, options);
+    }
+
+    return this._asyncEmit("table:read", payload) as Promise<{ data: object }>;
   }
 
   /**
