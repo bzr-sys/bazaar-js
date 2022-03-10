@@ -493,6 +493,8 @@ export class RethinkID {
 
   /**
    * Inserts a row into a table
+   * @param tableName The name of the table to operate on.
+   * @param row The row to insert.
    * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
