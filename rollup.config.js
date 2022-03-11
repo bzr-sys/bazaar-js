@@ -7,7 +7,7 @@ import pkg from "./package.json";
  */
 const config = [
   {
-    input: "src/index.ts", // your entry point
+    input: "src/index.ts", // entry point
     output: [
       { file: pkg.main, format: "cjs" },
       { file: pkg.module, format: "es" },
