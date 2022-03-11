@@ -16,6 +16,8 @@ const config = [
       typescript({ tsconfig: "./tsconfig.json" }),
       babel({
         exclude: ["node_modules/**"],
+        babelHelpers: "bundled",
+        external: [/@babel\/runtime/],
       }),
     ],
   },
