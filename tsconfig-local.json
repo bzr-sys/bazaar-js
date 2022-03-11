@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "outDir": "/Users/paddy/Sites/rethink-chat-for-identity/src/rollup",
+    "declaration": true,
+    "declarationDir": ".",
+    "noEmit": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
