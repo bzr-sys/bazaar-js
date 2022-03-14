@@ -1,5 +1,4 @@
-# Include dist folder intentionally so it's available for the published GitHub Packages package.
-
+dist
 node_modules
 
 # OS Specific Files

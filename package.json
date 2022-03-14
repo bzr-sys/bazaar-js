@@ -1,6 +1,6 @@
 {
   "name": "@mostlytyped/rethinkid-js-sdk",
-  "version": "1.8.0",
+  "version": "1.16.0",
   "description": "Conveniently use RethinkID with your app in the browser.",
   "main": "dist/rethinkid-js-sdk.cjs.js",
   "module": "dist/rethinkid-js-sdk.esm.js",
@@ -19,9 +19,12 @@
   "author": "RethinkID",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.17.5",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/runtime": "^7.17.2",
+    "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-typescript": "^8.3.0",
-    "rollup": "^2.67.2",
-    "rollup-plugin-babel": "^4.4.0",
+    "rollup": "^2.70.0",
     "tslib": "^2.3.1",
     "typescript": "^4.5.5"
   },
