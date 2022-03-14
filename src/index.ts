@@ -79,7 +79,7 @@ let logInWindowPreviousUrl = null;
  * export const rid = new RethinkID(config);
  * ```
  */
-export class RethinkID {
+export default class RethinkID {
   constructor(options: Options) {
     signUpRedirectUri = options.signUpRedirectUri;
 
