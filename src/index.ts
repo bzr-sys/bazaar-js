@@ -451,7 +451,7 @@ export class RethinkID {
     options: {
       tableName?: string;
       userId?: string;
-      permission?: "read" | "insert" | "update" | "delete";
+      type?: "read" | "insert" | "update" | "delete";
     } = {},
   ) {
     return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
