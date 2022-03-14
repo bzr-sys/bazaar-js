@@ -5,13 +5,29 @@ import io from "socket.io-client";
 import { Options, IdTokenDecoded, Permission } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
+// Config
 const signUpBaseUri: string = "http://localhost:3000/sign-up";
 const tokenUri: string = "http://localhost:4444/oauth2/token";
 const authUri: string = "http://localhost:4444/oauth2/auth";
 const socketioUri: string = "http://localhost:4000";
 
-let signUpRedirectUri: string = "";
+// Private vars set in the constructor
+
+/**
+ * The URI to redirect to after a successful sign up
+ */
+let signUpRedirectUri = "";
+
+/**
+ * Local storage key names, namespaced in the constructor
+ */
+let tokenKeyName = "";
+let idTokenKeyName = "";
+let pkceStateKeyName = "";
+let pkceCodeVerifierKeyName = "";
+
 let oAuthClient = null;
+
 let socket = null;
 
 /**
@@ -29,22 +45,20 @@ let onLogInComplete: () => void = null;
  */
 let baseUrl = "";
 
+// End constructor vars
+
 /**
  * A reference to the window object of the log in pop-up window.
+ * Used in {@link RethinkID.openLogInWindow}
  */
 let logInWindowReference = null;
 
 /**
  * A reference to the previous URL of the sign up pop-up window.
  * Used to avoid creating duplicate windows and for focusing an existing window.
+ * Used in {@link RethinkID.openLogInWindow}
  */
 let logInWindowPreviousUrl = null;
-
-// Local storage key names, namespaced in the constructor
-let tokenKeyName: string = "";
-let idTokenKeyName: string = "";
-let pkceStateKeyName = "";
-let pkceCodeVerifierKeyName = "";
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
@@ -67,12 +81,12 @@ let pkceCodeVerifierKeyName = "";
  */
 export class RethinkID {
   constructor(options: Options) {
-    // The URI to redirect to after a successful sign up
     signUpRedirectUri = options.signUpRedirectUri;
 
-    // Namespace local storage key names
+    /**
+     * Namespace local storage key names
+     */
     const namespace = `rethinkid_${options.appId}`;
-
     tokenKeyName = `${namespace}_token`;
     idTokenKeyName = `${namespace}_id_token`;
     pkceStateKeyName = `${namespace}_pkce_state`;
@@ -88,13 +102,16 @@ export class RethinkID {
 
     this._socketConnect();
 
-    // Set the app's custom post log in callback
+    /**
+     * Set the app's custom "after log in" callback
+     */
     onLogInComplete = options.onLogInComplete;
 
-    // Get the base URL from the log in redirect URI already supplied,
-    // to save a developer from having to add another options property
-    const logInRedirectUri = new URL(options.logInRedirectUri);
-    baseUrl = logInRedirectUri.origin;
+    /**
+     * Get the base URL from the log in redirect URI already supplied,
+     * to save a developer from having to add another options property
+     */
+    baseUrl = new URL(options.logInRedirectUri).origin;
   }
 
   /**
@@ -178,20 +195,23 @@ export class RethinkID {
     const strWindowFeatures = "toolbar=no, menubar=no, width=600, height=700, top=100, left=100";
 
     if (logInWindowReference === null || logInWindowReference.closed) {
-      /* if the pointer to the window object in memory does not exist
-    or if such pointer exists but the window was closed */
+      /**
+       * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
+       * */
       logInWindowReference = window.open(url, name, strWindowFeatures);
     } else if (logInWindowPreviousUrl !== url) {
-      /* if the resource to load is different,
-    then we load it in the already opened secondary window and then
-    we bring such window back on top/in front of its parent window. */
+      /**
+       * if the resource to load is different, then we load it in the already opened secondary
+       * window and then we bring such window back on top/in front of its parent window.
+       */
       logInWindowReference = window.open(url, name, strWindowFeatures);
       logInWindowReference.focus();
     } else {
-      /* else the window reference must exist and the window
-    is not closed; therefore, we can bring it back on top of any other
-    window with the focus() method. There would be no need to re-create
-    the window or to reload the referenced resource. */
+      /**
+       * else the window reference must exist and the window is not closed; therefore,
+       * we can bring it back on top of any other window with the focus() method.
+       * There would be no need to re-create the window or to reload the referenced resource.
+       */
       logInWindowReference.focus();
     }
 
