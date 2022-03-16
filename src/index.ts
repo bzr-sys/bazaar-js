@@ -558,4 +558,16 @@ export default class RethinkID {
 
     return this._asyncEmit("table:delete", payload) as Promise<{ message: string }>;
   }
+
+  async table(tableName: string) {
+    return {
+      read: (options: { rowId?: string; userId?: string } = {}) => this.tableRead(tableName, options),
+      subscribe: (options: { userId?: string }, listener: (changes: { new_val: object; old_val: object }) => void) =>
+        this.tableSubscribe(tableName, options, listener),
+      insert: (row: object, options: { userId?: string } = {}) => this.tableInsert(tableName, row, options),
+      update: (row: object, options: { userId?: string } = {}) => this.tableUpdate(tableName, row, options),
+      replace: (options: { userId?: string } = {}) => this.tableReplace(tableName, options),
+      delete: (options: { rowId?: string; userId?: string } = {}) => this.tableDelete(tableName, options),
+    };
+  }
 }
