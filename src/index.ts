@@ -503,6 +503,7 @@ export default class RethinkID {
     socket.on(subscriptionHandle, listener);
 
     return async () => {
+      socket.off(subscriptionHandle, listener);
       return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<{ message: string }>;
     };
   }
