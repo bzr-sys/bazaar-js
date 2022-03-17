@@ -2,6 +2,7 @@ import ClientOAuth2 from "client-oauth2";
 import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
+import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
@@ -556,25 +557,6 @@ export default class RethinkID {
   }
 
   async table(tableName: string, tableOptions: { userId?: string }) {
-    return {
-      read: async (methodOptions: { rowId?: string } = {}) => {
-        return this.tableRead(tableName, { ...tableOptions, ...methodOptions });
-      },
-      subscribe: async (methodOptions: {} = {}, listener: SubscribeListener) => {
-        return this.tableSubscribe(tableName, { ...tableOptions, ...methodOptions }, listener);
-      },
-      insert: async (row: object, methodOptions: {} = {}) => {
-        return this.tableInsert(tableName, row, { ...tableOptions, ...methodOptions });
-      },
-      update: async (row: object, methodOptions: {} = {}) => {
-        return this.tableUpdate(tableName, row, { ...tableOptions, ...methodOptions });
-      },
-      replace: async (methodOptions: {} = {}) => {
-        return this.tableReplace(tableName, { ...tableOptions, ...methodOptions });
-      },
-      delete: async (methodOptions: { rowId?: string } = {}) => {
-        return this.tableDelete(tableName, { ...tableOptions, ...methodOptions });
-      },
-    };
+    return new Table(this, tableName, tableOptions);
   }
 }
