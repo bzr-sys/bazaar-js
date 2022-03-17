@@ -555,15 +555,26 @@ export default class RethinkID {
     return this._asyncEmit("table:delete", payload) as Promise<{ message: string }>;
   }
 
-  async table(tableName: string) {
+  async table(tableName: string, tableOptions: { userId?: string }) {
     return {
-      read: (options: { rowId?: string; userId?: string } = {}) => this.tableRead(tableName, options),
-      subscribe: (options: { userId?: string }, listener: SubscribeListener) =>
-        this.tableSubscribe(tableName, options, listener),
-      insert: (row: object, options: { userId?: string } = {}) => this.tableInsert(tableName, row, options),
-      update: (row: object, options: { userId?: string } = {}) => this.tableUpdate(tableName, row, options),
-      replace: (options: { userId?: string } = {}) => this.tableReplace(tableName, options),
-      delete: (options: { rowId?: string; userId?: string } = {}) => this.tableDelete(tableName, options),
+      read: async (methodOptions: { rowId?: string } = {}) => {
+        return this.tableRead(tableName, { ...tableOptions, ...methodOptions });
+      },
+      subscribe: async (methodOptions: {} = {}, listener: SubscribeListener) => {
+        return this.tableSubscribe(tableName, { ...tableOptions, ...methodOptions }, listener);
+      },
+      insert: async (row: object, methodOptions: {} = {}) => {
+        return this.tableInsert(tableName, row, { ...tableOptions, ...methodOptions });
+      },
+      update: async (row: object, methodOptions: {} = {}) => {
+        return this.tableUpdate(tableName, row, { ...tableOptions, ...methodOptions });
+      },
+      replace: async (methodOptions: {} = {}) => {
+        return this.tableReplace(tableName, { ...tableOptions, ...methodOptions });
+      },
+      delete: async (methodOptions: { rowId?: string } = {}) => {
+        return this.tableDelete(tableName, { ...tableOptions, ...methodOptions });
+      },
     };
   }
 }
