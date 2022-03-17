@@ -2,7 +2,7 @@ import ClientOAuth2 from "client-oauth2";
 import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
-import { Options, IdTokenDecoded, Permission } from "./types";
+import { Options, IdTokenDecoded, Permission, SubscribeListener } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
 // Config
@@ -489,11 +489,7 @@ export default class RethinkID {
    * @param tableName
    * @param options An object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise passing `{}` operates on a table owned by the authenticated user.
    */
-  async tableSubscribe(
-    tableName: string,
-    options: { userId?: string },
-    listener: (changes: { new_val: object; old_val: object }) => void,
-  ) {
+  async tableSubscribe(tableName: string, options: { userId?: string }, listener: SubscribeListener) {
     const payload = { tableName };
     Object.assign(payload, options);
 
@@ -562,7 +558,7 @@ export default class RethinkID {
   async table(tableName: string) {
     return {
       read: (options: { rowId?: string; userId?: string } = {}) => this.tableRead(tableName, options),
-      subscribe: (options: { userId?: string }, listener: (changes: { new_val: object; old_val: object }) => void) =>
+      subscribe: (options: { userId?: string }, listener: SubscribeListener) =>
         this.tableSubscribe(tableName, options, listener),
       insert: (row: object, options: { userId?: string } = {}) => this.tableInsert(tableName, row, options),
       update: (row: object, options: { userId?: string } = {}) => this.tableUpdate(tableName, row, options),
