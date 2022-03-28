@@ -31,3 +31,5 @@ export type IdTokenDecoded = {
   // - 'profile' scope
   name?: string;
 };
+
+export type SubscribeListener = (changes: { new_val: object; old_val: object }) => void;
