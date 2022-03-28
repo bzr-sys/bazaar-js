@@ -56,6 +56,6 @@ jobs:
           source-directory: dist/
           destination-github-username: "mostlytyped"
           destination-repository-name: "rethinkid-js-sdk-dist"
-          user-email: paddy@paddyohanlon.com
+          user-email: github-action@mostlytyped.com
           commit-message: See ORIGIN_COMMIT from $GITHUB_REF
           target-branch: main
