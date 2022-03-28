@@ -1,6 +1,6 @@
 {
   "name": "@mostlytyped/rethinkid-js-sdk",
-  "version": "1.16.4",
+  "version": "1.17",
   "description": "Conveniently use RethinkID with your app in the browser.",
   "main": "dist/rethinkid-js-sdk.cjs.js",
   "browser": "dist/rethinkid-js-sdk.iife.js",
