@@ -33,3 +33,29 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  publish-to-public-repo:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12
+      - run: npm ci
+      - run: npm run build
+      - name: Pushes to another repository
+        id: push_directory
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: dist/
+          destination-github-username: "mostlytyped"
+          destination-repository-name: "rethinkid-js-sdk-dist"
+          user-email: github-action@mostlytyped.com
+          commit-message: See ORIGIN_COMMIT from $GITHUB_REF
+          target-branch: main
