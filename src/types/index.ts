@@ -1,4 +1,5 @@
 export type Options = {
+  rethinkIdBaseUri: string;
   appId: string;
   signUpRedirectUri: string;
   logInRedirectUri: string;

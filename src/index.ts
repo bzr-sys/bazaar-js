@@ -6,13 +6,12 @@ import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
-// Config
-const signUpBaseUri: string = "http://localhost:3000/sign-up";
-const tokenUri: string = "http://localhost:4444/oauth2/token";
-const authUri: string = "http://localhost:4444/oauth2/auth";
-const socketioUri: string = "http://localhost:4000";
-
 // Private vars set in the constructor
+let rethinkIdBaseUri = "";
+let signUpBaseUri = "";
+let tokenUri = "";
+let authUri = "";
+let socketioUri = "";
 
 /**
  * The URI to redirect to after a successful sign up
@@ -83,6 +82,12 @@ let logInWindowPreviousUrl = null;
 export default class RethinkID {
   constructor(options: Options) {
     signUpRedirectUri = options.signUpRedirectUri;
+
+    rethinkIdBaseUri = options.rethinkIdBaseUri;
+    signUpBaseUri = `${rethinkIdBaseUri}/sign-up`;
+    tokenUri = `${rethinkIdBaseUri}/oauth2/token`;
+    authUri = `${rethinkIdBaseUri}/oauth2/auth`;
+    socketioUri = rethinkIdBaseUri;
 
     /**
      * Namespace local storage key names
