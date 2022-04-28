@@ -16,7 +16,7 @@ function sha256(input: string): Promise<ArrayBuffer> {
   const data = encoder.encode(input);
 
   if (!window.crypto.subtle) {
-    console.error(
+    throw new Error(
       "The RethinkID JS SDK works with https or localhost. Possibly you're trying to use it with http. Reason: window.crypto.subtle requires https in most browsers.",
     );
   }
