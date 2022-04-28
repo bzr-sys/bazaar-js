@@ -166,16 +166,24 @@ export default class RethinkID {
    * at the `logInRedirectUri` URI specified when creating a RethinkID instance.
    */
   private async _logInUri(): Promise<string> {
+    console.log("_logInUri");
+
     // Create and store a random "state" value
     const state = generateRandomString();
     localStorage.setItem(pkceStateKeyName, state);
+
+    console.log("- state", state);
 
     // Create and store a new PKCE code_verifier (the plaintext random secret)
     const codeVerifier = generateRandomString();
     localStorage.setItem(pkceCodeVerifierKeyName, codeVerifier);
 
+    console.log("- codeVerifier", codeVerifier);
+
     // Hash and base64-urlencode the secret to use as the challenge
     const codeChallenge = await pkceChallengeFromVerifier(codeVerifier);
+
+    console.log("- codeChallenge", codeChallenge);
 
     return oAuthClient.code.getUri({
       state: state,
