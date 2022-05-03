@@ -30,35 +30,7 @@ let oAuthClient = null;
 
 let socket = null;
 
-/**
- * A callback function an app can specify in the constructor to run when
- * a user has successfully logged in.
- *
- * e.g. Set state, redirect, etc.
- */
-let onLogInComplete: () => void = null;
-
-/**
- * An app's base URL
- * Used to check against the origin of a postMessage event sent from the log in pop-up window.
- * e.g. https://example-app.com
- */
-let baseUrl = "";
-
 // End constructor vars
-
-/**
- * A reference to the window object of the log in pop-up window.
- * Used in {@link RethinkID.openLogInWindow}
- */
-let logInWindowReference = null;
-
-/**
- * A reference to the previous URL of the sign up pop-up window.
- * Used to avoid creating duplicate windows and for focusing an existing window.
- * Used in {@link RethinkID.openLogInWindow}
- */
-let logInWindowPreviousUrl = null;
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
@@ -71,9 +43,6 @@ let logInWindowPreviousUrl = null;
  *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
  *   signUpRedirectUri: "https://example.com/sign-in",
  *   logInRedirectUri: "https://example.com/callback",
- *   onLogInComplete: () => {
- *     // do something when the user logs in
- *   },
  * };
  *
  * export const rid = new RethinkID(config);
@@ -107,17 +76,6 @@ export default class RethinkID {
     });
 
     this._socketConnect();
-
-    /**
-     * Set the app's custom "after log in" callback
-     */
-    onLogInComplete = options.onLogInComplete;
-
-    /**
-     * Get the base URL from the log in redirect URI already supplied,
-     * to save a developer from having to add another options property
-     */
-    baseUrl = new URL(options.logInRedirectUri).origin;
   }
 
   /**
@@ -160,12 +118,10 @@ export default class RethinkID {
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    *
-   * Used by the {@link openLogInWindow} method as the URI to open.
-   *
    * Use {@link completeLogIn} to exchange the authorization code for an access token and ID token
-   * at the `logInRedirectUri` URI specified when creating a RethinkID instance.
+   * at the {@link Options.logInRedirectUri} URI specified when creating a RethinkID instance.
    */
-  private async _logInUri(): Promise<string> {
+  async logInUri(): Promise<string> {
     // Create and store a random "state" value
     const state = generateRandomString();
     localStorage.setItem(pkceStateKeyName, state);
@@ -187,93 +143,26 @@ export default class RethinkID {
   }
 
   /**
-   * Opens a pop-up window to perform OAuth log in.
-   * e.g. attach to "Log in" button click.
-   */
-  async openLogInWindow(): Promise<void> {
-    const url = await this._logInUri();
-    const name = "rethinkid-log-in-window";
-
-    // remove any existing event listeners
-    window.removeEventListener("message", this._receiveLogInWindowMessage);
-
-    // window features
-    const strWindowFeatures = "toolbar=no, menubar=no, width=600, height=700, top=100, left=100";
-
-    if (logInWindowReference === null || logInWindowReference.closed) {
-      /**
-       * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
-       * */
-      logInWindowReference = window.open(url, name, strWindowFeatures);
-    } else if (logInWindowPreviousUrl !== url) {
-      /**
-       * if the resource to load is different, then we load it in the already opened secondary
-       * window and then we bring such window back on top/in front of its parent window.
-       */
-      logInWindowReference = window.open(url, name, strWindowFeatures);
-      logInWindowReference.focus();
-    } else {
-      /**
-       * else the window reference must exist and the window is not closed; therefore,
-       * we can bring it back on top of any other window with the focus() method.
-       * There would be no need to re-create the window or to reload the referenced resource.
-       */
-      logInWindowReference.focus();
-    }
-
-    // add the listener for receiving a message from the pop-up
-    window.addEventListener("message", (event) => this._receiveLogInWindowMessage(event), false);
-    // assign the previous URL
-    logInWindowPreviousUrl = url;
-  }
-
-  /**
-   * Completes the log in flow, sends a message to the opener window, and
-   * closes the pop-up window.
-   * Runs in the log in pop-up window at the login redirect URI, options.logInRedirectUri.
+   * Completes the log in flow.
+   * Gets the access and ID tokens, establishes an API connection.
+   *
+   * Must be called at the {@link Options.logInRedirectUri} URI.
    */
   async completeLogIn(): Promise<void> {
-    // get the URL parameters which will include the auth code
-    const params = window.location.search;
-    if (window.opener) {
-      try {
-        await this._getAndSetTokens(params);
-      } catch (e) {
-        console.log("complete login error", e.message);
-      }
-      // send them to the opening window
-      window.opener.postMessage(params);
-      // close the pop-up
-      window.close();
-    }
-  }
-
-  /**
-   * A "message" event listener for the log in pop-up window.
-   * Handles messages sent from the log in pop-up window to its opener window.
-   * @param event A postMessage event object
-   */
-  private _receiveLogInWindowMessage(event): void {
-    // Do we trust the sender of this message? (might be
-    // different from what we originally opened, for example).
-    if (event.origin !== baseUrl) {
-      return;
+    try {
+      await this._getAndSetTokens();
+    } catch (e) {
+      console.log("complete login error", e.message);
     }
 
-    // if we trust the sender and the source is our pop-up
-    if (event.source === logInWindowReference) {
-      // Make a socket connection now that we have an access token and are back in the main window
-      this._socketConnect();
-
-      // Run the app's post log in callback
-      onLogInComplete();
-    }
+    // Make a socket connection now that we have an access token
+    this._socketConnect();
   }
 
   /**
    * Takes an authorization code and exchanges it for an access token and ID token.
    * Used in {@link completeLogIn}.
-   * An authorization code is received as a URL param after a successfully calling {@link openLogInWindow}
+   * An authorization code is received as a URL param after a successfully calling {@link logInUri}
    * and approving the log in request.
    *
    * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
@@ -281,8 +170,9 @@ export default class RethinkID {
    *
    * Stores the access token and ID token in local storage.
    */
-  private async _getAndSetTokens(paramsStr: string): Promise<void> {
-    const params = new URLSearchParams(paramsStr);
+  private async _getAndSetTokens(): Promise<void> {
+    // get the URL parameters which will include the auth code
+    const params = new URLSearchParams(window.location.search);
 
     // Check if the auth server returned an error string
     const error = params.get("error");
