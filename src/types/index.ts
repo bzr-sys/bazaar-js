@@ -9,6 +9,11 @@ export type Options = {
    * The URI the auth server redirects to with an auth code, after successful approving a log in request.
    */
   logInRedirectUri: string;
+  /**
+   * Provide a callback to handled failed data API connections. E.g. unauthorized, or expired token.
+   * `this` is the RethinkID instance. So you could log out with `this.logOut()` for example.
+   */
+  dataAPIConnectErrorCallback?: (errorMessage: string) => void;
 };
 
 export type Permission = {

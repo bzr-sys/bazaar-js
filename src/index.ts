@@ -7,11 +7,14 @@ import { Options, IdTokenDecoded, Permission, SubscribeListener } from "./types"
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
 // Private vars set in the constructor
-let rethinkIdBaseUri = "";
 let signUpBaseUri = "";
 let tokenUri = "";
 let authUri = "";
 let socketioUri = "";
+let rethinkIdBaseUri = "https://id.rethinkdb.cloud";
+let dataAPIConnectErrorCallback = (errorMessage: string) => {
+  console.error("Connection error:", errorMessage);
+};
 
 /**
  * The URI to redirect to after a successful sign up
@@ -52,11 +55,18 @@ export default class RethinkID {
   constructor(options: Options) {
     signUpRedirectUri = options.signUpRedirectUri;
 
-    rethinkIdBaseUri = options.rethinkIdBaseUri || "https://id.rethinkdb.cloud";
     signUpBaseUri = `${rethinkIdBaseUri}/sign-up`;
     tokenUri = `${rethinkIdBaseUri}/oauth2/token`;
     authUri = `${rethinkIdBaseUri}/oauth2/auth`;
     socketioUri = rethinkIdBaseUri;
+
+    if (options.rethinkIdBaseUri) {
+      rethinkIdBaseUri = options.rethinkIdBaseUri;
+    }
+
+    if (options.dataAPIConnectErrorCallback) {
+      dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
+    }
 
     /**
      * Namespace local storage key names
@@ -96,11 +106,18 @@ export default class RethinkID {
       console.log("sdk: connected. socket.id:", socket.id);
     });
 
-    socket.on("connect_error", (err) => {
-      console.error("sdk connect err.message", err.message);
-      if (err.message.includes("Unauthorized")) {
-        console.log("Unauthorized!");
+    socket.on("connect_error", (error) => {
+      let errorMessage = error.message;
+
+      if (error.message.includes("Unauthorized")) {
+        errorMessage = "Unauthorized";
+      } else if (error.message.includes("TokenExpiredError")) {
+        errorMessage = "Token expired";
       }
+
+      // Set `this` context so the RethinkID instance can be accessed a in the callback
+      // e.g. calling `this.logOut()` might be useful.
+      dataAPIConnectErrorCallback.call(this, errorMessage);
     });
   }
 
