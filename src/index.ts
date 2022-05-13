@@ -122,15 +122,6 @@ export default class RethinkID {
   }
 
   /**
-   * Generate a URI to sign up a user, creating a RethinkID account
-   */
-  signUpUri(): string {
-    const params = new URLSearchParams();
-    params.append("redirect_uri", signUpRedirectUri);
-    return `${signUpBaseUri}?${params.toString()}`;
-  }
-
-  /**
    * Generate a URI to log in a user to RethinkID and authorize an app.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
