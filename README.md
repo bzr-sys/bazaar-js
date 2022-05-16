@@ -11,7 +11,6 @@ Using the bundled file:
 <script>
   const config = {
     appId: "2252e43d-a52f-4964-bf34-9c686726a515",
-    signUpRedirectUri: "http://localhost:8080",
     logInRedirectUri: "http://localhost:8080/callback",
   };
 
