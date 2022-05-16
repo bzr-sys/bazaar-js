@@ -1,10 +1,8 @@
 {
   "name": "@mostlytyped/rethinkid-js-sdk",
-  "version": "1.27.0",
+  "version": "1.28.0",
   "description": "Conveniently use RethinkID with your app in the browser.",
-  "main": "dist/rethinkid-js-sdk.cjs.js",
-  "browser": "dist/rethinkid-js-sdk.iife.js",
-  "module": "dist/rethinkid-js-sdk.esm.js",
+  "main": "dist/rethinkid-js-sdk.esm.js",
   "typings": "dist/types/index.d.ts",
   "github": "",
   "scripts": {
@@ -12,7 +10,6 @@
     "build": "npm run clean && rollup -c",
     "watch": "npm run clean && rollup -c -w",
     "clean": "rm -rf dist",
-    "copy": "npm run build && cp /Users/paddy/Sites/rethinkid-js-sdk/dist/rethinkid-js-sdk.iife.js /Users/paddy/Sites/rethink-chat-for-identity/public/rethinkid-js-sdk.iife.js",
     "tsc": "tsc"
   },
   "keywords": [

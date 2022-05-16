@@ -13,30 +13,8 @@ const config = [
     input: "src/index.ts", // entry point
     output: [
       {
-        name: "RethinkID",
-        file: pkg.browser,
-        format: "iife",
-      },
-    ],
-    plugins: [
-      nodePolyfills(),
-      resolve({ browser: true }),
-      commonjs(),
-      typescript({ tsconfig: "./tsconfig.json" }),
-      babel({
-        exclude: ["node_modules/**"],
-        babelHelpers: "bundled",
-        external: [/@babel\/runtime/],
-      }),
-    ],
-  },
-  {
-    input: "src/index.ts", // entry point
-    output: [
-      { file: pkg.main, format: "cjs", exports: "auto" },
-      {
-        file: pkg.module,
-        format: "es",
+        file: pkg.main,
+        format: "esm",
         exports: "auto",
       },
     ],
