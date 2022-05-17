@@ -294,7 +294,7 @@ export default class RethinkID {
         // Don't wait for connection indefinitely
         setTimeout(() => {
           reject(new Error("Timeout waiting for on connect"));
-        }, 1000);
+        }, 3000);
       }
     });
   };
