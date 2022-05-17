@@ -7,16 +7,14 @@ import { Options, IdTokenDecoded, Permission, SubscribeListener } from "./types"
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
 // Private vars set in the constructor
-let rethinkIdBaseUri = "";
 let signUpBaseUri = "";
 let tokenUri = "";
 let authUri = "";
 let socketioUri = "";
-
-/**
- * The URI to redirect to after a successful sign up
- */
-let signUpRedirectUri = "";
+let rethinkIdBaseUri = "https://id.rethinkdb.cloud";
+let dataAPIConnectErrorCallback = (errorMessage: string) => {
+  console.error("Connection error:", errorMessage);
+};
 
 /**
  * Local storage key names, namespaced in the constructor
@@ -37,11 +35,10 @@ let socket = null;
  *
  * @example
  * ```
- * import { RethinkID } from "@mostlytyped/rethinkid-js-sdk";
+ * import RethinkID from "@mostlytyped/rethinkid-js-sdk";
  *
  * const config = {
  *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
- *   signUpRedirectUri: "https://example.com/sign-in",
  *   logInRedirectUri: "https://example.com/callback",
  * };
  *
@@ -50,13 +47,18 @@ let socket = null;
  */
 export default class RethinkID {
   constructor(options: Options) {
-    signUpRedirectUri = options.signUpRedirectUri;
-
-    rethinkIdBaseUri = options.rethinkIdBaseUri || "https://id.rethinkdb.cloud";
     signUpBaseUri = `${rethinkIdBaseUri}/sign-up`;
     tokenUri = `${rethinkIdBaseUri}/oauth2/token`;
     authUri = `${rethinkIdBaseUri}/oauth2/auth`;
     socketioUri = rethinkIdBaseUri;
+
+    if (options.rethinkIdBaseUri) {
+      rethinkIdBaseUri = options.rethinkIdBaseUri;
+    }
+
+    if (options.dataAPIConnectErrorCallback) {
+      dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
+    }
 
     /**
      * Namespace local storage key names
@@ -96,21 +98,19 @@ export default class RethinkID {
       console.log("sdk: connected. socket.id:", socket.id);
     });
 
-    socket.on("connect_error", (err) => {
-      console.error("sdk connect err.message", err.message);
-      if (err.message.includes("Unauthorized")) {
-        console.log("Unauthorized!");
-      }
-    });
-  }
+    socket.on("connect_error", (error) => {
+      let errorMessage = error.message;
 
-  /**
-   * Generate a URI to sign up a user, creating a RethinkID account
-   */
-  signUpUri(): string {
-    const params = new URLSearchParams();
-    params.append("redirect_uri", signUpRedirectUri);
-    return `${signUpBaseUri}?${params.toString()}`;
+      if (error.message.includes("Unauthorized")) {
+        errorMessage = "Unauthorized";
+      } else if (error.message.includes("TokenExpiredError")) {
+        errorMessage = "Token expired";
+      }
+
+      // Set `this` context so the RethinkID instance can be accessed a in the callback
+      // e.g. calling `this.logOut()` might be useful.
+      dataAPIConnectErrorCallback.call(this, errorMessage);
+    });
   }
 
   /**

@@ -9,19 +9,18 @@ import pkg from "./package.json";
  * @type {import('rollup').RollupOptions}
  */
 const config = [
+  // An ES6 module export, the main export
   {
     input: "src/index.ts", // entry point
     output: [
       {
-        name: "RethinkID",
-        file: pkg.browser,
-        format: "iife",
+        file: pkg.main,
+        format: "esm",
+        exports: "auto",
       },
     ],
+    external: ["client-oauth2", "jwt-decode", "socket.io-client"],
     plugins: [
-      nodePolyfills(),
-      resolve({ browser: true }),
-      commonjs(),
       typescript({ tsconfig: "./tsconfig.json" }),
       babel({
         exclude: ["node_modules/**"],
@@ -30,18 +29,20 @@ const config = [
       }),
     ],
   },
+  // An IIFE export with bundled deps for conveniently using with a script tag
   {
     input: "src/index.ts", // entry point
     output: [
-      { file: pkg.main, format: "cjs", exports: "auto" },
       {
-        file: pkg.module,
-        format: "es",
-        exports: "auto",
+        name: "RethinkID",
+        file: "dist/rethinkid-js-sdk.iife.js",
+        format: "iife",
       },
     ],
-    external: ["client-oauth2", "jwt-decode", "socket.io-client"],
     plugins: [
+      nodePolyfills(),
+      resolve({ browser: true }),
+      commonjs(),
       typescript({ tsconfig: "./tsconfig.json" }),
       babel({
         exclude: ["node_modules/**"],
