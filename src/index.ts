@@ -149,11 +149,7 @@ export default class RethinkID {
    * Must be called at the {@link Options.logInRedirectUri} URI.
    */
   async completeLogIn(): Promise<void> {
-    try {
-      await this._getAndSetTokens();
-    } catch (e) {
-      console.log("complete login error", e.message);
-    }
+    await this._getAndSetTokens();
 
     // Make a socket connection now that we have an access token
     this._socketConnect();
