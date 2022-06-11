@@ -143,7 +143,7 @@ export default class RethinkID {
   }
 
   /**
-   * Completes the log in flow.
+   * Completes the login flow.
    * Gets the access and ID tokens, establishes an API connection.
    *
    * Must be called at the {@link Options.loginRedirectUri} URI.
@@ -159,7 +159,7 @@ export default class RethinkID {
    * Takes an authorization code and exchanges it for an access token and ID token.
    * Used in {@link completeLogin}.
    * An authorization code is received as a URL param after a successfully calling {@link loginUri}
-   * and approving the log in request.
+   * and approving the login request.
    *
    * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
    * param if something went wrong.
@@ -262,7 +262,7 @@ export default class RethinkID {
 
         return {
           id: idTokenDecoded.sub || "",
-          email: idTokenDecoded.email || "", // emailVerified is redundant because log in requires verification
+          email: idTokenDecoded.email || "", // emailVerified is redundant because login requires verification
           name: idTokenDecoded.name || "",
         };
       } catch (error) {

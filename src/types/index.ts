@@ -5,7 +5,7 @@ export type Options = {
   rethinkIdBaseUri?: string;
   appId: string;
   /**
-   * The URI the auth server redirects to with an auth code, after successful approving a log in request.
+   * The URI the auth server redirects to with an auth code, after successful approving a login request.
    */
   loginRedirectUri: string;
   /**
