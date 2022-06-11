@@ -39,7 +39,7 @@ let socket = null;
  *
  * const config = {
  *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
- *   logInRedirectUri: "https://example.com/callback",
+ *   loginRedirectUri: "https://example.com/callback",
  * };
  *
  * export const rid = new RethinkID(config);
@@ -71,7 +71,7 @@ export default class RethinkID {
 
     oAuthClient = new ClientOAuth2({
       clientId: options.appId,
-      redirectUri: options.logInRedirectUri,
+      redirectUri: options.loginRedirectUri,
       accessTokenUri: tokenUri,
       authorizationUri: authUri,
       scopes: ["openid", "profile", "email"],
@@ -118,10 +118,10 @@ export default class RethinkID {
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    *
-   * Use {@link completeLogIn} to exchange the authorization code for an access token and ID token
-   * at the {@link Options.logInRedirectUri} URI specified when creating a RethinkID instance.
+   * Use {@link completeLogin} to exchange the authorization code for an access token and ID token
+   * at the {@link Options.loginRedirectUri} URI specified when creating a RethinkID instance.
    */
-  async logInUri(): Promise<string> {
+  async loginUri(): Promise<string> {
     // Create and store a random "state" value
     const state = generateRandomString();
     localStorage.setItem(pkceStateKeyName, state);
@@ -146,9 +146,9 @@ export default class RethinkID {
    * Completes the log in flow.
    * Gets the access and ID tokens, establishes an API connection.
    *
-   * Must be called at the {@link Options.logInRedirectUri} URI.
+   * Must be called at the {@link Options.loginRedirectUri} URI.
    */
-  async completeLogIn(): Promise<void> {
+  async completeLogin(): Promise<void> {
     await this._getAndSetTokens();
 
     // Make a socket connection now that we have an access token
@@ -157,8 +157,8 @@ export default class RethinkID {
 
   /**
    * Takes an authorization code and exchanges it for an access token and ID token.
-   * Used in {@link completeLogIn}.
-   * An authorization code is received as a URL param after a successfully calling {@link logInUri}
+   * Used in {@link completeLogin}.
+   * An authorization code is received as a URL param after a successfully calling {@link loginUri}
    * and approving the log in request.
    *
    * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
