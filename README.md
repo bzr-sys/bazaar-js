@@ -11,7 +11,7 @@ Using the bundled file:
 <script>
   const config = {
     appId: "2252e43d-a52f-4964-bf34-9c686726a515",
-    loginRedirectUri: "http://localhost:8080/callback",
+    loginRedirectUri: "http://localhost:8080/complete-login",
   };
 
   const rid = new RethinkID(config);
