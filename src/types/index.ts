@@ -16,10 +16,10 @@ export type Options = {
 };
 
 export type Permission = {
-  id: string;
+  id?: string; // for permissionSet ID is present if updating, absent if inserting
   tableName: string;
   userId: string;
-  permission: string;
+  type: "read" | "insert" | "update" | "delete";
   // condition: object; // not yet implemented
 };
 
@@ -43,3 +43,5 @@ export type IdTokenDecoded = {
 };
 
 export type SubscribeListener = (changes: { new_val: object; old_val: object }) => void;
+
+export type MessageOrError = { message?: string; error?: string };
