@@ -16,6 +16,9 @@ export class Table {
     return this.rid.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions });
   }
 
+  /**
+   * @returns An unsubscribe function
+   */
   async subscribe(methodOptions: {} = {}, listener: SubscribeListener) {
     return this.rid.tableSubscribe(this.tableName, { ...this.tableOptions, ...methodOptions }, listener);
   }

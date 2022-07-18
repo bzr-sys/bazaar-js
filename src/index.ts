@@ -3,7 +3,7 @@ import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
 import { Table } from "./table";
-import { Options, IdTokenDecoded, Permission, SubscribeListener } from "./types";
+import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
 
 // Private vars set in the constructor
@@ -335,29 +335,30 @@ export default class RethinkID {
   };
 
   /**
-   * Creates a table
+   * Create a table. Private endpoint.
    */
   async tablesCreate(tableName: string) {
-    return this._asyncEmit("tables:create", { tableName }) as Promise<{ message: string }>;
+    return this._asyncEmit("tables:create", { tableName }) as Promise<MessageOrError>;
   }
 
   /**
-   * Drops, or deletes, a table
+   * Drop a table. Private endpoint.
    */
   async tablesDrop(tableName: string) {
-    return this._asyncEmit("tables:drop", { tableName }) as Promise<{ message: string }>;
+    return this._asyncEmit("tables:drop", { tableName }) as Promise<MessageOrError>;
   }
 
   /**
-   * Lists all table names
+   * List all table names. Private endpoint.
+   * @returns Where `data` is an array of table names
    */
   async tablesList() {
-    return this._asyncEmit("tables:list", null) as Promise<{ data: object }>;
+    return this._asyncEmit("tables:list", null) as Promise<{ data: string[]; error?: string }>;
   }
 
   /**
-   * Gets permissions for a user.
-   * @param options An optional object for specifying which permissions to get.
+   * Get permissions for a table. Private endpoint.
+   * @param options If no optional params are set, all permissions for the user are returned.
    * @returns All permissions are returned if no options are passed.
    */
   async permissionsGet(
@@ -367,84 +368,86 @@ export default class RethinkID {
       type?: "read" | "insert" | "update" | "delete";
     } = {},
   ) {
-    return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
+    return this._asyncEmit("permissions:get", options) as Promise<{ data?: Permission[]; error?: string }>;
   }
 
   /**
-   * Sets permissions for a user
+   * Set (insert/update) permissions for a table. Private endpoint.
    */
   async permissionsSet(permissions: Permission[]) {
-    return this._asyncEmit("permissions:set", permissions) as Promise<{ message: string }>;
+    return this._asyncEmit("permissions:set", permissions) as Promise<MessageOrError>;
   }
 
   /**
-   * Deletes permissions for a user.
+   * Delete permissions for a table. Private endpoint.
    * @param options An optional object for specifying a permission ID to delete. All permissions are deleted if no permission ID option is passed.
    */
   async permissionsDelete(options: { permissionId?: string } = {}) {
-    return this._asyncEmit("permissions:delete", options) as Promise<{ message: string }>;
+    return this._asyncEmit("permissions:delete", options) as Promise<MessageOrError>;
   }
 
   /**
-   * Get data from a table.
+   * Read all table rows, or a single row if row ID passed. Private by default, or public with read permission.
    * @param options An optional object for specifying a row ID and/or user ID.
    * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}): Promise<{ data: object }> {
+  async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}) {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:read", payload) as Promise<{ data: object }>;
+    return this._asyncEmit("table:read", payload) as Promise<{ data?: any[] | object; error?: string }>;
   }
 
   /**
-   * Subscribe to table changes.
+   * Subscribe to table changes. Private by default, or public with read permission.
    * @param tableName
    * @param options An object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise passing `{}` operates on a table owned by the authenticated user.
+   * @returns An unsubscribe function
    */
   async tableSubscribe(tableName: string, options: { userId?: string }, listener: SubscribeListener) {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // data: subscription handle
+    const response = (await this._asyncEmit("table:subscribe", payload)) as { data?: string; error?: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     socket.on(subscriptionHandle, listener);
 
     return async () => {
       socket.off(subscriptionHandle, listener);
-      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<{ message: string }>;
+      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<MessageOrError>;
     };
   }
 
   /**
-   * Inserts a row into a table
+   * Insert a table row, lazily creates the table if it does not exist. Private by default, or public with insert permission
    * @param tableName The name of the table to operate on.
    * @param row The row to insert.
    * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
+   * @returns Where `data` is the row ID
    */
   async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:insert", payload) as Promise<{ message: string }>;
+    return this._asyncEmit("table:insert", payload) as Promise<{ data?: string; error?: string }>;
   }
 
   /**
-   * Updates a row in a table
+   * Update all table rows, or a single row if row ID exists. Private by default, or public with update permission
    * @param tableName The name of the table to operate on.
-   * @param row Must contain a row ID.
+   * @param row Note! If row.id not present, updates all rows
    * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
   async tableUpdate(tableName: string, row: object, options: { userId?: string } = {}) {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:update", payload) as Promise<{ message: string }>;
+    return this._asyncEmit("table:update", payload) as Promise<MessageOrError>;
   }
 
   /**
-   * Replaces a row in a table
+   * Replace a table row. Private by default, or public with insert, update, delete permissions.
    * @param tableName The name of the table to operate on.
    * @param row Must contain a row ID.
    * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
@@ -453,11 +456,11 @@ export default class RethinkID {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:replace", payload) as Promise<{ message: string }>;
+    return this._asyncEmit("table:replace", payload) as Promise<MessageOrError>;
   }
 
   /**
-   * Deletes from a table
+   * Deletes all table rows, or a single row if row ID passed. Private by default, or public with delete permission.
    * @param tableName The name of the table to operate on.
    * @param options An optional object for specifying a row ID and/or user ID. Specify a row ID to delete a specific row, otherwise all rows are deleted. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
@@ -465,7 +468,7 @@ export default class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:delete", payload) as Promise<{ message: string }>;
+    return this._asyncEmit("table:delete", payload) as Promise<MessageOrError>;
   }
 
   table(tableName: string, tableOptions: { userId?: string }) {
