@@ -19,9 +19,11 @@ export type Permission = {
   id?: string; // for permissionSet ID is present if updating, absent if inserting
   tableName: string;
   userId: string;
-  type: "read" | "insert" | "update" | "delete";
+  type: PermissionType;
   // condition: object; // not yet implemented
 };
+
+export type PermissionType = "read" | "insert" | "update" | "delete";
 
 export type IdTokenDecoded = {
   at_hash: string;
