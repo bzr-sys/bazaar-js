@@ -4,7 +4,7 @@ import io from "socket.io-client";
 
 import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError } from "./types";
-import { generateRandomString, pkceChallengeFromVerifier } from "./utils";
+import { generateRandomString, pkceChallengeFromVerifier, popUpWindow } from "./utils";
 
 // Private vars set in the constructor
 let signUpBaseUri = "";
@@ -187,27 +187,24 @@ export default class RethinkID {
    */
   async openLoginPopUp(loginCompleteCallback?: () => void): Promise<void> {
     const url = await this.loginUri();
-    const name = "rethinkid-login-window";
+    const windowName = "rethinkid-login-window";
 
     onPopUpLoginComplete = loginCompleteCallback;
 
     // remove any existing event listeners
     window.removeEventListener("message", this._receiveLoginWindowMessage);
 
-    // window features
-    const strWindowFeatures = "toolbar=no, menubar=no, width=600, height=700, top=100, left=100";
-
     if (logInWindowReference === null || logInWindowReference.closed) {
       /**
        * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
        * */
-      logInWindowReference = window.open(url, name, strWindowFeatures);
+      logInWindowReference = popUpWindow(url, windowName, window, 500, 608);
     } else if (logInWindowPreviousUrl !== url) {
       /**
        * if the resource to load is different, then we load it in the already opened secondary
        * window and then we bring such window back on top/in front of its parent window.
        */
-      logInWindowReference = window.open(url, name, strWindowFeatures);
+      logInWindowReference = popUpWindow(url, windowName, window, 500, 608);
       logInWindowReference.focus();
     } else {
       /**

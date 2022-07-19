@@ -46,3 +46,18 @@ export async function pkceChallengeFromVerifier(codeVerifier: string): Promise<s
   const hashed = await sha256(codeVerifier);
   return base64UrlEncode(hashed);
 }
+
+/**
+ * Open and center pop-up on specific window to account for multiple monitors
+ * @param url url to open
+ * @param windowName name to identify pop-up window
+ * @param win the parent/opener window
+ * @param w width
+ * @param h height
+ * @returns `Window` if successful, `null` if blocked by a built-in browser pop-up blocker. Otherwise fails silently I think...
+ */
+export function popUpWindow(url: string, windowName: string, win: Window, w: number, h: number): Window | null {
+  const y = win.top.outerHeight / 2 + win.top.screenY - h / 2;
+  const x = win.top.outerWidth / 2 + win.top.screenX - w / 2;
+  return win.open(url, windowName, `popup=yes, width=${w}, height=${h}, top=${y}, left=${x}`);
+}
