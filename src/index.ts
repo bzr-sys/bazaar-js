@@ -199,6 +199,12 @@ export default class RethinkID {
        * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
        * */
       logInWindowReference = popUpWindow(url, windowName, window, 500, 608);
+
+      // TODO if `null` pop-up blocked probably!
+      console.log("A. just tried to window.open", logInWindowReference);
+      if (logInWindowReference === null) {
+        console.log("A. - null on trying to open window. Blocked by browser likely.");
+      }
     } else if (logInWindowPreviousUrl !== url) {
       /**
        * if the resource to load is different, then we load it in the already opened secondary
@@ -206,6 +212,12 @@ export default class RethinkID {
        */
       logInWindowReference = popUpWindow(url, windowName, window, 500, 608);
       logInWindowReference.focus();
+
+      // TODO if `null` pop-up blocked probably!
+      console.log("B. just tried to window.open", logInWindowReference);
+      if (logInWindowReference === null) {
+        console.log("B. - null on trying to open window. Blocked by browser likely.");
+      }
     } else {
       /**
        * else the window reference must exist and the window is not closed; therefore,
