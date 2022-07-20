@@ -221,16 +221,11 @@ export default class RethinkID {
       logInWindowReference.focus();
     }
 
+    // Pop-up possibly blocked, follow link href and do redirect login
+    if (!logInWindowReference) return;
+
     // If the pop-up opened successfully (was not blocked), prevent default link behavior (prevent redirect)
-    if (logInWindowReference) {
-      console.log("prevent link click, did pop-up");
-      alert("prevent link click, did pop-up");
-      event.preventDefault();
-    } else {
-      console.log("pop-up didn't work, do nothing, i.e. do redirect login");
-      alert("pop-up didn't work, do nothing, i.e. do redirect login");
-      return;
-    }
+    event.preventDefault();
 
     // add the listener for receiving a message from the pop-up
     window.addEventListener("message", (event) => this._receiveLoginWindowMessage(event), false);
@@ -254,7 +249,6 @@ export default class RethinkID {
 
     // if we trust the sender and the source is our pop-up
     if (event.source === logInWindowReference) {
-      alert("about to do _afterLogin in _receiveLoginWindowMessage");
       this._afterLogin();
     }
   }
@@ -274,11 +268,7 @@ export default class RethinkID {
     /**
      * If completing a redirect login
      */
-    if (!window.opener) {
-      console.log("completeLogin: complete redirect login");
-      alert("completeLogin: complete redirect login");
-      return this._afterLogin();
-    }
+    if (!window.opener) return this._afterLogin();
 
     /**
      * If completing a login pop-up
@@ -287,11 +277,11 @@ export default class RethinkID {
     // Specify `baseUrl` targetOrigin for security
     window.opener.postMessage("Pop-up login complete", baseUrl); // _afterLogin() called when message received
 
-    console.log("completeLogin: complete pop-up login. Try close");
-    alert("completeLogin: complete pop-up login. Try close");
-
     // close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
     window.close();
+
+    console.log("completeLogin: did window.close");
+    alert("completeLogin: did window.close");
   }
 
   /**
@@ -301,9 +291,6 @@ export default class RethinkID {
    * 2. Run the user-defined login complete callback
    */
   private _afterLogin(): void {
-    console.log("do _afterLogin");
-    alert("do _afterLogin");
-
     // Make a socket connection now that we have an access token (and are back in the main window, if pop-up login)
     this._socketConnect();
 
