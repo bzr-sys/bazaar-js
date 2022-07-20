@@ -263,8 +263,10 @@ export default class RethinkID {
    * Gets the access and ID tokens, establishes an API connection.
    *
    * Must be called at the {@link Options.loginRedirectUri} URI.
+   *
+   * @returns pop-up success string in case window.close() fails
    */
-  async completeLogin(): Promise<void> {
+  async completeLogin(): Promise<string> {
     // Only attempt to complete login if actually logging in.
     if (!this.isLoggingIn()) return;
 
@@ -273,7 +275,10 @@ export default class RethinkID {
     /**
      * If completing a redirect login
      */
-    if (!window.opener) return this._afterLogin();
+    if (!window.opener) {
+      this._afterLogin();
+      return "";
+    }
 
     /**
      * If completing a login pop-up
@@ -285,8 +290,10 @@ export default class RethinkID {
     // close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
     window.close();
 
-    console.log("completeLogin: did window.close");
-    alert("completeLogin: did window.close");
+    // Send success message in case window fails to close,
+    // e.g. On Brave iOS the tab  does not seem to close,
+    // so at least an app has some way of gracefully handling this case.
+    return "Login successful. This tab can now be closed";
   }
 
   /**
