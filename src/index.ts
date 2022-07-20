@@ -209,13 +209,13 @@ export default class RethinkID {
       /**
        * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
        * */
-      logInWindowReference = popUpWindow(url, windowName, window, 500, 608);
+      logInWindowReference = popUpWindow(url, windowName, window);
     } else if (logInWindowPreviousUrl !== url) {
       /**
        * if the resource to load is different, then we load it in the already opened secondary
        * window and then we bring such window back on top/in front of its parent window.
        */
-      logInWindowReference = popUpWindow(url, windowName, window, 500, 608);
+      logInWindowReference = popUpWindow(url, windowName, window);
       logInWindowReference.focus();
     } else {
       /**
