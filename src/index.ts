@@ -29,13 +29,13 @@ let oAuthClient = null;
 let socket = null;
 
 /**
- * A callback function an app can specify when opening a pop-up login window.
- * The callback will run when a user has successfully logged in.
+ * A callback function an app can specify when creating a loginURI.
+ * The callback will run when a user has successfully logged in, either
+ * via redirect or pop-up login
  *
  * e.g. Set state, redirect, etc.
- * TODO // Set `this` context so the RethinkID instance can be accessed a in the callback
  */
-let afterLoginCallback: () => void = () => console.log("afterLoginCallback default"); // was null
+let afterLoginCallback: () => void = null;
 
 /**
  * An app's base URL
@@ -149,9 +149,11 @@ export default class RethinkID {
   }
 
   /**
-   * Generate a URI to log in a user to RethinkID and authorize an app.
+   * Generate a URI to log in a user to RethinkID and authorize an app, via redirect login.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
+   *
+   * Enhance with {@link openLoginPopUp } as a click handler for pop-up login. Falls back to redirect login.
    *
    * Use {@link completeLogin} to exchange the authorization code for an access token and ID token
    * at the {@link Options.loginRedirectUri} URI specified when creating a RethinkID instance.
@@ -165,7 +167,6 @@ export default class RethinkID {
     }
 
     // Set callback to module-scoped variable so we can call when receiving a login window post message
-    console.log("about to set callback", callback);
     if (callback) {
       afterLoginCallback = callback;
     }
@@ -192,7 +193,11 @@ export default class RethinkID {
 
   /**
    * Opens a pop-up window to perform OAuth login.
-   * TODO enhance link with login URI, don't use alone
+   * Can add as a click handler to a login link, `<a>` tag to attempt pop-up login.
+   * Will fallback to just following the link if pop-up is blocked by in-built browser blocker
+   * If blocked by extension, still untested...
+   *
+   * Always use as enhancement to login link, not just a a button click handler because of pop-up unreliability.
    */
   async openLoginPopUp(url: string, event: Event): Promise<void> {
     const windowName = "rethinkid-login-window";
