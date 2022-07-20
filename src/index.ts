@@ -35,7 +35,7 @@ let socket = null;
  * e.g. Set state, redirect, etc.
  * TODO // Set `this` context so the RethinkID instance can be accessed a in the callback
  */
-let onLoginComplete: () => void = null;
+let afterLoginCallback: () => void = () => console.log("afterLoginCallback default"); // was null
 
 /**
  * An app's base URL
@@ -155,11 +155,19 @@ export default class RethinkID {
    *
    * Use {@link completeLogin} to exchange the authorization code for an access token and ID token
    * at the {@link Options.loginRedirectUri} URI specified when creating a RethinkID instance.
+   *
+   * @param callback After login callback, e.g. set logged in to true in local state. Redirect somewhere...
    */
-  async loginUri(): Promise<string> {
+  async loginUri(callback?: () => void): Promise<string> {
     // if logging in, do not overwrite existing PKCE local storage values.
     if (this.isLoggingIn()) {
       return "";
+    }
+
+    // Set callback to module-scoped variable so we can call when receiving a login window post message
+    console.log("about to set callback", callback);
+    if (callback) {
+      afterLoginCallback = callback;
     }
 
     // Create and store a random "state" value
@@ -252,17 +260,12 @@ export default class RethinkID {
    * Gets the access and ID tokens, establishes an API connection.
    *
    * Must be called at the {@link Options.loginRedirectUri} URI.
-   *
-   * @param completeLoginCallback e.g. set logged in to true in local state
    */
-  async completeLogin(completeLoginCallback?: () => void): Promise<void> {
+  async completeLogin(): Promise<void> {
     // Only attempt to complete login if actually logging in.
     if (!this.isLoggingIn()) return;
 
     await this._getAndSetTokens();
-
-    // Set callback to module-scoped variable so we can call when receiving a login window post message
-    onLoginComplete = completeLoginCallback;
 
     /**
      * If completing a redirect login
@@ -291,7 +294,7 @@ export default class RethinkID {
     this._socketConnect();
 
     // Run the user defined post login callback
-    onLoginComplete.call(this);
+    afterLoginCallback.call(this);
   }
 
   /**
