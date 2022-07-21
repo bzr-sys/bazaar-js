@@ -4,7 +4,7 @@ import io from "socket.io-client";
 
 import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError, LoginType } from "./types";
-import { generateRandomString, pkceChallengeFromVerifier, popUpWindow } from "./utils";
+import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
 
 // Private vars set in the constructor
 let signUpBaseUri = "";
@@ -48,14 +48,14 @@ let baseUrl = "";
 
 /**
  * A reference to the window object of the log in pop-up window.
- * Used in {@link RethinkID.openLogInPopUp}
+ * Used in {@link RethinkID.openLogInPopup}
  */
 let logInWindowReference = null;
 
 /**
  * A reference to the previous URL of the sign up pop-up window.
  * Used to avoid creating duplicate windows and for focusing an existing window.
- * Used in {@link RethinkID.openLogInPopUp}
+ * Used in {@link RethinkID.openLogInPopup}
  */
 let logInWindowPreviousUrl = null;
 
@@ -211,13 +211,13 @@ export default class RethinkID {
       /**
        * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
        * */
-      logInWindowReference = popUpWindow(url, windowName, window);
+      logInWindowReference = popupWindow(url, windowName, window);
     } else if (logInWindowPreviousUrl !== url) {
       /**
        * if the resource to load is different, then we load it in the already opened secondary
        * window and then we bring such window back on top/in front of its parent window.
        */
-      logInWindowReference = popUpWindow(url, windowName, window);
+      logInWindowReference = popupWindow(url, windowName, window);
       logInWindowReference.focus();
     } else {
       /**

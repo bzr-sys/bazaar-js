@@ -54,7 +54,7 @@ export async function pkceChallengeFromVerifier(codeVerifier: string): Promise<s
  * @param win the parent/opener window
  * @returns `Window` if successful, `null` if blocked by a built-in browser pop-up blocker. Otherwise fails silently I think...
  */
-export function popUpWindow(url: string, windowName: string, win: Window): Window | null {
+export function popupWindow(url: string, windowName: string, win: Window): Window | null {
   const w = 500;
   const h = 608;
   const y = win.top.outerHeight / 2 + win.top.screenY - h / 2;
