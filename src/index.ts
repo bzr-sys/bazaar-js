@@ -3,7 +3,7 @@ import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
 import { Table } from "./table";
-import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError } from "./types";
+import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError, LoginType } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier, popUpWindow } from "./utils";
 
 // Private vars set in the constructor
@@ -149,26 +149,17 @@ export default class RethinkID {
   }
 
   /**
-   * Generate a URI to log in a user to RethinkID and authorize an app, via redirect login.
+   * Generate a URI to log in a user to RethinkID and authorize an app.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    *
-   * Enhance with {@link openLoginPopUp } as a click handler for pop-up login. Falls back to redirect login.
-   *
    * Use {@link completeLogin} to exchange the authorization code for an access token and ID token
    * at the {@link Options.loginRedirectUri} URI specified when creating a RethinkID instance.
-   *
-   * @param callback After login callback, e.g. set logged in to true in local state. Redirect somewhere...
    */
-  async loginUri(callback?: () => void): Promise<string> {
+  async loginUri(): Promise<string> {
     // if logging in, do not overwrite existing PKCE local storage values.
     if (this.isLoggingIn()) {
       return "";
-    }
-
-    // Set callback to module-scoped variable so we can call when receiving a login window post message
-    if (callback) {
-      afterLoginCallback = callback;
     }
 
     // Create and store a random "state" value
@@ -193,14 +184,25 @@ export default class RethinkID {
 
   /**
    * Opens a pop-up window to perform OAuth login.
-   * Can add as a click handler to a login link, `<a>` tag to attempt pop-up login.
-   * Will fallback to just following the link if pop-up is blocked by in-built browser blocker
-   * If blocked by extension, still untested...
-   *
-   * Always use as enhancement to login link, not just a a button click handler because of pop-up unreliability.
+   * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
-  async openLoginPopUp(url: string, event: Event): Promise<void> {
+  async login(options?: { type: LoginType; callback: () => void }): Promise<void> {
+    const loginType = options.type || "popup_fallback";
+
+    const url = await this.loginUri();
+
+    // App explicitly requested redirect login, so redirect
+    if (loginType === "redirect") {
+      window.location.href = url;
+      return;
+    }
+
     const windowName = "rethinkid-login-window";
+
+    // Set callback to module-scoped variable so we can call when receiving a login window post message
+    if (options.callback) {
+      afterLoginCallback = options.callback;
+    }
 
     // remove any existing event listeners
     window.removeEventListener("message", this._receiveLoginWindowMessage);
@@ -226,11 +228,17 @@ export default class RethinkID {
       logInWindowReference.focus();
     }
 
-    // Pop-up possibly blocked, follow link href and do redirect login
-    if (!logInWindowReference) return;
-
-    // If the pop-up opened successfully (was not blocked), prevent default link behavior (prevent redirect)
-    event.preventDefault();
+    // Pop-up possibly blocked
+    if (!logInWindowReference) {
+      if (loginType === "popup") {
+        // app explicitly does not want to fallback to redirect
+        throw new Error("Pop-up failed to open");
+      } else {
+        // fallback to redirect login
+        window.location.href = url;
+        return;
+      }
+    }
 
     // add the listener for receiving a message from the pop-up
     window.addEventListener("message", (event) => this._receiveLoginWindowMessage(event), false);
@@ -264,7 +272,7 @@ export default class RethinkID {
    *
    * Must be called at the {@link Options.loginRedirectUri} URI.
    *
-   * @returns pop-up success string in case window.close() fails
+   * @returns pop-up success string in case `window.close()` fails
    */
   async completeLogin(): Promise<string> {
     // Only attempt to complete login if actually logging in.

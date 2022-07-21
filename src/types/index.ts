@@ -25,6 +25,8 @@ export type Permission = {
 
 export type PermissionType = "read" | "insert" | "update" | "delete";
 
+export type LoginType = "popup_fallback" | "popup" | "redirect";
+
 export type IdTokenDecoded = {
   at_hash: string;
   aud: string[];
