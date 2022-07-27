@@ -111,6 +111,7 @@ export default class RethinkID {
      */
     baseUrl = new URL(options.loginRedirectUri).origin;
 
+    // Make a connection to the Data API if logged in
     this._socketConnect();
   }
 
@@ -199,6 +200,7 @@ export default class RethinkID {
     const windowName = "rethinkid-login-window";
 
     // Set callback to module-scoped variable so we can call when receiving a login window post message
+    // Only applicable to the "popup" login type because on redirect
     if (options.callback) {
       afterLoginCallback = options.callback;
     }
