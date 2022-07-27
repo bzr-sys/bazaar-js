@@ -25,6 +25,13 @@ export type Permission = {
 
 export type PermissionType = "read" | "insert" | "update" | "delete";
 
+/**
+ * The possible login types. Default is "popup_fallback"
+ *
+ * "popup_fallback" - Do pop-up login, if the pop-up fails to open, fallback to redirect
+ * "popup" - Do pop-up login only. Do not fallback to redirect
+ * "redirect" - Do redirect login. Do not open a pop-up
+ */
 export type LoginType = "popup_fallback" | "popup" | "redirect";
 
 export type IdTokenDecoded = {
