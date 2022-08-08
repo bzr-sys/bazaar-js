@@ -13,6 +13,12 @@ export type Options = {
    * `this` is the RethinkID instance. So you could log out with `this.logOut()` for example.
    */
   dataAPIConnectErrorCallback?: (errorMessage: string) => void;
+  /**
+   * A callback function an app can specify to run when a user has successfully logged in.
+   *
+   * e.g. Set state, redirect, etc.
+   */
+  onLoginCallback?: () => void;
 };
 
 export type Permission = {

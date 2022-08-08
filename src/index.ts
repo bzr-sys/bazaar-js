@@ -29,14 +29,6 @@ let oAuthClient = null;
 let socket = null;
 
 /**
- * A callback function an app can specify when creating a loginURI.
- * The callback will run when a user has successfully logged in via pop-up login.
- *
- * e.g. Set state, redirect, etc.
- */
-let afterLoginCallback: () => void = null;
-
-/**
  * An app's base URL
  * Used to check against the origin of a postMessage event sent from the log in pop-up window.
  * e.g. https://example-app.com
@@ -88,6 +80,10 @@ export default class RethinkID {
       dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
     }
 
+    if (options.onLoginCallback) {
+      this.onLoginCallback = options.onLoginCallback;
+    }
+
     /**
      * Namespace local storage key names
      */
@@ -114,6 +110,13 @@ export default class RethinkID {
     // Make a connection to the Data API if logged in
     this._socketConnect();
   }
+
+  /**
+   * A callback function an app can specify to run when a user has successfully logged in.
+   *
+   * e.g. Set state, redirect, etc.
+   */
+  onLoginCallback = () => {};
 
   /**
    * Creates a SocketIO connection with an auth token
@@ -186,7 +189,7 @@ export default class RethinkID {
    * Opens a pop-up window to perform OAuth login.
    * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
-  async login(options?: { type?: LoginType; callback?: () => void }): Promise<void> {
+  async login(options?: { type?: LoginType }): Promise<void> {
     const loginType = options.type || "popup_fallback";
 
     const url = await this.loginUri();
@@ -198,12 +201,6 @@ export default class RethinkID {
     }
 
     const windowName = "rethinkid-login-window";
-
-    // Set callback to module-scoped variable so we can call when receiving a login window post message
-    // Only applicable to the "popup" login type because on redirect
-    if (options.callback) {
-      afterLoginCallback = options.callback;
-    }
 
     // remove any existing event listeners
     window.removeEventListener("message", this._receiveLoginWindowMessage);
@@ -248,6 +245,16 @@ export default class RethinkID {
   }
 
   /**
+   * Run actions that should happen when login has completed
+   */
+  private _onLogin(): void {
+    this._socketConnect();
+
+    // Run the user defined post login callback
+    this.onLoginCallback.call(this);
+  }
+
+  /**
    * A "message" event listener for the login pop-up window.
    * Handles messages sent from the login pop-up window to its opener window.
    * @param event A postMessage event object
@@ -263,11 +270,8 @@ export default class RethinkID {
 
     // if we trust the sender and the source is our pop-up
     if (event.source === loginWindowReference) {
-      // Make a socket connection now that we have an access token (and are back in the main window, if pop-up login)
-      this._socketConnect();
-
-      // Run the user defined post login callback
-      afterLoginCallback.call(this);
+      // Now we are back in the main window...
+      this._onLogin();
     }
   }
 
@@ -286,17 +290,15 @@ export default class RethinkID {
     await this._getAndSetTokens();
 
     /**
-     * If completing a redirect login
+     * If completing redirect login
      */
     if (!window.opener) {
-      this._socketConnect();
-      // Cannot call afterLoginCallback on redirect. It would need to be defined again in completeLogin.
-      // Instead, check completeLogin response
+      this._onLogin();
       return "redirect";
     }
 
     /**
-     * If completing a login pop-up
+     * If completing pop-up login
      */
     // Send message to parent/opener window so we know login is complete
     // Specify `baseUrl` targetOrigin for security
