@@ -7,7 +7,6 @@ import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError,
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
 
 // Private vars set in the constructor
-let signUpBaseUri = "";
 let tokenUri = "";
 let authUri = "";
 let socketioUri = "";
@@ -67,7 +66,6 @@ let loginWindowPreviousUrl = null;
  */
 export default class RethinkID {
   constructor(options: Options) {
-    signUpBaseUri = `${rethinkIdBaseUri}/sign-up`;
     tokenUri = `${rethinkIdBaseUri}/oauth2/token`;
     authUri = `${rethinkIdBaseUri}/oauth2/auth`;
     socketioUri = rethinkIdBaseUri;
