@@ -78,8 +78,8 @@ export default class RethinkID {
       dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
     }
 
-    if (options.onLoginCallback) {
-      this.onLoginCallback = options.onLoginCallback;
+    if (options.onLogin) {
+      this.onLogin = options.onLogin;
     }
 
     /**
@@ -114,7 +114,7 @@ export default class RethinkID {
    *
    * e.g. Set state, redirect, etc.
    */
-  onLoginCallback = () => {};
+  onLogin = () => {};
 
   /**
    * Creates a SocketIO connection with an auth token
@@ -243,13 +243,13 @@ export default class RethinkID {
   }
 
   /**
-   * Run actions that should happen when login has completed
+   * Run actions that should happen when login has completed successfully
    */
-  private _onLogin(): void {
+  private afterLoginSuccessful(): void {
     this._socketConnect();
 
     // Run the user defined post login callback
-    this.onLoginCallback.call(this);
+    this.onLogin.call(this);
   }
 
   /**
@@ -269,7 +269,7 @@ export default class RethinkID {
     // if we trust the sender and the source is our pop-up
     if (event.source === loginWindowReference) {
       // Now we are back in the main window...
-      this._onLogin();
+      this.afterLoginSuccessful();
     }
   }
 
@@ -291,7 +291,7 @@ export default class RethinkID {
      * If completing redirect login
      */
     if (!window.opener) {
-      this._onLogin();
+      this.afterLoginSuccessful();
       return "redirect";
     }
 

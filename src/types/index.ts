@@ -18,7 +18,7 @@ export type Options = {
    *
    * e.g. Set state, redirect, etc.
    */
-  onLoginCallback?: () => void;
+  onLogin?: () => void;
 };
 
 export type Permission = {
