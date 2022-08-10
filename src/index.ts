@@ -159,7 +159,7 @@ export default class RethinkID {
    */
   async loginUri(): Promise<string> {
     // if logging in, do not overwrite existing PKCE local storage values.
-    if (this.isLoggingIn()) {
+    if (this.hasLoginQueryParams()) {
       return "";
     }
 
@@ -283,7 +283,7 @@ export default class RethinkID {
    */
   async completeLogin(): Promise<string> {
     // Only attempt to complete login if actually logging in.
-    if (!this.isLoggingIn()) return;
+    if (!this.hasLoginQueryParams()) return;
 
     await this._getAndSetTokens();
 
@@ -401,7 +401,7 @@ export default class RethinkID {
    * Also used in {@link loginUri} to make sure PKCE local storage values are not overwritten,
    * which would otherwise accidentally invalidate a login request.
    */
-  isLoggingIn(): boolean {
+  hasLoginQueryParams(): boolean {
     const params = new URLSearchParams(location.search);
 
     // These query params will be present when redirected
