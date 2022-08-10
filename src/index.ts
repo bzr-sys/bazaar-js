@@ -107,6 +107,8 @@ export default class RethinkID {
 
     // Make a connection to the Data API if logged in
     this._socketConnect();
+
+    this._tryCompleteLogin();
   }
 
   /**
@@ -154,7 +156,7 @@ export default class RethinkID {
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    *
-   * Use {@link tryCompleteLogin} to exchange the authorization code for an access token and ID token
+   * Use {@link _tryCompleteLogin} to exchange the authorization code for an access token and ID token
    * at the {@link Options.loginRedirectUri} URI specified when creating a RethinkID instance.
    */
   async loginUri(): Promise<string> {
@@ -281,7 +283,7 @@ export default class RethinkID {
    *
    * @returns pop-up success string in case `window.close()` fails
    */
-  async tryCompleteLogin(): Promise<string> {
+  private async _tryCompleteLogin(): Promise<string> {
     // Only attempt to complete login if actually logging in.
     if (!this.hasLoginQueryParams()) return;
 
@@ -313,7 +315,6 @@ export default class RethinkID {
 
   /**
    * Takes an authorization code and exchanges it for an access token and ID token.
-   * Used in {@link tryCompleteLogin}.
    * An authorization code is received as a URL param after a successfully calling {@link loginUri}
    * and approving the login request.
    *
@@ -395,8 +396,6 @@ export default class RethinkID {
 
   /**
    * A utility function to check if a redirect to complete a login request has been performed.
-   * Useful if a login redirect URI is not used solely to complete login, e.g. an app's
-   * home page, to check when {@link tryCompleteLogin} needs to be called.
    *
    * Also used in {@link loginUri} to make sure PKCE local storage values are not overwritten,
    * which would otherwise accidentally invalidate a login request.
