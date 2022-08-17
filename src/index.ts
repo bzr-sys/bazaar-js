@@ -187,7 +187,7 @@ export default class RethinkID {
    * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
   async login(options?: { type?: LoginType }): Promise<void> {
-    const loginType = options.type || "popup_fallback";
+    const loginType = options?.type || "popup_fallback";
 
     const url = await this.loginUri();
 
