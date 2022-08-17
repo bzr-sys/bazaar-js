@@ -331,11 +331,17 @@ export default class RethinkID {
     // Exchange auth code for access and ID tokens
     let getTokenResponse;
     try {
-      getTokenResponse = await oAuthClient.code.getToken(window.location.href, {
-        body: {
-          code_verifier: localStorage.getItem(pkceCodeVerifierKeyName) || "",
+      getTokenResponse = await oAuthClient.code.getToken(
+        {
+          pathname: location.pathname,
+          query: loginQueryParams,
         },
-      });
+        {
+          body: {
+            code_verifier: localStorage.getItem(pkceCodeVerifierKeyName) || "",
+          },
+        },
+      );
     } catch (error) {
       throw new Error(`Error getting token: ${error.message}`);
     }
