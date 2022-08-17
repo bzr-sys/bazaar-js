@@ -29,7 +29,7 @@ let socket = null;
 
 /**
  * An app's base URL
- * Used to check against the origin of a postMessage event sent from the log in pop-up window.
+ * Used to check against the origin of a postMessage event sent from the login pop-up window.
  * e.g. https://example-app.com
  */
 let baseUrl = "";
@@ -37,13 +37,13 @@ let baseUrl = "";
 // End constructor vars
 
 /**
- * A reference to the window object of the log in pop-up window.
+ * A reference to the window object of the login pop-up window.
  * Used in {@link RethinkID.openLoginPopup}
  */
 let loginWindowReference = null;
 
 /**
- * A reference to the previous URL of the sign up pop-up window.
+ * A reference to the previous URL of the login pop-up window.
  * Used to avoid creating duplicate windows and for focusing an existing window.
  * Used in {@link RethinkID.openLoginPopup}
  */
@@ -108,7 +108,7 @@ export default class RethinkID {
     // Make a connection to the Data API if logged in
     this._socketConnect();
 
-    this._tryCompleteLogin();
+    this._onLoggingIn();
   }
 
   /**
@@ -155,9 +155,6 @@ export default class RethinkID {
    * Generate a URI to log in a user to RethinkID and authorize an app.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
-   *
-   * Use {@link _tryCompleteLogin} to exchange the authorization code for an access token and ID token
-   * at the {@link Options.loginRedirectUri} URI specified when creating a RethinkID instance.
    */
   async loginUri(): Promise<string> {
     // if logging in, do not overwrite existing PKCE local storage values.
@@ -245,16 +242,6 @@ export default class RethinkID {
   }
 
   /**
-   * Run actions that should happen when login has completed successfully
-   */
-  private afterLoginSuccessful(): void {
-    this._socketConnect();
-
-    // Run the user defined post login callback
-    this.onLogin.call(this);
-  }
-
-  /**
    * A "message" event listener for the login pop-up window.
    * Handles messages sent from the login pop-up window to its opener window.
    * @param event A postMessage event object
@@ -270,62 +257,59 @@ export default class RethinkID {
 
     // if we trust the sender and the source is our pop-up
     if (event.source === loginWindowReference) {
-      // Now we are back in the main window...
-      this.afterLoginSuccessful();
+      this._completeLogin(event.data);
     }
   }
 
   /**
-   * Completes the login flow.
-   * Gets the access and ID tokens, establishes an API connection.
+   * Continues the login flow after redirected back from the OAuth server, handling pop-up or redirect login types.
    *
    * Must be called at the {@link Options.loginRedirectUri} URI.
    *
-   * @returns pop-up success string in case `window.close()` fails
+   * @returns string to indicate login type
    */
-  private async _tryCompleteLogin(): Promise<string> {
+  private async _onLoggingIn(): Promise<string> {
     // Only attempt to complete login if actually logging in.
     if (!this.hasLoginQueryParams()) return;
-
-    await this._getAndSetTokens();
 
     /**
      * If completing redirect login
      */
     if (!window.opener) {
-      this.afterLoginSuccessful();
+      await this._completeLogin(location.search);
       return "redirect";
     }
 
     /**
      * If completing pop-up login
      */
-    // Send message to parent/opener window so we know login is complete
+    // Send message to parent/opener window with login query params
     // Specify `baseUrl` targetOrigin for security
-    window.opener.postMessage("Pop-up login complete", baseUrl); // _afterLogin() called when message received
+    window.opener.postMessage(location.search, baseUrl); // handled by _receiveLoginWindowMessage
 
-    // close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
+    // Close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
     window.close();
 
-    // Send success message in case window fails to close,
-    // e.g. On Brave iOS the tab  does not seem to close,
+    // Send message in case window fails to close,
+    // e.g. On Brave iOS the tab does not seem to close,
     // so at least an app has some way of gracefully handling this case.
     return "popup";
   }
 
   /**
+   * Complete a login request
+   *
    * Takes an authorization code and exchanges it for an access token and ID token.
-   * An authorization code is received as a URL param after a successfully calling {@link loginUri}
-   * and approving the login request.
    *
    * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
    * param if something went wrong.
    *
    * Stores the access token and ID token in local storage.
+   *
+   * Performs after login actions.
    */
-  private async _getAndSetTokens(): Promise<void> {
-    // get the URL parameters which will include the auth code
-    const params = new URLSearchParams(window.location.search);
+  private async _completeLogin(loginQueryParams: string): Promise<void> {
+    const params = new URLSearchParams(loginQueryParams);
 
     // Check if the auth server returned an error string
     const error = params.get("error");
@@ -339,11 +323,12 @@ export default class RethinkID {
       throw new Error(`No query param code`);
     }
 
-    // Verify state matches what we set at the beginning
+    // Verify state matches the value set when the login request was initiated to mitigate CSRF attacks
     if (localStorage.getItem(pkceStateKeyName) !== params.get("state")) {
       throw new Error(`State did not match. Possible CSRF attack`);
     }
 
+    // Exchange auth code for access and ID tokens
     let getTokenResponse;
     try {
       getTokenResponse = await oAuthClient.code.getToken(window.location.href, {
@@ -369,6 +354,15 @@ export default class RethinkID {
 
     localStorage.setItem(tokenKeyName, token);
     localStorage.setItem(idTokenKeyName, idToken);
+
+    /**
+     * Do after login actions
+     */
+    // Connect to the Data API
+    this._socketConnect();
+
+    // Run the user defined post login callback
+    this.onLogin.call(this);
   }
 
   /**
