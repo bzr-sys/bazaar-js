@@ -331,7 +331,6 @@ export default class RethinkID {
     // Exchange auth code for access and ID tokens
     let getTokenResponse;
     const uri = `${location.origin}${loginQueryParams}`;
-    console.log("get token uri", uri);
     try {
       getTokenResponse = await oAuthClient.code.getToken(uri, {
         body: {
