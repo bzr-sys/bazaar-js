@@ -108,7 +108,7 @@ export default class RethinkID {
     // Make a connection to the Data API if logged in
     this._socketConnect();
 
-    this._onLoggingIn();
+    this._checkLoginQueryParams();
   }
 
   /**
@@ -268,7 +268,7 @@ export default class RethinkID {
    *
    * @returns string to indicate login type
    */
-  private async _onLoggingIn(): Promise<string> {
+  private async _checkLoginQueryParams(): Promise<string> {
     // Only attempt to complete login if actually logging in.
     if (!this.hasLoginQueryParams()) return;
 
