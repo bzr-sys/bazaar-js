@@ -14,24 +14,10 @@ npm run build
 npm run watch
 ```
 
-Import to your project using an absolute URL.
+Install your locally built package.
 
-```js
-import RethinkID from "<your local path>/rethinkid-js-sdk";
-
-// e.g.
-import RethinkID from "~/Sites/rethinkid-js-sdk";
-// Where `rethinkid-js-sdk` is the folder this README is in
-```
-
-Import the package as usual.
-
-```js
-import RethinkID from "@mostlytyped/rethinkid-js-sdk";
-
-const rid = new RethinkID({
-  /* config... */
-});
+```bash
+npm install <../path/to/rethinkid-js-sdk>
 ```
 
 ## Using via NPM
