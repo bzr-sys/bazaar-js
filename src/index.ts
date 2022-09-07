@@ -6,11 +6,38 @@ import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError, LoginType } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
 
+/**
+ * The URL of the current RethinkID deployment
+ */
+const rethinkIdUri = "https://id.rethinkdb.cloud";
+
 // Private vars set in the constructor
-let tokenUri = "";
+
+/**
+ * URI for the Data API, RethinkID's realtime data storage service.
+ * Currently implemented with Socket.IO + RethinkDB
+ */
+let dataApiUri = rethinkIdUri;
+
+/**
+ * Public URI for the OAuth authorization server.
+ * Currently implemented with Hydra
+ */
+let oAuthServerUriPublic = rethinkIdUri;
+
+/**
+ * URI to start an OAuth login request
+ */
 let authUri = "";
-let dataApiUri = "";
-let rethinkIdBaseUri = "https://id.rethinkdb.cloud";
+
+/**
+ * URI to complete an OAuth login request, exchanging a auth code for an access token and ID token
+ */
+let tokenUri = "";
+
+/**
+ * A callback to do something when a Data API connection error occurs
+ */
 let dataAPIConnectErrorCallback = (errorMessage: string) => {
   console.error("Connection error:", errorMessage);
 };
@@ -54,28 +81,17 @@ let loginWindowPreviousUrl = null;
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
- *
- * @example
- * ```
- * import RethinkID from "@mostlytyped/rethinkid-js-sdk";
- *
- * const config = {
- *   appId: "3343f20f-dd9c-482c-9f6f-8f6e6074bb81",
- *   loginRedirectUri: "https://example.com/complete-login",
- * };
- *
- * export const rid = new RethinkID(config);
- * ```
  */
 export default class RethinkID {
   constructor(options: Options) {
-    tokenUri = `${rethinkIdBaseUri}/oauth2/token`;
-    authUri = `${rethinkIdBaseUri}/oauth2/auth`;
-    dataApiUri = rethinkIdBaseUri;
-
-    if (options.rethinkIdBaseUri) {
-      rethinkIdBaseUri = options.rethinkIdBaseUri;
+    if (options.env === "development") {
+      // Development ports are declared in `docker-compose.yml` of the `rethink-identity` repo
+      dataApiUri = "http://localhost:4000";
+      oAuthServerUriPublic = "http://localhost:4444";
     }
+
+    authUri = `${oAuthServerUriPublic}/oauth2/auth`;
+    tokenUri = `${oAuthServerUriPublic}/oauth2/token`;
 
     if (options.dataAPIConnectErrorCallback) {
       dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;

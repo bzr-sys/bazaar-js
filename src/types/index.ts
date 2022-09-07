@@ -2,7 +2,10 @@
  * RethinkID constructor options
  */
 export type Options = {
-  rethinkIdBaseUri?: string;
+  /**
+   * Set to "development" when running RethinkID locally with Docker compose. Defaults to production.
+   */
+  env?: "development";
   appId: string;
   /**
    * The URI the auth server redirects to with an auth code, after successful approving a login request.
