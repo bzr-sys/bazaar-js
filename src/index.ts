@@ -16,12 +16,16 @@ const rethinkIdUri = "https://id.rethinkdb.cloud";
 /**
  * URI for the Data API, RethinkID's realtime data storage service.
  * Currently implemented with Socket.IO + RethinkDB
+ *
+ * In local development requires a port value and is different than {@link oAuthServerUriPublic }
  */
 let dataApiUri = rethinkIdUri;
 
 /**
  * Public URI for the OAuth authorization server.
  * Currently implemented with Hydra
+ *
+ * In local development requires a port value and is different than {@link dataApiUri }
  */
 let oAuthServerUriPublic = rethinkIdUri;
 
@@ -84,10 +88,11 @@ let loginWindowPreviousUrl = null;
  */
 export default class RethinkID {
   constructor(options: Options) {
-    if (options.env === "development") {
-      // Development ports are declared in `docker-compose.yml` of the `rethink-identity` repo
-      dataApiUri = "http://localhost:4000";
-      oAuthServerUriPublic = "http://localhost:4444";
+    if (options.dataApiUri) {
+      dataApiUri = options.dataApiUri;
+    }
+    if (options.oAuthServerUriPublic) {
+      oAuthServerUriPublic = options.oAuthServerUriPublic;
     }
 
     authUri = `${oAuthServerUriPublic}/oauth2/auth`;
