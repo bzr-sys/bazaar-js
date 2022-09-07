@@ -9,7 +9,7 @@ import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./
 // Private vars set in the constructor
 let tokenUri = "";
 let authUri = "";
-let socketioUri = "";
+let dataApiUri = "";
 let rethinkIdBaseUri = "https://id.rethinkdb.cloud";
 let dataAPIConnectErrorCallback = (errorMessage: string) => {
   console.error("Connection error:", errorMessage);
@@ -25,7 +25,10 @@ let pkceCodeVerifierKeyName = "";
 
 let oAuthClient = null;
 
-let socket = null;
+/**
+ * A Socket.IO connection to the Data API
+ */
+let dataApi = null;
 
 /**
  * An app's base URL
@@ -68,7 +71,7 @@ export default class RethinkID {
   constructor(options: Options) {
     tokenUri = `${rethinkIdBaseUri}/oauth2/token`;
     authUri = `${rethinkIdBaseUri}/oauth2/auth`;
-    socketioUri = rethinkIdBaseUri;
+    dataApiUri = rethinkIdBaseUri;
 
     if (options.rethinkIdBaseUri) {
       rethinkIdBaseUri = options.rethinkIdBaseUri;
@@ -106,7 +109,7 @@ export default class RethinkID {
     baseUrl = new URL(options.loginRedirectUri).origin;
 
     // Make a connection to the Data API if logged in
-    this._socketConnect();
+    this._dataApiConnect();
 
     this._checkLoginQueryParams();
   }
@@ -119,24 +122,24 @@ export default class RethinkID {
   onLogin = () => {};
 
   /**
-   * Creates a SocketIO connection with an auth token
+   * Creates a Data API connection with an auth token
    */
-  private _socketConnect(): void {
+  private _dataApiConnect(): void {
     const token = localStorage.getItem(tokenKeyName);
 
     if (!token) {
       return;
     }
 
-    socket = io(socketioUri, {
+    dataApi = io(dataApiUri, {
       auth: { token },
     });
 
-    socket.on("connect", () => {
-      console.log("sdk: connected. socket.id:", socket.id);
+    dataApi.on("connect", () => {
+      console.log("sdk: connected. dataApi.id:", dataApi.id);
     });
 
-    socket.on("connect_error", (error) => {
+    dataApi.on("connect_error", (error) => {
       let errorMessage = error.message;
 
       if (error.message.includes("Unauthorized")) {
@@ -360,7 +363,7 @@ export default class RethinkID {
      * Do after login actions
      */
     // Connect to the Data API
-    this._socketConnect();
+    this._dataApiConnect();
 
     // Run the user defined post login callback
     this.onLogin.call(this);
@@ -443,14 +446,14 @@ export default class RethinkID {
   // Data API
 
   /**
-   * Makes sure a socket has connected.
+   * Make sure a connection to the Data API has been made.
    */
   private _waitForConnection: () => Promise<true> = () => {
     return new Promise((resolve, reject) => {
-      if (socket.connected) {
+      if (dataApi.connected) {
         resolve(true);
       } else {
-        socket.on("connect", () => {
+        dataApi.on("connect", () => {
           resolve(true);
         });
         // Don't wait for connection indefinitely
@@ -462,14 +465,14 @@ export default class RethinkID {
   };
 
   /**
-   * Promisifies a socket.io emit event
-   * @param event A socket.io event name, like `tables:create`
+   * Promisifies a dataApi.io emit event
+   * @param event A dataApi.io event name, like `tables:create`
    * @param payload
    */
   private _asyncEmit = async (event: string, payload: any) => {
     await this._waitForConnection();
     return new Promise((resolve, reject) => {
-      socket.emit(event, payload, (response: any) => {
+      dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
           reject(new Error(response.error));
         } else {
@@ -556,10 +559,10 @@ export default class RethinkID {
     const response = (await this._asyncEmit("table:subscribe", payload)) as { data?: string; error?: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    socket.on(subscriptionHandle, listener);
+    dataApi.on(subscriptionHandle, listener);
 
     return async () => {
-      socket.off(subscriptionHandle, listener);
+      dataApi.off(subscriptionHandle, listener);
       return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<MessageOrError>;
     };
   }
