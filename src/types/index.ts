@@ -18,7 +18,7 @@ export type Options = {
   /**
    * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4444
    */
-  oAuthServerUriPublic?: string;
+  oAuthUri?: string;
   dataAPIConnectErrorCallback?: (errorMessage: string) => void;
   /**
    * A callback function an app can specify to run when a user has successfully logged in.

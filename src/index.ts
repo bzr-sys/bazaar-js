@@ -7,7 +7,7 @@ import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError,
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
 
 /**
- * The URL of the current RethinkID deployment
+ * The URI of the current RethinkID deployment
  */
 const rethinkIdUri = "https://id.rethinkdb.cloud";
 
@@ -17,7 +17,7 @@ const rethinkIdUri = "https://id.rethinkdb.cloud";
  * URI for the Data API, RethinkID's realtime data storage service.
  * Currently implemented with Socket.IO + RethinkDB
  *
- * In local development requires a port value and is different than {@link oAuthServerUriPublic }
+ * In local development requires a port value and is different than {@link oAuthUri }
  */
 let dataApiUri = rethinkIdUri;
 
@@ -27,7 +27,7 @@ let dataApiUri = rethinkIdUri;
  *
  * In local development requires a port value and is different than {@link dataApiUri }
  */
-let oAuthServerUriPublic = rethinkIdUri;
+let oAuthUri = rethinkIdUri;
 
 /**
  * URI to start an OAuth login request
@@ -91,12 +91,12 @@ export default class RethinkID {
     if (options.dataApiUri) {
       dataApiUri = options.dataApiUri;
     }
-    if (options.oAuthServerUriPublic) {
-      oAuthServerUriPublic = options.oAuthServerUriPublic;
+    if (options.oAuthUri) {
+      oAuthUri = options.oAuthUri;
     }
 
-    authUri = `${oAuthServerUriPublic}/oauth2/auth`;
-    tokenUri = `${oAuthServerUriPublic}/oauth2/token`;
+    authUri = `${oAuthUri}/oauth2/auth`;
+    tokenUri = `${oAuthUri}/oauth2/token`;
 
     if (options.dataAPIConnectErrorCallback) {
       dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
