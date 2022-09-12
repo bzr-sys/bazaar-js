@@ -2,7 +2,6 @@
  * RethinkID constructor options
  */
 export type Options = {
-  rethinkIdBaseUri?: string;
   appId: string;
   /**
    * The URI the auth server redirects to with an auth code, after successful approving a login request.
@@ -12,6 +11,14 @@ export type Options = {
    * Provide a callback to handled failed data API connections. E.g. unauthorized, or expired token.
    * `this` is the RethinkID instance. So you could log out with `this.logOut()` for example.
    */
+  /**
+   * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4000
+   */
+  dataApiUri?: string;
+  /**
+   * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4444
+   */
+  oAuthUri?: string;
   dataAPIConnectErrorCallback?: (errorMessage: string) => void;
   /**
    * A callback function an app can specify to run when a user has successfully logged in.
