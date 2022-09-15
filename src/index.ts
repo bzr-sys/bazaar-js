@@ -573,7 +573,7 @@ export default class RethinkID {
    * @param options An object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise passing `{}` operates on a table owned by the authenticated user.
    * @returns An unsubscribe function
    */
-  async tableSubscribe(tableName: string, options: { userId?: string }, listener: SubscribeListener) {
+  async tableSubscribe(tableName: string, options: { rowId?: string; userId?: string }, listener: SubscribeListener) {
     const payload = { tableName };
     Object.assign(payload, options);
 
