@@ -33,10 +33,15 @@ export type Permission = {
   tableName: string;
   userId: string;
   type: PermissionType;
-  // condition: object; // not yet implemented
+  condition?: PermissionCondition;
 };
 
 export type PermissionType = "read" | "insert" | "update" | "delete";
+
+export type PermissionCondition = {
+  rowId?: string;
+  matchUserId?: string;
+};
 
 /**
  * The possible login types. Default is "popup_fallback"
