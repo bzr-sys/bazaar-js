@@ -68,6 +68,11 @@ let dataApi = null;
  */
 let baseUrl = "";
 
+/**
+ * The OAuth2 redirect URI. Required to get token.
+ */
+let loginRedirectUri = "";
+
 // End constructor vars
 
 /**
@@ -128,6 +133,8 @@ export default class RethinkID {
      * to save a developer from having to add another options property
      */
     baseUrl = new URL(options.loginRedirectUri).origin;
+
+    loginRedirectUri = options.loginRedirectUri;
 
     // Make a connection to the Data API if logged in
     this._dataApiConnect();
@@ -354,7 +361,7 @@ export default class RethinkID {
 
     // Exchange auth code for access and ID tokens
     let getTokenResponse;
-    const uri = `${location.origin}${loginQueryParams}`;
+    const uri = `${loginRedirectUri}${loginQueryParams}`;
     try {
       getTokenResponse = await oAuthClient.code.getToken(uri, {
         body: {
