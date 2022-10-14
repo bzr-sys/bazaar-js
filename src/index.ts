@@ -647,7 +647,7 @@ export default class RethinkID {
     return this._asyncEmit("table:delete", payload) as Promise<MessageOrError>;
   }
 
-  table(tableName: string, tableOptions: { userId?: string }) {
-    return new Table(this, tableName, tableOptions);
+  table(tableName: string, onCreate: () => Promise<void>, tableOptions?: { userId?: string }) {
+    return new Table(this, tableName, onCreate, tableOptions);
   }
 }
