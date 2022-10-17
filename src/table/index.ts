@@ -59,16 +59,19 @@ export class Table {
 
   //
   async withTable(tableQuery: Promise<any>) {
-    let result = await tableQuery;
-    // Table `af450dd0-88ad-4f15-ac24-7e4aef4ddec9_7cb5a8f3-c174-4f12-aa72-d188a89ccae9.hosted_games` does not exist in:
-    if (result.error && result.error.match(/Table `.*` does not exist in/)) {
-      const createRes = await this.rid.tablesCreate(this.tableName);
-      if (createRes.error) {
-        return createRes;
+    try {
+      await tableQuery;
+    } catch (error) {
+      // Table `af450dd0-88ad-4f15-ac24-7e4aef4ddec9_7cb5a8f3-c174-4f12-aa72-d188a89ccae9.hosted_games` does not exist in:
+      if (error.message && error.message.match(/Table `.*` does not exist in/)) {
+        try {
+          await this.rid.tablesCreate(this.tableName);
+        } catch (createError) {
+          return createError.message;
+        }
+        await this.onCreate();
+        return tableQuery;
       }
-      await this.onCreate();
-      return tableQuery;
     }
-    return result;
   }
 }
