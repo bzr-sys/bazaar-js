@@ -596,7 +596,7 @@ export default class RethinkID {
   }
 
   /**
-   * Insert a table row, lazily creates the table if it does not exist. Private by default, or public with insert permission
+   * Insert a table row. Private by default, or public with insert permission
    * @param tableName The name of the table to operate on.
    * @param row The row to insert.
    * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
