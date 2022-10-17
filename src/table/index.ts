@@ -15,7 +15,9 @@ export class Table {
   }
 
   async read(methodOptions: { rowId?: string } = {}) {
-    return this.withTable(this.rid.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions })) as Promise<{
+    return this.withTable(() =>
+      this.rid.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions }),
+    ) as Promise<{
       data?: object | any[];
     }>;
   }
@@ -24,13 +26,13 @@ export class Table {
    * @returns An unsubscribe function
    */
   async subscribe(methodOptions: {} = {}, listener: SubscribeListener) {
-    return this.withTable(
+    return this.withTable(() =>
       this.rid.tableSubscribe(this.tableName, { ...this.tableOptions, ...methodOptions }, listener),
     ) as Promise<() => Promise<Message>>;
   }
 
   async insert(row: object, methodOptions: {} = {}) {
-    return this.withTable(
+    return this.withTable(() =>
       this.rid.tableInsert(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<{
       data?: string;
@@ -38,27 +40,27 @@ export class Table {
   }
 
   async update(row: object, methodOptions: {} = {}) {
-    return this.withTable(
+    return this.withTable(() =>
       this.rid.tableUpdate(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<Message>;
   }
 
   async replace(methodOptions: {} = {}) {
-    return this.withTable(
+    return this.withTable(() =>
       this.rid.tableReplace(this.tableName, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<Message>;
   }
 
   async delete(methodOptions: { rowId?: string } = {}) {
-    return this.withTable(
+    return this.withTable(() =>
       this.rid.tableDelete(this.tableName, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<Message>;
   }
 
   //
-  async withTable(tableQuery: Promise<any>) {
+  async withTable(tableQuery: () => Promise<any>) {
     try {
-      await tableQuery;
+      return tableQuery();
     } catch (error) {
       // Table `af450dd0-88ad-4f15-ac24-7e4aef4ddec9_7cb5a8f3-c174-4f12-aa72-d188a89ccae9.hosted_games` does not exist in:
       if (error.message && error.message.match(/Table `.*` does not exist in/)) {
@@ -68,7 +70,7 @@ export class Table {
           return createError.message;
         }
         await this.onCreate();
-        return tableQuery;
+        return tableQuery();
       }
     }
   }
