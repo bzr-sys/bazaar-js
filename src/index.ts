@@ -3,7 +3,7 @@ import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
 import { Table } from "./table";
-import { Options, IdTokenDecoded, Permission, SubscribeListener, MessageOrError, LoginType } from "./types";
+import { Options, IdTokenDecoded, Permission, SubscribeListener, Message, LoginType } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
 
 /**
@@ -514,14 +514,14 @@ export default class RethinkID {
    * Create a table. Private endpoint.
    */
   async tablesCreate(tableName: string) {
-    return this._asyncEmit("tables:create", { tableName }) as Promise<MessageOrError>;
+    return this._asyncEmit("tables:create", { tableName }) as Promise<Message>;
   }
 
   /**
    * Drop a table. Private endpoint.
    */
   async tablesDrop(tableName: string) {
-    return this._asyncEmit("tables:drop", { tableName }) as Promise<MessageOrError>;
+    return this._asyncEmit("tables:drop", { tableName }) as Promise<Message>;
   }
 
   /**
@@ -529,7 +529,7 @@ export default class RethinkID {
    * @returns Where `data` is an array of table names
    */
   async tablesList() {
-    return this._asyncEmit("tables:list", null) as Promise<{ data: string[]; error?: string }>;
+    return this._asyncEmit("tables:list", null) as Promise<{ data: string[] }>;
   }
 
   /**
@@ -544,14 +544,14 @@ export default class RethinkID {
       type?: "read" | "insert" | "update" | "delete";
     } = {},
   ) {
-    return this._asyncEmit("permissions:get", options) as Promise<{ data?: Permission[]; error?: string }>;
+    return this._asyncEmit("permissions:get", options) as Promise<{ data?: Permission[] }>;
   }
 
   /**
    * Set (insert/update) permissions for a table. Private endpoint.
    */
   async permissionsSet(permissions: Permission[]) {
-    return this._asyncEmit("permissions:set", permissions) as Promise<MessageOrError>;
+    return this._asyncEmit("permissions:set", permissions) as Promise<Message>;
   }
 
   /**
@@ -559,7 +559,7 @@ export default class RethinkID {
    * @param options An optional object for specifying a permission ID to delete. All permissions are deleted if no permission ID option is passed.
    */
   async permissionsDelete(options: { permissionId?: string } = {}) {
-    return this._asyncEmit("permissions:delete", options) as Promise<MessageOrError>;
+    return this._asyncEmit("permissions:delete", options) as Promise<Message>;
   }
 
   /**
@@ -571,7 +571,7 @@ export default class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:read", payload) as Promise<{ data?: any[] | object; error?: string }>;
+    return this._asyncEmit("table:read", payload) as Promise<{ data?: any[] | object }>;
   }
 
   /**
@@ -584,14 +584,14 @@ export default class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("table:subscribe", payload)) as { data?: string; error?: string }; // where data is the subscription handle
+    const response = (await this._asyncEmit("table:subscribe", payload)) as { data?: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<MessageOrError>;
+      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
 
@@ -606,7 +606,7 @@ export default class RethinkID {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:insert", payload) as Promise<{ data?: string; error?: string }>;
+    return this._asyncEmit("table:insert", payload) as Promise<{ data?: string }>;
   }
 
   /**
@@ -619,7 +619,7 @@ export default class RethinkID {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:update", payload) as Promise<MessageOrError>;
+    return this._asyncEmit("table:update", payload) as Promise<Message>;
   }
 
   /**
@@ -632,7 +632,7 @@ export default class RethinkID {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:replace", payload) as Promise<MessageOrError>;
+    return this._asyncEmit("table:replace", payload) as Promise<Message>;
   }
 
   /**
@@ -644,7 +644,7 @@ export default class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:delete", payload) as Promise<MessageOrError>;
+    return this._asyncEmit("table:delete", payload) as Promise<Message>;
   }
 
   table(tableName: string, onCreate: () => Promise<void>, tableOptions?: { userId?: string }) {

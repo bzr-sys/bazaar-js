@@ -1,5 +1,5 @@
 import RethinkID from "..";
-import { SubscribeListener, MessageOrError } from "../types";
+import { SubscribeListener, Message } from "../types";
 
 export class Table {
   rid: RethinkID;
@@ -17,7 +17,6 @@ export class Table {
   async read(methodOptions: { rowId?: string } = {}) {
     return this.withTable(this.rid.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions })) as Promise<{
       data?: object | any[];
-      error?: string;
     }>;
   }
 
@@ -27,7 +26,7 @@ export class Table {
   async subscribe(methodOptions: {} = {}, listener: SubscribeListener) {
     return this.withTable(
       this.rid.tableSubscribe(this.tableName, { ...this.tableOptions, ...methodOptions }, listener),
-    ) as Promise<() => Promise<MessageOrError>>;
+    ) as Promise<() => Promise<Message>>;
   }
 
   async insert(row: object, methodOptions: {} = {}) {
@@ -35,26 +34,25 @@ export class Table {
       this.rid.tableInsert(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<{
       data?: string;
-      error?: string;
     }>;
   }
 
   async update(row: object, methodOptions: {} = {}) {
     return this.withTable(
       this.rid.tableUpdate(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
-    ) as Promise<MessageOrError>;
+    ) as Promise<Message>;
   }
 
   async replace(methodOptions: {} = {}) {
     return this.withTable(
       this.rid.tableReplace(this.tableName, { ...this.tableOptions, ...methodOptions }),
-    ) as Promise<MessageOrError>;
+    ) as Promise<Message>;
   }
 
   async delete(methodOptions: { rowId?: string } = {}) {
     return this.withTable(
       this.rid.tableDelete(this.tableName, { ...this.tableOptions, ...methodOptions }),
-    ) as Promise<MessageOrError>;
+    ) as Promise<Message>;
   }
 
   //
