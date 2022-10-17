@@ -64,11 +64,7 @@ export class Table {
     } catch (error) {
       // Table `af450dd0-88ad-4f15-ac24-7e4aef4ddec9_7cb5a8f3-c174-4f12-aa72-d188a89ccae9.hosted_games` does not exist in:
       if (error.message && error.message.match(/Table `.*` does not exist in/)) {
-        try {
-          await this.rid.tablesCreate(this.tableName);
-        } catch (createError) {
-          return createError.message;
-        }
+        await this.rid.tablesCreate(this.tableName);
         await this.onCreate();
         return tableQuery();
       }
