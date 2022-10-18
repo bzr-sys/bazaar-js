@@ -73,4 +73,4 @@ export type IdTokenDecoded = {
 
 export type SubscribeListener = (changes: { new_val: object; old_val: object }) => void;
 
-export type MessageOrError = { message?: string; error?: string };
+export type Message = { message: string };
