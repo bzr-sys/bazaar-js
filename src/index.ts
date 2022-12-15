@@ -549,7 +549,7 @@ export default class RethinkID {
       type?: "read" | "insert" | "update" | "delete";
     } = {},
   ) {
-    return this._asyncEmit("permissions:get", options) as Promise<{ data?: Permission[] }>;
+    return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
   }
 
   /**
@@ -575,8 +575,7 @@ export default class RethinkID {
   async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}) {
     const payload = { tableName };
     Object.assign(payload, options);
-
-    return this._asyncEmit("table:read", payload) as Promise<{ data?: any[] | object }>;
+    return this._asyncEmit("table:read", payload) as Promise<{ data: any[] | object }>;
   }
 
   /**
@@ -589,7 +588,7 @@ export default class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("table:subscribe", payload)) as { data?: string }; // where data is the subscription handle
+    const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     dataApi.on(subscriptionHandle, listener);
@@ -611,7 +610,7 @@ export default class RethinkID {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:insert", payload) as Promise<{ data?: string }>;
+    return this._asyncEmit("table:insert", payload) as Promise<{ data: string }>;
   }
 
   /**

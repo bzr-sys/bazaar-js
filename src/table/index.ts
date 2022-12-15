@@ -19,7 +19,7 @@ export class Table {
     return this.withTable(() =>
       this.rid.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<{
-      data?: object | any[];
+      data: object | any[];
     }>;
   }
 
@@ -36,7 +36,7 @@ export class Table {
     return this.withTable(() =>
       this.rid.tableInsert(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<{
-      data?: string;
+      data: string;
     }>;
   }
 
