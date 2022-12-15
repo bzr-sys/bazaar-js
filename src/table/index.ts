@@ -1,5 +1,6 @@
 import RethinkID from "..";
 import { SubscribeListener, Message } from "../types";
+import { ErrorTypes, RethinkIDError } from "../utils";
 
 export class Table {
   rid: RethinkID;
@@ -62,12 +63,12 @@ export class Table {
     try {
       return await tableQuery();
     } catch (error) {
-      // Table `af450dd0-88ad-4f15-ac24-7e4aef4ddec9_7cb5a8f3-c174-4f12-aa72-d188a89ccae9.hosted_games` does not exist in:
-      if (error.message && error.message.match(/Table `.*` does not exist in/)) {
+      if (error instanceof RethinkIDError && error.type == ErrorTypes.TableDoesNotExist) {
         await this.rid.tablesCreate(this.tableName);
         await this.onCreate();
         return tableQuery();
       }
+      throw error;
     }
   }
 }

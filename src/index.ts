@@ -4,7 +4,12 @@ import io from "socket.io-client";
 
 import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener, Message, LoginType } from "./types";
-import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
+import { generateRandomString, pkceChallengeFromVerifier, popupWindow, RethinkIDError } from "./utils";
+
+/**
+ * Types of errors that can return from the API
+ */
+export { ErrorTypes, RethinkIDError } from "./utils";
 
 /**
  * The URI of the current RethinkID deployment
@@ -502,7 +507,7 @@ export default class RethinkID {
     return new Promise((resolve, reject) => {
       dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
-          reject(new Error(response.error));
+          reject(new RethinkIDError(response.error.type, response.error.message));
         } else {
           resolve(response);
         }
