@@ -572,7 +572,16 @@ export default class RethinkID {
    * @param options An optional object for specifying a row ID and/or user ID.
    * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}) {
+  async tableRead(
+    tableName: string,
+    options: {
+      rowId?: string;
+      startOffset?: number;
+      endOffset?: number;
+      orderBy?: { [field: string]: "asc" | "desc" };
+      userId?: string;
+    } = {},
+  ) {
     const payload = { tableName };
     Object.assign(payload, options);
     return this._asyncEmit("table:read", payload) as Promise<{ data: any[] | object }>;

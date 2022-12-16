@@ -15,7 +15,14 @@ export class Table {
     this.onCreate = onCreate;
   }
 
-  async read(methodOptions: { rowId?: string } = {}) {
+  async read(
+    methodOptions: {
+      rowId?: string;
+      startOffset?: number;
+      endOffset?: number;
+      orderBy?: { [field: string]: "asc" | "desc" };
+    } = {},
+  ) {
     return this.withTable(() =>
       this.rid.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<{
