@@ -1,4 +1,31 @@
 /**
+ * Enum of all the error types
+ */
+export const ErrorTypes = {
+  Unspecified: 1,
+  NoPermission: 2,
+  ReservedTableName: 3,
+  TableDoesNotExist: 4,
+  DatabaseDoesNotExist: 5,
+};
+
+export class RethinkIDError extends Error {
+  type: number;
+
+  constructor(type: number, ...params) {
+    super(...params);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, RethinkIDError);
+    }
+
+    this.name = "RethinkIDError";
+    this.type = type;
+  }
+}
+
+/**
  * Generates a secure random string using the browser crypto functions
  */
 export function generateRandomString(): string {

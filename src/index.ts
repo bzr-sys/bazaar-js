@@ -4,7 +4,12 @@ import io from "socket.io-client";
 
 import { Table } from "./table";
 import { Options, IdTokenDecoded, Permission, SubscribeListener, Message, LoginType } from "./types";
-import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
+import { generateRandomString, pkceChallengeFromVerifier, popupWindow, RethinkIDError } from "./utils";
+
+/**
+ * Types of errors that can return from the API
+ */
+export { ErrorTypes, RethinkIDError } from "./utils";
 
 /**
  * The URI of the current RethinkID deployment
@@ -502,7 +507,7 @@ export default class RethinkID {
     return new Promise((resolve, reject) => {
       dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
-          reject(new Error(response.error));
+          reject(new RethinkIDError(response.error.type, response.error.message));
         } else {
           resolve(response);
         }
@@ -544,7 +549,7 @@ export default class RethinkID {
       type?: "read" | "insert" | "update" | "delete";
     } = {},
   ) {
-    return this._asyncEmit("permissions:get", options) as Promise<{ data?: Permission[] }>;
+    return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
   }
 
   /**
@@ -567,11 +572,19 @@ export default class RethinkID {
    * @param options An optional object for specifying a row ID and/or user ID.
    * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  async tableRead(tableName: string, options: { rowId?: string; userId?: string } = {}) {
+  async tableRead(
+    tableName: string,
+    options: {
+      rowId?: string;
+      startOffset?: number;
+      endOffset?: number;
+      orderBy?: { [field: string]: "asc" | "desc" };
+      userId?: string;
+    } = {},
+  ) {
     const payload = { tableName };
     Object.assign(payload, options);
-
-    return this._asyncEmit("table:read", payload) as Promise<{ data?: any[] | object }>;
+    return this._asyncEmit("table:read", payload) as Promise<{ data: any[] | object }>;
   }
 
   /**
@@ -584,7 +597,7 @@ export default class RethinkID {
     const payload = { tableName };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("table:subscribe", payload)) as { data?: string }; // where data is the subscription handle
+    const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     dataApi.on(subscriptionHandle, listener);
@@ -606,7 +619,7 @@ export default class RethinkID {
     const payload = { tableName, row };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:insert", payload) as Promise<{ data?: string }>;
+    return this._asyncEmit("table:insert", payload) as Promise<{ data: string }>;
   }
 
   /**
