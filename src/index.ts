@@ -3,7 +3,7 @@ import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 
 import { Table } from "./table";
-import { Options, IdTokenDecoded, Permission, SubscribeListener, Message, LoginType } from "./types";
+import { Options, IdTokenDecoded, Permission, SubscribeListener, Message, LoginType, Filter } from "./types";
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow, RethinkIDError } from "./utils";
 
 /**
@@ -632,16 +632,7 @@ export default class RethinkID {
       startOffset?: number;
       endOffset?: number;
       orderBy?: { [field: string]: "asc" | "desc" };
-      filter?: {
-        [field: string]: {
-          $eq?: string | number;
-          $ne?: string | number;
-          $gt?: string | number;
-          $ge?: string | number;
-          $lt?: string | number;
-          $le?: string | number;
-        };
-      }[];
+      filter?: Filter[];
       userId?: string;
     } = {},
   ) {
@@ -652,11 +643,18 @@ export default class RethinkID {
 
   /**
    * Subscribe to table changes. Private by default, or public with read permission.
-   * @param tableName
-   * @param options An object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise passing `{}` operates on a table owned by the authenticated user.
+   * @param {string} tableName The name of the table to subscribe to
+   * @param {Object} [options={}] An optional object for specifying query options.
+   * @param {string} [options.rowId] - The rowId
+   * @param {Filter} [options.filter] - An optional Filter object
+   * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async tableSubscribe(tableName: string, options: { rowId?: string; userId?: string }, listener: SubscribeListener) {
+  async tableSubscribe(
+    tableName: string,
+    options: { rowId?: string; filter?: Filter[]; userId?: string },
+    listener: SubscribeListener,
+  ) {
     const payload = { tableName };
     Object.assign(payload, options);
 

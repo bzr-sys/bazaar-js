@@ -74,3 +74,14 @@ export type IdTokenDecoded = {
 export type SubscribeListener = (changes: { new_val: object; old_val: object }) => void;
 
 export type Message = { message: string };
+
+export type Filter = {
+  [field: string]: {
+    $eq?: string | number;
+    $ne?: string | number;
+    $gt?: string | number;
+    $ge?: string | number;
+    $lt?: string | number;
+    $le?: string | number;
+  };
+};
