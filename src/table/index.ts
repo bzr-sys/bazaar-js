@@ -21,6 +21,16 @@ export class Table {
       startOffset?: number;
       endOffset?: number;
       orderBy?: { [field: string]: "asc" | "desc" };
+      filter?: {
+        [field: string]: {
+          $eq?: string | number;
+          $ne?: string | number;
+          $gt?: string | number;
+          $ge?: string | number;
+          $lt?: string | number;
+          $le?: string | number;
+        };
+      }[];
     } = {},
   ) {
     return this.withTable(() =>
