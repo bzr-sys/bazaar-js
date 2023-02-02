@@ -1,7 +1,8 @@
 import io from "socket.io-client";
 
 import {
-  Options,
+  CommonOptions,
+  ApiOptions,
   Permission,
   SubscribeListener,
   Message,
@@ -14,57 +15,47 @@ import {
   User,
 } from "../types";
 import { RethinkIDError } from "../utils";
-
-/**
- * The URI of the current RethinkID deployment
- */
-const rethinkIdUri = "https://id.rethinkdb.cloud";
-
-// Private vars set in the constructor
-
-/**
- * URI for the Data API, RethinkID's realtime data storage service.
- * Currently implemented with Socket.IO + RethinkDB
- *
- * In local development requires a port value and is different than {@link oAuthUri }
- */
-let dataApiUri = rethinkIdUri;
-
-/**
- * A callback to do something when a Data API connection error occurs
- */
-let dataAPIConnectErrorCallback = (errorMessage: string) => {
-  console.error("Connection error:", errorMessage);
-};
-
-/**
- * Local storage key names, namespaced in the constructor
- */
-let tokenKeyName = "";
-
-/**
- * A Socket.IO connection to the Data API
- */
-let dataApi = null;
+import { rethinkIdUri, namespacePrefix } from "../constants";
 
 /**
  * The class that encapsulates the low level data API
  */
 export default class API {
-  constructor(options: Options) {
+  /**
+   * URI for the Data API, RethinkID's realtime data storage service.
+   * Currently implemented with Socket.IO + RethinkDB
+   *
+   * In local development requires a port value and is different than {@link oAuthUri }
+   */
+  private dataApiUri = rethinkIdUri;
+
+  /**
+   * Local storage key names, namespaced in the constructor
+   */
+  private tokenKeyName: string;
+
+  /**
+   * A Socket.IO connection to the Data API
+   */
+  private dataApi;
+
+  /**
+   * A callback to do something when a Data API connection error occurs
+   */
+  private onConnectError: (message: string) => void;
+
+  constructor(options: CommonOptions & ApiOptions, onConnectError: (message: string) => void) {
     if (options.dataApiUri) {
-      dataApiUri = options.dataApiUri;
+      this.dataApiUri = options.dataApiUri;
     }
 
-    if (options.dataAPIConnectErrorCallback) {
-      dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
-    }
+    this.onConnectError = onConnectError;
 
     /**
      * Namespace local storage key names
      */
-    const namespace = `rethinkid_${options.appId}`;
-    tokenKeyName = `${namespace}_token`;
+    const namespace = namespacePrefix + options.appId;
+    this.tokenKeyName = `${namespace}_token`;
 
     // Make a connection to the Data API if logged in
     this._connect();
@@ -74,21 +65,21 @@ export default class API {
    * Creates a Data API connection with an auth token
    */
   _connect(): void {
-    const token = localStorage.getItem(tokenKeyName);
+    const token = localStorage.getItem(this.tokenKeyName);
 
     if (!token) {
       return;
     }
 
-    dataApi = io(dataApiUri, {
+    this.dataApi = io(this.dataApiUri, {
       auth: { token },
     });
 
-    dataApi.on("connect", () => {
-      console.log("sdk: connected. dataApi.id:", dataApi.id);
+    this.dataApi.on("connect", () => {
+      console.log("sdk: connected. dataApi.id:", this.dataApi.id);
     });
 
-    dataApi.on("connect_error", (error) => {
+    this.dataApi.on("connect_error", (error) => {
       let errorMessage = error.message;
 
       if (error.message.includes("Unauthorized")) {
@@ -97,9 +88,7 @@ export default class API {
         errorMessage = "Token expired";
       }
 
-      // Set `this` context so the RethinkID instance can be accessed a in the callback
-      // e.g. calling `this.logOut()` might be useful.
-      dataAPIConnectErrorCallback.call(this, errorMessage);
+      this.onConnectError(errorMessage);
     });
   }
 
@@ -108,10 +97,10 @@ export default class API {
    */
   private _waitForConnection: () => Promise<true> = () => {
     return new Promise((resolve, reject) => {
-      if (dataApi.connected) {
+      if (this.dataApi.connected) {
         resolve(true);
       } else {
-        dataApi.on("connect", () => {
+        this.dataApi.on("connect", () => {
           resolve(true);
         });
         // Don't wait for connection indefinitely
@@ -130,7 +119,7 @@ export default class API {
   private _asyncEmit = async (event: string, payload: any) => {
     await this._waitForConnection();
     return new Promise((resolve, reject) => {
-      dataApi.emit(event, payload, (response: any) => {
+      this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
           reject(new RethinkIDError(response.error.type, response.error.message));
         } else {
@@ -286,10 +275,10 @@ export default class API {
     const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    dataApi.on(subscriptionHandle, listener);
+    this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
-      dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, listener);
       return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
@@ -396,10 +385,10 @@ export default class API {
     const response = (await this._asyncEmit("contacts:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    dataApi.on(subscriptionHandle, listener);
+    this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
-      dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, listener);
       return this._asyncEmit("contacts:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
@@ -442,10 +431,10 @@ export default class API {
     const response = (await this._asyncEmit("connection_requests:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    dataApi.on(subscriptionHandle, listener);
+    this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
-      dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, listener);
       return this._asyncEmit("connection_requests:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
@@ -507,10 +496,10 @@ export default class API {
     const response = (await this._asyncEmit("received_invitations:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    dataApi.on(subscriptionHandle, listener);
+    this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
-      dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, listener);
       return this._asyncEmit("received_invitations:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
@@ -553,10 +542,10 @@ export default class API {
     const response = (await this._asyncEmit("accepted_invitations:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    dataApi.on(subscriptionHandle, listener);
+    this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
-      dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, listener);
       return this._asyncEmit("accepted_invitations:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }

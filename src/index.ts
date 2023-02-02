@@ -1,10 +1,10 @@
-import ClientOAuth2 from "client-oauth2";
 import jwt_decode from "jwt-decode";
 
 import API from "./api";
+import Auth from "./auth";
+import { namespacePrefix } from "./constants";
 import { Table } from "./table";
-import { Options, IdTokenDecoded, LoginType } from "./types";
-import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
+import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -12,155 +12,76 @@ import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./
 export { ErrorTypes, RethinkIDError } from "./utils";
 
 /**
- * The URI of the current RethinkID deployment
+ * RethinkID constructor options
  */
-const rethinkIdUri = "https://id.rethinkdb.cloud";
+export type Options = CommonOptions &
+  AuthOptions &
+  ApiOptions & {
+    /**
+     * A callback function an app can specify to run when a user has successfully logged in.
+     *
+     * e.g. Set state, redirect, etc.
+     */
+    onLogin?: (rid: RethinkID) => void;
 
-// Private vars set in the constructor
-
-/**
- * Public URI for the OAuth authorization server.
- * Currently implemented with Hydra
- *
- * In local development requires a port value and is different than {@link dataApiUri }
- */
-let oAuthUri = rethinkIdUri;
-
-/**
- * URI to start an OAuth login request
- */
-let authUri = "";
-
-/**
- * URI to complete an OAuth login request, exchanging a auth code for an access token and ID token
- */
-let tokenUri = "";
-
-/**
- * Local storage key names, namespaced in the constructor
- */
-let tokenKeyName = "";
-let idTokenKeyName = "";
-let pkceStateKeyName = "";
-let pkceCodeVerifierKeyName = "";
-
-let oAuthClient = null;
-
-/**
- * An app's base URL
- * Used to check against the origin of a postMessage event sent from the login pop-up window.
- * e.g. https://example-app.com
- */
-let baseUrl = "";
-
-/**
- * The OAuth2 redirect URI. Required to get token.
- */
-let loginRedirectUri = "";
-
-// End constructor vars
-
-/**
- * A reference to the window object of the login pop-up window.
- * Used in {@link RethinkID.openLoginPopup}
- */
-let loginWindowReference = null;
-
-/**
- * A reference to the previous URL of the login pop-up window.
- * Used to avoid creating duplicate windows and for focusing an existing window.
- * Used in {@link RethinkID.openLoginPopup}
- */
-let loginWindowPreviousUrl = null;
+    /**
+     * Provide a callback to handled failed data API connections. E.g. unauthorized, or expired token.
+     */
+    onApiConnectError?: (rid: RethinkID, message: string) => void;
+  };
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  */
 export default class RethinkID {
   /**
+   * Local storage key names, namespaced in the constructor
+   */
+  idTokenKeyName: string;
+
+  /**
+   * Auth handles authentication and login
+   */
+
+  auth: Auth;
+  /**
    * A wrapper of the low level Data API
    */
   api: API;
 
   constructor(options: Options) {
-    if (options.oAuthUri) {
-      oAuthUri = options.oAuthUri;
-    }
-
-    authUri = `${oAuthUri}/oauth2/auth`;
-    tokenUri = `${oAuthUri}/oauth2/token`;
-
-    if (options.onLogin) {
-      this.onLogin = options.onLogin;
-    }
-
-    /**
-     * Namespace local storage key names
-     */
-    const namespace = `rethinkid_${options.appId}`;
-    tokenKeyName = `${namespace}_token`;
-    idTokenKeyName = `${namespace}_id_token`;
-    pkceStateKeyName = `${namespace}_pkce_state`;
-    pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
-
-    oAuthClient = new ClientOAuth2({
-      clientId: options.appId,
-      redirectUri: options.loginRedirectUri,
-      accessTokenUri: tokenUri,
-      authorizationUri: authUri,
-      scopes: ["openid", "profile", "email"],
-    });
-
-    /**
-     * Get the base URL from the log in redirect URI already supplied,
-     * to save a developer from having to add another options property
-     */
-    baseUrl = new URL(options.loginRedirectUri).origin;
-
-    loginRedirectUri = options.loginRedirectUri;
+    // set local storage variable name for userInfo method (TODO: remove)
+    const namespace = namespacePrefix + options.appId;
+    this.idTokenKeyName = `${namespace}_id_token`;
 
     // Initialize API and make a connection to the Data API if logged in
-    this.api = new API(options);
+    this.api = new API(options, (message: string) => {
+      if (options.onApiConnectError) {
+        options.onApiConnectError(this, message);
+        return;
+      }
+      console.error("Connection error:", message);
+    });
 
-    this._checkLoginQueryParams();
+    // Initialize authentication (auto-login or auto-complete-login if possible)
+    this.auth = new Auth(options, () => {
+      this.api._connect();
+      if (options.onLogin) {
+        options.onLogin(this);
+      }
+    });
   }
 
   /**
-   * A callback function an app can specify to run when a user has successfully logged in.
+   * Set a callback function an app can run when a user has successfully logged in.
    *
    * e.g. Set state, redirect, etc.
    */
-  onLogin = () => {};
-
-  /**
-   * Generate a URI to log in a user to RethinkID and authorize an app.
-   * Uses the Authorization Code Flow for single page apps with PKCE code verification.
-   * Requests an authorization code.
-   */
-  async loginUri(): Promise<string> {
-    // if logging in, do not overwrite existing PKCE local storage values.
-    if (this.hasLoginQueryParams()) {
-      return "";
-    }
-
-    // Create and store a random "state" value
-    const state = generateRandomString();
-    localStorage.setItem(pkceStateKeyName, state);
-
-    // Create and store a new PKCE code_verifier (the plaintext random secret)
-    const codeVerifier = generateRandomString();
-    localStorage.setItem(pkceCodeVerifierKeyName, codeVerifier);
-
-    // Hash and base64-urlencode the secret to use as the challenge
-    const codeChallenge = await pkceChallengeFromVerifier(codeVerifier);
-
-    return oAuthClient.code.getUri({
-      state: state,
-      query: {
-        code_challenge: codeChallenge,
-        code_challenge_method: "S256",
-      },
-    });
+  onLogin(f: (rid: RethinkID) => void) {
+    this.auth.onLogin = () => {
+      this.api._connect();
+      f(this);
+    };
   }
 
   /**
@@ -168,183 +89,7 @@ export default class RethinkID {
    * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
   async login(options?: { type?: LoginType }): Promise<void> {
-    const loginType = options?.type || "popup_fallback";
-
-    const url = await this.loginUri();
-
-    // App explicitly requested redirect login, so redirect
-    if (loginType === "redirect") {
-      window.location.href = url;
-      return;
-    }
-
-    const windowName = "rethinkid-login-window";
-
-    // remove any existing event listeners
-    window.removeEventListener("message", this._receiveLoginWindowMessage);
-
-    if (loginWindowReference === null || loginWindowReference.closed) {
-      /**
-       * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
-       * */
-      loginWindowReference = popupWindow(url, windowName, window);
-    } else if (loginWindowPreviousUrl !== url) {
-      /**
-       * if the resource to load is different, then we load it in the already opened secondary
-       * window and then we bring such window back on top/in front of its parent window.
-       */
-      loginWindowReference = popupWindow(url, windowName, window);
-      loginWindowReference.focus();
-    } else {
-      /**
-       * else the window reference must exist and the window is not closed; therefore,
-       * we can bring it back on top of any other window with the focus() method.
-       * There would be no need to re-create the window or to reload the referenced resource.
-       */
-      loginWindowReference.focus();
-    }
-
-    // Pop-up possibly blocked
-    if (!loginWindowReference) {
-      if (loginType === "popup") {
-        // app explicitly does not want to fallback to redirect
-        throw new Error("Pop-up failed to open");
-      } else {
-        // fallback to redirect login
-        window.location.href = url;
-        return;
-      }
-    }
-
-    // add the listener for receiving a message from the pop-up
-    window.addEventListener("message", (event) => this._receiveLoginWindowMessage(event), false);
-    // assign the previous URL
-    loginWindowPreviousUrl = url;
-  }
-
-  /**
-   * A "message" event listener for the login pop-up window.
-   * Handles messages sent from the login pop-up window to its opener window.
-   * @param event A postMessage event object
-   */
-  private _receiveLoginWindowMessage(event): void {
-    // Make sure to check origin and source to mitigate XSS attacks
-
-    // Do we trust the sender of this message? (might be
-    // different from what we originally opened, for example).
-    if (event.origin !== baseUrl) {
-      return;
-    }
-
-    // if we trust the sender and the source is our pop-up
-    if (event.source === loginWindowReference) {
-      this._completeLogin(event.data);
-    }
-  }
-
-  /**
-   * Continues the login flow after redirected back from the OAuth server, handling pop-up or redirect login types.
-   *
-   * Must be called at the {@link Options.loginRedirectUri} URI.
-   *
-   * @returns string to indicate login type
-   */
-  private async _checkLoginQueryParams(): Promise<string> {
-    // Only attempt to complete login if actually logging in.
-    if (!this.hasLoginQueryParams()) return;
-
-    /**
-     * If completing redirect login
-     */
-    if (!window.opener) {
-      await this._completeLogin(location.search);
-      return "redirect";
-    }
-
-    /**
-     * If completing pop-up login
-     */
-    // Send message to parent/opener window with login query params
-    // Specify `baseUrl` targetOrigin for security
-    window.opener.postMessage(location.search, baseUrl); // handled by _receiveLoginWindowMessage
-
-    // Close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
-    window.close();
-
-    // Send message in case window fails to close,
-    // e.g. On Brave iOS the tab does not seem to close,
-    // so at least an app has some way of gracefully handling this case.
-    return "popup";
-  }
-
-  /**
-   * Complete a login request
-   *
-   * Takes an authorization code and exchanges it for an access token and ID token.
-   *
-   * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
-   * param if something went wrong.
-   *
-   * Stores the access token and ID token in local storage.
-   *
-   * Performs after login actions.
-   */
-  private async _completeLogin(loginQueryParams: string): Promise<void> {
-    const params = new URLSearchParams(loginQueryParams);
-
-    // Check if the auth server returned an error string
-    const error = params.get("error");
-    if (error) {
-      throw new Error(`An error occurred: ${error}`);
-    }
-
-    // Make sure the auth server returned a code
-    const code = params.get("code");
-    if (!code) {
-      throw new Error(`No query param code`);
-    }
-
-    // Verify state matches the value set when the login request was initiated to mitigate CSRF attacks
-    if (localStorage.getItem(pkceStateKeyName) !== params.get("state")) {
-      throw new Error(`State did not match. Possible CSRF attack`);
-    }
-
-    // Exchange auth code for access and ID tokens
-    let getTokenResponse;
-    const uri = `${loginRedirectUri}${loginQueryParams}`;
-    try {
-      getTokenResponse = await oAuthClient.code.getToken(uri, {
-        body: {
-          code_verifier: localStorage.getItem(pkceCodeVerifierKeyName) || "",
-        },
-      });
-    } catch (error) {
-      throw new Error(`Error getting token: ${error.message}`);
-    }
-
-    if (!getTokenResponse) {
-      throw new Error(`No token response`);
-    }
-
-    // Clean these up since we don't need them anymore
-    localStorage.removeItem(pkceStateKeyName);
-    localStorage.removeItem(pkceCodeVerifierKeyName);
-
-    // Store tokens in local storage
-    const token: string = getTokenResponse.data.access_token;
-    const idToken: string = getTokenResponse.data.id_token;
-
-    localStorage.setItem(tokenKeyName, token);
-    localStorage.setItem(idTokenKeyName, idToken);
-
-    /**
-     * Do after login actions
-     */
-    // Connect to the Data API
-    this.api._connect();
-
-    // Run the user defined post login callback
-    this.onLogin.call(this);
+    return this.auth.login(options);
   }
 
   /**
@@ -352,36 +97,7 @@ export default class RethinkID {
    * i.e. if an access token and ID token are in local storage.
    */
   isLoggedIn(): boolean {
-    const token = localStorage.getItem(tokenKeyName);
-    const idToken = localStorage.getItem(idTokenKeyName);
-
-    if (token && idToken) {
-      try {
-        jwt_decode(idToken);
-
-        return true;
-      } catch (error) {
-        // Error decoding ID token, assume tokens are invalid and remove
-        localStorage.removeItem(tokenKeyName);
-        localStorage.removeItem(idTokenKeyName);
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * A utility function to check if a redirect to complete a login request has been performed.
-   *
-   * Also used in {@link loginUri} to make sure PKCE local storage values are not overwritten,
-   * which would otherwise accidentally invalidate a login request.
-   */
-  hasLoginQueryParams(): boolean {
-    const params = new URLSearchParams(location.search);
-
-    // These query params will be present when redirected
-    // back from the RethinkID auth server
-    return !!(params.get("code") && params.get("scope") && params.get("state"));
+    return this.auth.isLoggedIn();
   }
 
   /**
@@ -389,19 +105,17 @@ export default class RethinkID {
    * Deletes the access token and ID token from local storage and reloads the page.
    */
   logOut(): void {
-    if (localStorage.getItem(tokenKeyName) || localStorage.getItem(idTokenKeyName)) {
-      localStorage.removeItem(tokenKeyName);
-      localStorage.removeItem(idTokenKeyName);
-      location.reload();
-    }
+    return this.auth.logOut();
   }
+
+  // TODO remove userInfo
 
   /**
    * A utility function to get user info, i.e. user ID and the scope-based claims of an
    * authenticated user's ID token.
    */
   userInfo(): null | { id: string; email: string; name: string } {
-    const idToken = localStorage.getItem(idTokenKeyName);
+    const idToken = localStorage.getItem(this.idTokenKeyName);
 
     if (idToken) {
       try {
@@ -414,7 +128,7 @@ export default class RethinkID {
         };
       } catch (error) {
         // Error decoding ID token, assume token is invalid and remove
-        localStorage.removeItem(idTokenKeyName);
+        localStorage.removeItem(this.idTokenKeyName);
       }
     }
 
