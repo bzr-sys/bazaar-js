@@ -85,3 +85,44 @@ export type Filter = {
     $le?: string | number;
   };
 };
+
+export type User = {
+  id: string;
+  name: string | undefined;
+  email: string | undefined;
+};
+
+export type Contact = {
+  id: string;
+  userId: string;
+  contactId: string;
+  connected: boolean; // flag to signal if contact is connected (you are trusted by this contact)
+};
+export type ConnectionRequest = {
+  id: string;
+  userId: string;
+  contactId: string;
+};
+
+export type Invitation = {
+  id: string;
+  type: "user" | "link";
+  userId: string | undefined; // ID of invited user (if type='user')
+  limit: number | undefined; // the amount of times the invitation can be used (0 = unlimited, if type='link')
+  resource: any;
+};
+
+export type ReceivedInvitation = {
+  id: string;
+  userId: string;
+  hostId: string;
+  appId: string;
+  invitationId: string;
+};
+
+export type AcceptedInvitation = {
+  id: string;
+  invitationId: string;
+  userId: string;
+  handled: boolean;
+};

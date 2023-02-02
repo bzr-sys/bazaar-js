@@ -1,10 +1,10 @@
 import ClientOAuth2 from "client-oauth2";
 import jwt_decode from "jwt-decode";
-import io from "socket.io-client";
 
+import API from "./api";
 import { Table } from "./table";
-import { Options, IdTokenDecoded, Permission, SubscribeListener, Message, LoginType, Filter } from "./types";
-import { generateRandomString, pkceChallengeFromVerifier, popupWindow, RethinkIDError } from "./utils";
+import { Options, IdTokenDecoded, LoginType } from "./types";
+import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "./utils";
 
 /**
  * Types of errors that can return from the API
@@ -17,14 +17,6 @@ export { ErrorTypes, RethinkIDError } from "./utils";
 const rethinkIdUri = "https://id.rethinkdb.cloud";
 
 // Private vars set in the constructor
-
-/**
- * URI for the Data API, RethinkID's realtime data storage service.
- * Currently implemented with Socket.IO + RethinkDB
- *
- * In local development requires a port value and is different than {@link oAuthUri }
- */
-let dataApiUri = rethinkIdUri;
 
 /**
  * Public URI for the OAuth authorization server.
@@ -45,13 +37,6 @@ let authUri = "";
 let tokenUri = "";
 
 /**
- * A callback to do something when a Data API connection error occurs
- */
-let dataAPIConnectErrorCallback = (errorMessage: string) => {
-  console.error("Connection error:", errorMessage);
-};
-
-/**
  * Local storage key names, namespaced in the constructor
  */
 let tokenKeyName = "";
@@ -60,11 +45,6 @@ let pkceStateKeyName = "";
 let pkceCodeVerifierKeyName = "";
 
 let oAuthClient = null;
-
-/**
- * A Socket.IO connection to the Data API
- */
-let dataApi = null;
 
 /**
  * An app's base URL
@@ -97,20 +77,18 @@ let loginWindowPreviousUrl = null;
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  */
 export default class RethinkID {
+  /**
+   * A wrapper of the low level Data API
+   */
+  api: API;
+
   constructor(options: Options) {
-    if (options.dataApiUri) {
-      dataApiUri = options.dataApiUri;
-    }
     if (options.oAuthUri) {
       oAuthUri = options.oAuthUri;
     }
 
     authUri = `${oAuthUri}/oauth2/auth`;
     tokenUri = `${oAuthUri}/oauth2/token`;
-
-    if (options.dataAPIConnectErrorCallback) {
-      dataAPIConnectErrorCallback = options.dataAPIConnectErrorCallback;
-    }
 
     if (options.onLogin) {
       this.onLogin = options.onLogin;
@@ -141,8 +119,8 @@ export default class RethinkID {
 
     loginRedirectUri = options.loginRedirectUri;
 
-    // Make a connection to the Data API if logged in
-    this._dataApiConnect();
+    // Initialize API and make a connection to the Data API if logged in
+    this.api = new API(options);
 
     this._checkLoginQueryParams();
   }
@@ -153,39 +131,6 @@ export default class RethinkID {
    * e.g. Set state, redirect, etc.
    */
   onLogin = () => {};
-
-  /**
-   * Creates a Data API connection with an auth token
-   */
-  private _dataApiConnect(): void {
-    const token = localStorage.getItem(tokenKeyName);
-
-    if (!token) {
-      return;
-    }
-
-    dataApi = io(dataApiUri, {
-      auth: { token },
-    });
-
-    dataApi.on("connect", () => {
-      console.log("sdk: connected. dataApi.id:", dataApi.id);
-    });
-
-    dataApi.on("connect_error", (error) => {
-      let errorMessage = error.message;
-
-      if (error.message.includes("Unauthorized")) {
-        errorMessage = "Unauthorized";
-      } else if (error.message.includes("TokenExpiredError")) {
-        errorMessage = "Token expired";
-      }
-
-      // Set `this` context so the RethinkID instance can be accessed a in the callback
-      // e.g. calling `this.logOut()` might be useful.
-      dataAPIConnectErrorCallback.call(this, errorMessage);
-    });
-  }
 
   /**
    * Generate a URI to log in a user to RethinkID and authorize an app.
@@ -396,7 +341,7 @@ export default class RethinkID {
      * Do after login actions
      */
     // Connect to the Data API
-    this._dataApiConnect();
+    this.api._connect();
 
     // Run the user defined post login callback
     this.onLogin.call(this);
@@ -476,252 +421,17 @@ export default class RethinkID {
     return null;
   }
 
-  // Data API
+  //
+  // APIs
+  //
 
   /**
-   * Make sure a connection to the Data API has been made.
+   * Get a table interface
+   * @param tableName The name of the table to create the interface for.
+   * @param onCreate A hook to set up a table when it is created (e.g., to set up permissions)
+   * @param tableOptions An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
-  private _waitForConnection: () => Promise<true> = () => {
-    return new Promise((resolve, reject) => {
-      if (dataApi.connected) {
-        resolve(true);
-      } else {
-        dataApi.on("connect", () => {
-          resolve(true);
-        });
-        // Don't wait for connection indefinitely
-        setTimeout(() => {
-          reject(new Error("Timeout waiting for on connect"));
-        }, 3000);
-      }
-    });
-  };
-
-  /**
-   * Promisifies a dataApi.io emit event
-   * @param event A dataApi.io event name, like `tables:create`
-   * @param payload
-   */
-  private _asyncEmit = async (event: string, payload: any) => {
-    await this._waitForConnection();
-    return new Promise((resolve, reject) => {
-      dataApi.emit(event, payload, (response: any) => {
-        if (response.error) {
-          reject(new RethinkIDError(response.error.type, response.error.message));
-        } else {
-          resolve(response);
-        }
-      });
-    });
-  };
-
-  /**
-   * Create a table. Private endpoint.
-   */
-  async tablesCreate(tableName: string) {
-    return this._asyncEmit("tables:create", { tableName }) as Promise<Message>;
-  }
-
-  /**
-   * Drop a table. Private endpoint.
-   */
-  async tablesDrop(tableName: string) {
-    return this._asyncEmit("tables:drop", { tableName }) as Promise<Message>;
-  }
-
-  /**
-   * List all table names. Private endpoint.
-   * @returns Where `data` is an array of table names
-   */
-  async tablesList() {
-    return this._asyncEmit("tables:list", null) as Promise<{ data: string[] }>;
-  }
-
-  /**
-   * Get permissions for a table. Private endpoint.
-   * @param options If no optional params are set, all permissions for the user are returned.
-   * @returns All permissions are returned if no options are passed.
-   */
-  async permissionsGet(
-    options: {
-      tableName?: string;
-      userId?: string;
-      type?: "read" | "insert" | "update" | "delete";
-    } = {},
-  ) {
-    return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
-  }
-
-  /**
-   * Set (insert/update) permissions for a table. Private endpoint.
-   */
-  async permissionsSet(permissions: Permission[]) {
-    return this._asyncEmit("permissions:set", permissions) as Promise<Message>;
-  }
-
-  /**
-   * Delete permissions for a table. Private endpoint.
-   * @param options An optional object for specifying a permission ID to delete. All permissions are deleted if no permission ID option is passed.
-   */
-  async permissionsDelete(options: { permissionId?: string } = {}) {
-    return this._asyncEmit("permissions:delete", options) as Promise<Message>;
-  }
-
-  /**
-   * A FilterOp is an object that applies one or more logic operators to the field it is assigned to.
-   * The logic operators are combined with an AND.
-   * @typedef {Object} FilterOp
-   * @property {string | number} [$eq] -
-   * @property {string | number} [$ne] -
-   * @property {string | number} [$gt] -
-   * @property {string | number} [$ge] -
-   * @property {string | number} [$lt] -
-   * @property {string | number} [$le] -
-   */
-
-  /**
-   * A FilterCondition is an object that applies FilterOps to fields (object keys).
-   * All fields are combined with an OR.
-   * @typedef {Object.<string, FilterOp>} FilterCondition
-   */
-
-  /**
-   * A Filter is an array of FilterConditions.
-   * All FilterConditions are combined with an AND.
-   * The filter
-   * [{
-   *   height: {
-   *     $gt: 80,
-   *     $lt: 140
-   *   },
-   *   weight: {
-   *     $gt: 10,
-   *     $lt: 25
-   *   }
-   * },{
-   *   age: {
-   *     $lt: 12
-   *   }
-   * }]
-   * would result in "((height > 80 AND height < 140) OR (weight > 10 AND weight < 25)) AND (age < 12)"
-   * @typedef {FilterCondition[]} Filter
-   */
-
-  /**
-   * An OrderBy object specifies orderings of results.
-   * Example: { height: "desc", age: "asc" }
-   * @typedef {Object.<string, 'asc' | 'desc'>} OrderBy
-   */
-
-  /**
-   * Read all table rows, or a single row if row ID passed. Private by default, or public with read permission.
-   * @param {string} tableName The name of the table to read
-   * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {string} [options.rowId] - The rowId
-   * @param {number} [options.startOffset] - An optional start offset. Default 0 (including)
-   * @param {number} [options.endOffset] - An optional end offset. Default null (excluding)
-   * @param {OrderBy} [options.orderBy] - An optional OrderBy object
-   * @param {Filter} [options.filter] - An optional Filter object
-   * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
-   * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableRead(
-    tableName: string,
-    options: {
-      rowId?: string;
-      startOffset?: number;
-      endOffset?: number;
-      orderBy?: { [field: string]: "asc" | "desc" };
-      filter?: Filter[];
-      userId?: string;
-    } = {},
-  ) {
-    const payload = { tableName };
-    Object.assign(payload, options);
-    return this._asyncEmit("table:read", payload) as Promise<{ data: any[] | object }>;
-  }
-
-  /**
-   * Subscribe to table changes. Private by default, or public with read permission.
-   * @param {string} tableName The name of the table to subscribe to
-   * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {string} [options.rowId] - The rowId
-   * @param {Filter} [options.filter] - An optional Filter object
-   * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
-   * @returns An unsubscribe function
-   */
-  async tableSubscribe(
-    tableName: string,
-    options: { rowId?: string; filter?: Filter[]; userId?: string },
-    listener: SubscribeListener,
-  ) {
-    const payload = { tableName };
-    Object.assign(payload, options);
-
-    const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // where data is the subscription handle
-    const subscriptionHandle = response.data;
-
-    dataApi.on(subscriptionHandle, listener);
-
-    return async () => {
-      dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<Message>;
-    };
-  }
-
-  /**
-   * Insert a table row. Private by default, or public with insert permission
-   * @param tableName The name of the table to operate on.
-   * @param row The row to insert.
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   * @returns Where `data` is the row ID
-   */
-  async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
-    const payload = { tableName, row };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:insert", payload) as Promise<{ data: string }>;
-  }
-
-  /**
-   * Update all table rows, or a single row if row ID exists. Private by default, or public with update permission
-   * @param tableName The name of the table to operate on.
-   * @param row Note! If row.id not present, updates all rows
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableUpdate(tableName: string, row: object, options: { userId?: string } = {}) {
-    const payload = { tableName, row };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:update", payload) as Promise<Message>;
-  }
-
-  /**
-   * Replace a table row. Private by default, or public with insert, update, delete permissions.
-   * @param tableName The name of the table to operate on.
-   * @param row Must contain a row ID.
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableReplace(tableName: string, row: object, options: { userId?: string } = {}) {
-    const payload = { tableName, row };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:replace", payload) as Promise<Message>;
-  }
-
-  /**
-   * Deletes all table rows, or a single row if row ID passed. Private by default, or public with delete permission.
-   * @param tableName The name of the table to operate on.
-   * @param options An optional object for specifying a row ID and/or user ID. Specify a row ID to delete a specific row, otherwise all rows are deleted. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableDelete(tableName: string, options: { rowId?: string; userId?: string } = {}) {
-    const payload = { tableName };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:delete", payload) as Promise<Message>;
-  }
-
   table(tableName: string, onCreate: () => Promise<void>, tableOptions?: { userId?: string }) {
-    return new Table(this, tableName, onCreate, tableOptions);
+    return new Table(this.api, tableName, onCreate, tableOptions);
   }
 }
