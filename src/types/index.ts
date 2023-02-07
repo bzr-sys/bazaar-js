@@ -19,12 +19,6 @@ export type AuthOptions = {
 
 export type ApiOptions = {
   /**
-   * Provide a callback to handled failed data API connections. E.g. unauthorized, or expired token.
-   * `this` is the RethinkID instance. So you could log out with `this.logOut()` for example.
-   */
-  dataAPIConnectErrorCallback?: (errorMessage: string) => void;
-
-  /**
    * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4000
    */
   dataApiUri?: string;

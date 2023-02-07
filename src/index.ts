@@ -4,7 +4,17 @@ import API from "./api";
 import Auth from "./auth";
 import { namespacePrefix } from "./constants";
 import { Table } from "./table";
-import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType } from "./types";
+import {
+  AcceptedInvitation,
+  ApiOptions,
+  AuthOptions,
+  CommonOptions,
+  ConnectionRequest,
+  IdTokenDecoded,
+  LoginType,
+  Message,
+  ReceivedInvitation,
+} from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -25,7 +35,7 @@ export type Options = CommonOptions &
     onLogin?: (rid: RethinkID) => void;
 
     /**
-     * Provide a callback to handled failed data API connections. E.g. unauthorized, or expired token.
+     * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
      */
     onApiConnectError?: (rid: RethinkID, message: string) => void;
   };
@@ -49,6 +59,10 @@ export default class RethinkID {
    */
   api: API;
 
+  private onContactConnectionRequestUnsubscribe: () => Promise<Message>;
+  private onReceivedInvitationUnsubscribe: () => Promise<Message>;
+  private onAcceptedInvitationUnsubscribe: () => Promise<Message>;
+
   constructor(options: Options) {
     // set local storage variable name for userInfo method (TODO: remove)
     const namespace = namespacePrefix + options.appId;
@@ -71,6 +85,10 @@ export default class RethinkID {
       }
     });
   }
+
+  //
+  // Login methods
+  //
 
   /**
    * Set a callback function an app can run when a user has successfully logged in.
@@ -133,6 +151,91 @@ export default class RethinkID {
     }
 
     return null;
+  }
+
+  //
+  // Social callbacks
+  //
+
+  /**
+   * Provide a callback to handle an incoming contact connection request
+   */
+  async onContactConnectionRequest(f: (rid: RethinkID, request: ConnectionRequest) => void) {
+    if (this.onContactConnectionRequestUnsubscribe) {
+      await this.onContactConnectionRequestUnsubscribe();
+    }
+    try {
+      // Subscribe
+      this.onContactConnectionRequestUnsubscribe = await this.api.connectionRequestsSubscribe(
+        (changes: { new_val: object; old_val: object }) => {
+          if (changes.new_val) {
+            f(this, changes.new_val as ConnectionRequest);
+          }
+        },
+      );
+      // List
+      let reqs = await this.api.connectionRequestsList();
+      reqs.data.forEach((req: ConnectionRequest) => {
+        f(this, req);
+      });
+    } catch (error) {
+      // TODO what should we do
+      console.log("onContactConnectionRequest error:", error);
+    }
+  }
+
+  /**
+   * Provide a callback to handle a received app invitation
+   */
+  async onReceivedInvitation(f: (rid: RethinkID, invitation: ReceivedInvitation) => void) {
+    if (this.onReceivedInvitationUnsubscribe) {
+      await this.onReceivedInvitationUnsubscribe();
+    }
+    try {
+      // Subscribe
+      this.onReceivedInvitationUnsubscribe = await this.api.receivedInvitationsSubscribe(
+        (changes: { new_val: object; old_val: object }) => {
+          if (changes.new_val) {
+            f(this, changes.new_val as ReceivedInvitation);
+          }
+        },
+      );
+      // List
+      let reqs = await this.api.receivedInvitationsList();
+      reqs.data.forEach((req: ReceivedInvitation) => {
+        f(this, req);
+      });
+    } catch (error) {
+      // TODO what should we do
+      console.log("onReceivedInvitation error:", error);
+    }
+  }
+
+  /**
+   * Provide a callback to handle accepted app invitations
+   */
+  async onAcceptedInvitation(f: (rid: RethinkID, invitation: AcceptedInvitation) => void) {
+    if (this.onAcceptedInvitationUnsubscribe) {
+      await this.onAcceptedInvitationUnsubscribe();
+    }
+    try {
+      // Subscribe
+      this.onAcceptedInvitationUnsubscribe = await this.api.acceptedInvitationsSubscribe(
+        (changes: { new_val: object; old_val: object }) => {
+          if (changes.new_val) {
+            f(this, changes.new_val as AcceptedInvitation);
+          }
+        },
+      );
+      // List
+      let reqs = await this.api.acceptedInvitationsList();
+      reqs.data.forEach((req: AcceptedInvitation) => {
+        f(this, req);
+      });
+    } catch (error) {
+      // TODO what should we do
+      console.log("onAcceptedInvitation error:", error);
+    }
   }
 
   //
