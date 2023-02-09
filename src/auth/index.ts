@@ -54,13 +54,13 @@ export default class Auth {
   /**
    * A reference to the window object of the login pop-up window.
    */
-  loginWindowReference;
+  loginWindowReference = null;
 
   /**
    * A reference to the previous URL of the login pop-up window.
    * Used to avoid creating duplicate windows and for focusing an existing window.
    */
-  loginWindowPreviousUrl;
+  loginWindowPreviousUrl = null;
 
   /**
    * A callback function an app can specify to run when a user has successfully logged in.
