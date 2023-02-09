@@ -43,7 +43,7 @@ export type Options = CommonOptions &
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  */
-export default class RethinkID {
+export class RethinkID {
   /**
    * Local storage key names, namespaced in the constructor
    */
