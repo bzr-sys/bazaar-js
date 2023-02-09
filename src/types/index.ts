@@ -122,3 +122,8 @@ export type AcceptedInvitation = {
   userId: string;
   handled: boolean;
 };
+
+export type TableOptions = {
+  onCreate?: () => Promise<void>;
+  userId?: string;
+};

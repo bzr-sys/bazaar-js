@@ -1,18 +1,16 @@
 import API from "../api";
-import { SubscribeListener, Message } from "../types";
+import { SubscribeListener, Message, TableOptions } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
 export class Table {
   api: API;
   tableName: string;
-  tableOptions: { userId?: string };
-  onCreate: () => Promise<void>;
+  tableOptions: TableOptions;
 
-  constructor(api: API, tableName: string, onCreate: () => Promise<void>, tableOptions?: { userId?: string }) {
+  constructor(api: API, tableName: string, tableOptions: TableOptions = {}) {
     this.api = api;
     this.tableName = tableName;
     this.tableOptions = tableOptions;
-    this.onCreate = onCreate;
   }
 
   async read(
@@ -80,9 +78,20 @@ export class Table {
     try {
       return await tableQuery();
     } catch (error) {
+      if (this.tableOptions.userId) {
+        // We cannot create tables for other users
+        //
+        // Note: userId could be your own ID which would give you permission to create a table.
+        // However, if userId is set it is safe to say the user does not know if it is the own ID (dynamic)
+        // and thus a table should not be created.
+        // TODO: this should be reviewed with real-world usage.
+        throw error;
+      }
       if (error instanceof RethinkIDError && error.type == ErrorTypes.TableDoesNotExist) {
         await this.api.tablesCreate(this.tableName);
-        await this.onCreate();
+        if (this.tableOptions.onCreate) {
+          await this.tableOptions.onCreate();
+        }
         return tableQuery();
       }
       throw error;

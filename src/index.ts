@@ -14,6 +14,7 @@ import {
   LoginType,
   Message,
   ReceivedInvitation,
+  TableOptions,
 } from "./types";
 
 /**
@@ -238,17 +239,18 @@ export class RethinkID {
     }
   }
 
+  // TODO add mirror functions (keep local state reactive to object that has subscribe function such as table or contacts, other?)
+
   //
   // APIs
   //
 
   /**
    * Get a table interface
-   * @param tableName The name of the table to create the interface for.
-   * @param onCreate A hook to set up a table when it is created (e.g., to set up permissions)
-   * @param tableOptions An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
+   * @param {string} tableName The name of the table to create the interface for.
+   * @param {TableOptions} [tableOptions] An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user. The onCreate hook sets up a table when it is created (e.g., to set up permissions)
    */
-  table(tableName: string, onCreate: () => Promise<void>, tableOptions?: { userId?: string }) {
-    return new Table(this.api, tableName, onCreate, tableOptions);
+  table(tableName: string, tableOptions?: TableOptions) {
+    return new Table(this.api, tableName, tableOptions);
   }
 }
