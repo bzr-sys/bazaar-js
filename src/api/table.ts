@@ -1,9 +1,9 @@
-import API from "../api";
-import { SubscribeListener, Message, TableOptions } from "../types";
+import { API } from ".";
+import { SubscribeListener, Message, TableOptions, Filter } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
-export class Table {
-  api: API;
+export class TableAPI {
+  private api: API;
   tableName: string;
   tableOptions: TableOptions;
 
@@ -13,29 +13,24 @@ export class Table {
     this.tableOptions = tableOptions;
   }
 
+  /**
+   *
+   * @param methodOptions
+   * @returns
+   */
   async read(
     methodOptions: {
       rowId?: string;
       startOffset?: number;
       endOffset?: number;
       orderBy?: { [field: string]: "asc" | "desc" };
-      filter?: {
-        [field: string]: {
-          $eq?: string | number;
-          $ne?: string | number;
-          $gt?: string | number;
-          $ge?: string | number;
-          $lt?: string | number;
-          $le?: string | number;
-        };
-      }[];
+      filter?: Filter[];
     } = {},
   ) {
-    return this.withTable(() =>
-      this.api.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions }),
-    ) as Promise<{
-      data: object | any[];
-    }>;
+    return this.withTable(async () => {
+      const rec = await this.api.tableRead(this.tableName, { ...this.tableOptions, ...methodOptions });
+      return rec.data;
+    }) as Promise<object | any[]>;
   }
 
   /**
@@ -48,11 +43,10 @@ export class Table {
   }
 
   async insert(row: object, methodOptions: {} = {}) {
-    return this.withTable(() =>
-      this.api.tableInsert(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
-    ) as Promise<{
-      data: string;
-    }>;
+    return this.withTable(async () => {
+      const rec = await this.api.tableInsert(this.tableName, row, { ...this.tableOptions, ...methodOptions });
+      return rec.data;
+    }) as Promise<string>;
   }
 
   async update(row: object, methodOptions: {} = {}) {

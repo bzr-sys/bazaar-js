@@ -106,6 +106,7 @@ export type Invitation = {
   userId: string | undefined; // ID of invited user (if type='user')
   limit: number | undefined; // the amount of times the invitation can be used (0 = unlimited, if type='link')
   resource: any;
+  accepted: AcceptedInvitation[] | undefined;
 };
 
 export type ReceivedInvitation = {
@@ -126,4 +127,9 @@ export type AcceptedInvitation = {
 export type TableOptions = {
   onCreate?: () => Promise<void>;
   userId?: string;
+};
+
+export type ListInvitationsOptions = {
+  includeAccepted?: boolean;
+  type?: string;
 };

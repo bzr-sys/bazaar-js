@@ -1,26 +1,31 @@
 import jwt_decode from "jwt-decode";
 
-import API from "./api";
-import Auth from "./auth";
+import { API, ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+import { Auth } from "./auth";
 import { namespacePrefix } from "./constants";
-import { Table } from "./table";
-import {
-  AcceptedInvitation,
-  ApiOptions,
-  AuthOptions,
-  CommonOptions,
-  ConnectionRequest,
-  IdTokenDecoded,
-  LoginType,
-  Message,
-  ReceivedInvitation,
-  TableOptions,
-} from "./types";
+import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType, TableOptions } from "./types";
 
 /**
  * Types of errors that can return from the API
  */
 export { ErrorTypes, RethinkIDError } from "./utils";
+export { ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+
+export {
+  User,
+  Contact,
+  ConnectionRequest,
+  Invitation,
+  ReceivedInvitation,
+  AcceptedInvitation,
+  Permission,
+  PermissionType,
+  PermissionCondition,
+  TableOptions,
+  Filter,
+  Message,
+  ListInvitationsOptions,
+} from "./types";
 
 /**
  * RethinkID constructor options
@@ -55,17 +60,41 @@ export class RethinkID {
    */
 
   auth: Auth;
+
   /**
    * A wrapper of the low level Data API
    */
-  api: API;
+  private api: API;
 
-  private onContactConnectionRequestUnsubscribe: () => Promise<Message>;
-  private onReceivedInvitationUnsubscribe: () => Promise<Message>;
-  private onAcceptedInvitationUnsubscribe: () => Promise<Message>;
+  /**
+   * Access to the tables API
+   */
+  tables: TablesAPI;
+
+  /**
+   * Access to the permissions API
+   */
+  permissions: PermissionsAPI;
+
+  /**
+   * Access to the users API
+   */
+  users: UsersAPI;
+
+  /**
+   * Access to the contacts API
+   */
+  contacts: ContactsAPI;
+
+  /**
+   * Access to the invitations API
+   */
+  invitations: InvitationsAPI;
 
   constructor(options: Options) {
-    // set local storage variable name for userInfo method (TODO: remove)
+    // TODO remove current userInfo method
+
+    // set local storage variable name for userInfo method
     const namespace = namespacePrefix + options.appId;
     this.idTokenKeyName = `${namespace}_id_token`;
 
@@ -85,6 +114,12 @@ export class RethinkID {
         options.onLogin(this);
       }
     });
+
+    this.tables = new TablesAPI(this.api);
+    this.permissions = new PermissionsAPI(this.api);
+    this.users = new UsersAPI(this.api);
+    this.contacts = new ContactsAPI(this.api);
+    this.invitations = new InvitationsAPI(this.api);
   }
 
   //
@@ -130,6 +165,7 @@ export class RethinkID {
   // TODO remove userInfo
 
   /**
+   * @deprecated Use api.usersInfo() instead
    * A utility function to get user info, i.e. user ID and the scope-based claims of an
    * authenticated user's ID token.
    */
@@ -154,103 +190,12 @@ export class RethinkID {
     return null;
   }
 
-  //
-  // Social callbacks
-  //
-
   /**
-   * Provide a callback to handle an incoming contact connection request
-   */
-  async onContactConnectionRequest(f: (rid: RethinkID, request: ConnectionRequest) => void) {
-    if (this.onContactConnectionRequestUnsubscribe) {
-      await this.onContactConnectionRequestUnsubscribe();
-    }
-    try {
-      // Subscribe
-      this.onContactConnectionRequestUnsubscribe = await this.api.connectionRequestsSubscribe(
-        (changes: { new_val: object; old_val: object }) => {
-          if (changes.new_val) {
-            f(this, changes.new_val as ConnectionRequest);
-          }
-        },
-      );
-      // List
-      let reqs = await this.api.connectionRequestsList();
-      reqs.data.forEach((req: ConnectionRequest) => {
-        f(this, req);
-      });
-    } catch (error) {
-      // TODO what should we do
-      console.log("onContactConnectionRequest error:", error);
-    }
-  }
-
-  /**
-   * Provide a callback to handle a received app invitation
-   */
-  async onReceivedInvitation(f: (rid: RethinkID, invitation: ReceivedInvitation) => void) {
-    if (this.onReceivedInvitationUnsubscribe) {
-      await this.onReceivedInvitationUnsubscribe();
-    }
-    try {
-      // Subscribe
-      this.onReceivedInvitationUnsubscribe = await this.api.receivedInvitationsSubscribe(
-        (changes: { new_val: object; old_val: object }) => {
-          if (changes.new_val) {
-            f(this, changes.new_val as ReceivedInvitation);
-          }
-        },
-      );
-      // List
-      let reqs = await this.api.receivedInvitationsList();
-      reqs.data.forEach((req: ReceivedInvitation) => {
-        f(this, req);
-      });
-    } catch (error) {
-      // TODO what should we do
-      console.log("onReceivedInvitation error:", error);
-    }
-  }
-
-  /**
-   * Provide a callback to handle accepted app invitations
-   */
-  async onAcceptedInvitation(f: (rid: RethinkID, invitation: AcceptedInvitation) => void) {
-    if (this.onAcceptedInvitationUnsubscribe) {
-      await this.onAcceptedInvitationUnsubscribe();
-    }
-    try {
-      // Subscribe
-      this.onAcceptedInvitationUnsubscribe = await this.api.acceptedInvitationsSubscribe(
-        (changes: { new_val: object; old_val: object }) => {
-          if (changes.new_val) {
-            f(this, changes.new_val as AcceptedInvitation);
-          }
-        },
-      );
-      // List
-      let reqs = await this.api.acceptedInvitationsList();
-      reqs.data.forEach((req: AcceptedInvitation) => {
-        f(this, req);
-      });
-    } catch (error) {
-      // TODO what should we do
-      console.log("onAcceptedInvitation error:", error);
-    }
-  }
-
-  // TODO add mirror functions (keep local state reactive to object that has subscribe function such as table or contacts, other?)
-
-  //
-  // APIs
-  //
-
-  /**
-   * Get a table interface
+   * Get a table interface (API access to the specified table)
    * @param {string} tableName The name of the table to create the interface for.
    * @param {TableOptions} [tableOptions] An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user. The onCreate hook sets up a table when it is created (e.g., to set up permissions)
    */
-  table(tableName: string, tableOptions?: TableOptions) {
-    return new Table(this.api, tableName, tableOptions);
+  table(tableName: string, tableOptions?: TableOptions): TableAPI {
+    return new TableAPI(this.api, tableName, tableOptions);
   }
 }

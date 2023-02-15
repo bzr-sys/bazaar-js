@@ -8,7 +8,7 @@ import { rethinkIdUri, namespacePrefix } from "../constants";
 /**
  * The class that deals with login and authentication
  */
-export default class Auth {
+export class Auth {
   /**
    * Public URI for the OAuth authorization server.
    * Currently implemented with Hydra
