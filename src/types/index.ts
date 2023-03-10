@@ -1,31 +1,27 @@
 /**
  * RethinkID constructor options
  */
-export type Options = {
+export type CommonOptions = {
   appId: string;
+};
+
+export type AuthOptions = {
   /**
    * The URI the auth server redirects to with an auth code, after successful approving a login request.
    */
   loginRedirectUri: string;
-  /**
-   * Provide a callback to handled failed data API connections. E.g. unauthorized, or expired token.
-   * `this` is the RethinkID instance. So you could log out with `this.logOut()` for example.
-   */
-  /**
-   * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4000
-   */
-  dataApiUri?: string;
+
   /**
    * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4444
    */
   oAuthUri?: string;
-  dataAPIConnectErrorCallback?: (errorMessage: string) => void;
+};
+
+export type ApiOptions = {
   /**
-   * A callback function an app can specify to run when a user has successfully logged in.
-   *
-   * e.g. Set state, redirect, etc.
+   * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4000
    */
-  onLogin?: () => void;
+  dataApiUri?: string;
 };
 
 export type Permission = {
@@ -39,8 +35,8 @@ export type Permission = {
 export type PermissionType = "read" | "insert" | "update" | "delete";
 
 export type PermissionCondition = {
-  rowId?: string;
-  matchUserId?: string;
+  rowId?: string; // Permission applies to a specific row ID
+  matchUserId?: string; // Permission applies if specified field matches or contains the user's ID
 };
 
 /**
@@ -84,4 +80,56 @@ export type Filter = {
     $lt?: string | number;
     $le?: string | number;
   };
+};
+
+export type User = {
+  id: string;
+  name: string | undefined;
+  email: string | undefined;
+};
+
+export type Contact = {
+  id: string;
+  userId: string;
+  contactId: string;
+  connected: boolean; // flag to signal if contact is connected (you are trusted by this contact)
+};
+export type ConnectionRequest = {
+  id: string;
+  userId: string;
+  contactId: string;
+};
+
+export type Invitation = {
+  id: string;
+  type: "user" | "link";
+  userId: string | undefined; // ID of invited user (if type='user')
+  limit: number | undefined; // the amount of times the invitation can be used (0 = unlimited, if type='link')
+  resource: any;
+  accepted: AcceptedInvitation[] | undefined;
+};
+
+export type ReceivedInvitation = {
+  id: string;
+  userId: string;
+  hostId: string;
+  appId: string;
+  invitationId: string;
+};
+
+export type AcceptedInvitation = {
+  id: string;
+  invitationId: string;
+  userId: string;
+  handled: boolean;
+};
+
+export type TableOptions = {
+  onCreate?: () => Promise<void>;
+  userId?: string;
+};
+
+export type ListInvitationsOptions = {
+  includeAccepted?: boolean;
+  type?: string;
 };
