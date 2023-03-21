@@ -6,13 +6,14 @@ import {
   Permission,
   SubscribeListener,
   Message,
-  Filter,
+  FilterObject,
   AcceptedInvitation,
   ReceivedInvitation,
   Invitation,
   ConnectionRequest,
   Contact,
   User,
+  OrderBy,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
@@ -183,52 +184,6 @@ export class API {
   }
 
   /**
-   * A FilterOp is an object that applies one or more logic operators to the field it is assigned to.
-   * The logic operators are combined with an AND.
-   * @typedef {Object} FilterOp
-   * @property {string | number} [$eq] -
-   * @property {string | number} [$ne] -
-   * @property {string | number} [$gt] -
-   * @property {string | number} [$ge] -
-   * @property {string | number} [$lt] -
-   * @property {string | number} [$le] -
-   */
-
-  /**
-   * A FilterCondition is an object that applies FilterOps to fields (object keys).
-   * All fields are combined with an OR.
-   * @typedef {Object.<string, FilterOp>} FilterCondition
-   */
-
-  /**
-   * A Filter is an array of FilterConditions.
-   * All FilterConditions are combined with an AND.
-   * The filter
-   * [{
-   *   height: {
-   *     $gt: 80,
-   *     $lt: 140
-   *   },
-   *   weight: {
-   *     $gt: 10,
-   *     $lt: 25
-   *   }
-   * },{
-   *   age: {
-   *     $lt: 12
-   *   }
-   * }]
-   * would result in "((height > 80 AND height < 140) OR (weight > 10 AND weight < 25)) AND (age < 12)"
-   * @typedef {FilterCondition[]} Filter
-   */
-
-  /**
-   * An OrderBy object specifies orderings of results.
-   * Example: { height: "desc", age: "asc" }
-   * @typedef {Object.<string, 'asc' | 'desc'>} OrderBy
-   */
-
-  /**
    * Read all table rows, or a single row if row ID passed. Private by default, or public with read permission.
    * @param {string} tableName The name of the table to read
    * @param {Object} [options={}] An optional object for specifying query options.
@@ -236,7 +191,7 @@ export class API {
    * @param {number} [options.startOffset] - An optional start offset. Default 0 (including)
    * @param {number} [options.endOffset] - An optional end offset. Default null (excluding)
    * @param {OrderBy} [options.orderBy] - An optional OrderBy object
-   * @param {Filter} [options.filter] - An optional Filter object
+   * @param {FilterObject} [options.filter] - An optional Filter object
    * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
    * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
    */
@@ -246,8 +201,8 @@ export class API {
       rowId?: string;
       startOffset?: number;
       endOffset?: number;
-      orderBy?: { [field: string]: "asc" | "desc" };
-      filter?: Filter[];
+      orderBy?: OrderBy;
+      filter?: FilterObject;
       userId?: string;
     } = {},
   ) {
@@ -261,13 +216,13 @@ export class API {
    * @param {string} tableName The name of the table to subscribe to
    * @param {Object} [options={}] An optional object for specifying query options.
    * @param {string} [options.rowId] - The rowId
-   * @param {Filter} [options.filter] - An optional Filter object
+   * @param {FilterObject} [options.filter] - An optional Filter object
    * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
   async tableSubscribe(
     tableName: string,
-    options: { rowId?: string; filter?: Filter[]; userId?: string },
+    options: { rowId?: string; filter?: FilterObject; userId?: string },
     listener: SubscribeListener,
   ) {
     const payload = { tableName };
@@ -442,10 +397,10 @@ export class API {
 
   /**
    * Delete a connection request
-   * @param {string} userID The ID of the user
+   * @param {string} requestId The ID of the user
    */
-  async connectionRequestsDelete(userId: string) {
-    const payload = { userId };
+  async connectionRequestsDelete(requestId: string) {
+    const payload = { requestId };
     return this._asyncEmit("connection_requests:delete", payload) as Promise<Message>;
   }
 

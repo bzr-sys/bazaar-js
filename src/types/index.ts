@@ -71,15 +71,63 @@ export type SubscribeListener = (changes: { new_val: object; old_val: object }) 
 
 export type Message = { message: string };
 
-export type Filter = {
-  [field: string]: {
-    $eq?: string | number;
-    $ne?: string | number;
-    $gt?: string | number;
-    $ge?: string | number;
-    $lt?: string | number;
-    $le?: string | number;
-  };
+/**
+ * A FilterComparison is an object, that applies a set of comparison operators.
+ * Multiple properties are combined with AND. Most comparison operators are self-explanatory
+ * logical operators except for contains, which checks if an element is part of an array.
+ */
+export type FilterComparison = {
+  $eq?: string | number;
+  $ne?: string | number;
+  $gt?: string | number;
+  $ge?: string | number;
+  $lt?: string | number;
+  $le?: string | number;
+  $contains?: string | number;
+};
+
+/**
+ * A FilterObject is an object that either maps
+ * - string keys to string | number | boolean | null. This corresponds to an equality operation
+ * - string keys to FilterComparison. This corresponds to the operation defined in FilterComparison
+ * - $and to FilterObject[]. This combines the result of each FilterObject in the array with AND
+ * - $or to FilterObject[]. This combines the result of each FilterObject in the array with OR
+ * - $not to FilterObject. This applies NOT to the result of the FilterObject
+ * All fields in a FilterObject are combined with an AND.
+ * The FilterObject
+ * {
+ *   $or: [
+ *     {
+ *       height: {
+ *         $gt: 80,
+ *         $lt: 140,
+ *       },
+ *     },
+ *     {
+ *       weight: {
+ *         $gt: 10,
+ *         $lt: 25,
+ *       },
+ *     },
+ *   ],
+ *   age: { $lt: 12 },
+ * }
+ * would result in "((height > 80 AND height < 140) OR (weight > 10 AND weight < 25)) AND (age < 12)"
+ */
+export type FilterObject = {
+  $and?: FilterObject[];
+  $or?: FilterObject[];
+  $not: FilterObject;
+  // Arbitrary fields cannot be FilterObject or FilterObject[]. These types are declared as options because typescript requires it.
+  [field: string]: FilterComparison | string | number | boolean | null | FilterObject | FilterObject[];
+};
+
+/**
+ * An OrderBy object specifies orderings of results.
+ * Example: { height: "desc", age: "asc" }
+ */
+export type OrderBy = {
+  [field: string]: "asc" | "desc";
 };
 
 export type User = {
