@@ -1,5 +1,4 @@
 import ClientOAuth2 from "client-oauth2";
-import jwt_decode from "jwt-decode";
 
 import { CommonOptions, AuthOptions, LoginType } from "../types";
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "../utils";
@@ -11,9 +10,6 @@ import { rethinkIdUri, namespacePrefix } from "../constants";
 export class Auth {
   /**
    * Public URI for the OAuth authorization server.
-   * Currently implemented with Hydra
-   *
-   * In local development requires a port value and is different than {@link dataApiUri }
    */
   oAuthUri = rethinkIdUri;
 
@@ -31,7 +27,6 @@ export class Auth {
    * Local storage key names, namespaced in the constructor
    */
   tokenKeyName: string;
-  idTokenKeyName: string;
   pkceStateKeyName: string;
   pkceCodeVerifierKeyName: string;
 
@@ -74,8 +69,8 @@ export class Auth {
       this.oAuthUri = options.oAuthUri;
     }
 
-    this.authUri = `${this.oAuthUri}/oauth2/auth`;
-    this.tokenUri = `${this.oAuthUri}/oauth2/token`;
+    this.authUri = `${this.oAuthUri}/oauth2`;
+    this.tokenUri = `${this.oAuthUri}/api/v1/oauth2/token`;
 
     this.onLogin = onLogin;
 
@@ -84,7 +79,6 @@ export class Auth {
      */
     const namespace = namespacePrefix + options.appId;
     this.tokenKeyName = `${namespace}_token`;
-    this.idTokenKeyName = `${namespace}_id_token`;
     this.pkceStateKeyName = `${namespace}_pkce_state`;
     this.pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
 
@@ -306,11 +300,9 @@ export class Auth {
     localStorage.removeItem(this.pkceCodeVerifierKeyName);
 
     // Store tokens in local storage
-    const token: string = getTokenResponse.data.access_token;
-    const idToken: string = getTokenResponse.data.id_token;
+    const token: string = getTokenResponse.data.accessToken;
 
     localStorage.setItem(this.tokenKeyName, token);
-    localStorage.setItem(this.idTokenKeyName, idToken);
 
     /**
      * Do after login actions
@@ -324,20 +316,9 @@ export class Auth {
    */
   isLoggedIn(): boolean {
     const token = localStorage.getItem(this.tokenKeyName);
-    const idToken = localStorage.getItem(this.idTokenKeyName);
-
-    if (token && idToken) {
-      try {
-        jwt_decode(idToken);
-
-        return true;
-      } catch (error) {
-        // Error decoding ID token, assume tokens are invalid and remove
-        localStorage.removeItem(this.tokenKeyName);
-        localStorage.removeItem(this.idTokenKeyName);
-      }
+    if (token) {
+      return true;
     }
-
     return false;
   }
 
@@ -352,7 +333,7 @@ export class Auth {
 
     // These query params will be present when redirected
     // back from the RethinkID auth server
-    return !!(params.get("code") && params.get("scope") && params.get("state"));
+    return !!(params.get("code") && params.get("state"));
   }
 
   /**
@@ -360,9 +341,8 @@ export class Auth {
    * Deletes the access token and ID token from local storage and reloads the page.
    */
   logOut(): void {
-    if (localStorage.getItem(this.tokenKeyName) || localStorage.getItem(this.idTokenKeyName)) {
+    if (localStorage.getItem(this.tokenKeyName)) {
       localStorage.removeItem(this.tokenKeyName);
-      localStorage.removeItem(this.idTokenKeyName);
       location.reload();
     }
   }

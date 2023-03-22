@@ -1,5 +1,5 @@
 import { API } from ".";
-import { SubscribeListener, Message, TableOptions, Filter } from "../types";
+import { SubscribeListener, Message, TableOptions, FilterObject, OrderBy } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
 export class TableAPI {
@@ -23,8 +23,8 @@ export class TableAPI {
       rowId?: string;
       startOffset?: number;
       endOffset?: number;
-      orderBy?: { [field: string]: "asc" | "desc" };
-      filter?: Filter[];
+      orderBy?: OrderBy;
+      filter?: FilterObject;
     } = {},
   ) {
     return this.withTable(async () => {
@@ -36,7 +36,7 @@ export class TableAPI {
   /**
    * @returns An unsubscribe function
    */
-  async subscribe(methodOptions: {} = {}, listener: SubscribeListener) {
+  async subscribe(methodOptions: { rowId?: string; filter?: FilterObject } = {}, listener: SubscribeListener) {
     return this.withTable(() =>
       this.api.tableSubscribe(this.tableName, { ...this.tableOptions, ...methodOptions }, listener),
     ) as Promise<() => Promise<Message>>;

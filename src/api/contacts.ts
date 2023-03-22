@@ -65,10 +65,10 @@ export class ContactsAPI {
 
   /**
    * Delete a connection request
-   * @param {string} userID The ID of the user
+   * @param {string} requestId The ID of the user
    */
-  async deleteConnectionRequest(userId: string) {
-    return this.api.connectionRequestsDelete(userId);
+  async deleteConnectionRequest(requestId: string) {
+    return this.api.connectionRequestsDelete(requestId);
   }
 
   /**

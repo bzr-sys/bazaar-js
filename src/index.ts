@@ -1,8 +1,5 @@
-import jwt_decode from "jwt-decode";
-
 import { API, ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
 import { Auth } from "./auth";
-import { namespacePrefix } from "./constants";
 import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType, TableOptions } from "./types";
 
 /**
@@ -22,7 +19,8 @@ export {
   PermissionType,
   PermissionCondition,
   TableOptions,
-  Filter,
+  FilterObject,
+  OrderBy,
   Message,
   ListInvitationsOptions,
 } from "./types";
@@ -33,6 +31,12 @@ export {
 export type Options = CommonOptions &
   AuthOptions &
   ApiOptions & {
+    /**
+     * Public URI for the API & OAuth authorization server.
+     * Will set AuthOptions.oAuthUri & ApiOptions.dataApiUri
+     */
+    rethinkIdUri?: string;
+
     /**
      * A callback function an app can specify to run when a user has successfully logged in.
      *
@@ -50,11 +54,6 @@ export type Options = CommonOptions &
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
  */
 export class RethinkID {
-  /**
-   * Local storage key names, namespaced in the constructor
-   */
-  idTokenKeyName: string;
-
   /**
    * Auth handles authentication and login
    */
@@ -92,11 +91,10 @@ export class RethinkID {
   invitations: InvitationsAPI;
 
   constructor(options: Options) {
-    // TODO remove current userInfo method
-
-    // set local storage variable name for userInfo method
-    const namespace = namespacePrefix + options.appId;
-    this.idTokenKeyName = `${namespace}_id_token`;
+    if (options.rethinkIdUri) {
+      options.dataApiUri = options.rethinkIdUri;
+      options.oAuthUri = options.rethinkIdUri;
+    }
 
     // Initialize API and make a connection to the Data API if logged in
     this.api = new API(options, (message: string) => {
@@ -160,34 +158,6 @@ export class RethinkID {
    */
   logOut(): void {
     return this.auth.logOut();
-  }
-
-  // TODO remove userInfo
-
-  /**
-   * @deprecated Use api.usersInfo() instead
-   * A utility function to get user info, i.e. user ID and the scope-based claims of an
-   * authenticated user's ID token.
-   */
-  userInfo(): null | { id: string; email: string; name: string } {
-    const idToken = localStorage.getItem(this.idTokenKeyName);
-
-    if (idToken) {
-      try {
-        const idTokenDecoded: IdTokenDecoded = jwt_decode(idToken);
-
-        return {
-          id: idTokenDecoded.sub || "",
-          email: idTokenDecoded.email || "", // emailVerified is redundant because login requires verification
-          name: idTokenDecoded.name || "",
-        };
-      } catch (error) {
-        // Error decoding ID token, assume token is invalid and remove
-        localStorage.removeItem(this.idTokenKeyName);
-      }
-    }
-
-    return null;
   }
 
   /**
