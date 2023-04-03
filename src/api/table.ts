@@ -42,11 +42,11 @@ export class TableAPI {
     ) as Promise<() => Promise<Message>>;
   }
 
-  async insert(row: object, methodOptions: {} = {}) {
+  async insert(rowOrRows: object, methodOptions: {} = {}) {
     return this.withTable(async () => {
-      const rec = await this.api.tableInsert(this.tableName, row, { ...this.tableOptions, ...methodOptions });
+      const rec = await this.api.tableInsert(this.tableName, rowOrRows, { ...this.tableOptions, ...methodOptions });
       return rec.data;
-    }) as Promise<string>;
+    }) as Promise<string[]>;
   }
 
   async update(row: object, methodOptions: {} = {}) {

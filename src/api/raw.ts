@@ -242,15 +242,15 @@ export class API {
   /**
    * Insert a table row. Private by default, or public with insert permission
    * @param tableName The name of the table to operate on.
-   * @param row The row to insert.
+   * @param rowOrRows The row or rows to insert.
    * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   * @returns Where `data` is the row ID
+   * @returns Where `data` is the array of new row IDs (only generated IDs)
    */
-  async tableInsert(tableName: string, row: object, options: { userId?: string } = {}) {
-    const payload = { tableName, row };
+  async tableInsert(tableName: string, rowOrRows: object | object[], options: { userId?: string } = {}) {
+    const payload = { tableName, rowOrRows };
     Object.assign(payload, options);
 
-    return this._asyncEmit("table:insert", payload) as Promise<{ data: string }>;
+    return this._asyncEmit("table:insert", payload) as Promise<{ data: string[] }>;
   }
 
   /**
