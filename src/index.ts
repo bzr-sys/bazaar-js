@@ -117,7 +117,7 @@ export class RethinkID {
     this.permissions = new PermissionsAPI(this.api);
     this.users = new UsersAPI(this.api);
     this.contacts = new ContactsAPI(this.api);
-    this.invitations = new InvitationsAPI(this.api);
+    this.invitations = new InvitationsAPI(this.api, options.rethinkIdUri);
   }
 
   //

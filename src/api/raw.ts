@@ -415,6 +415,16 @@ export class API {
   }
 
   /**
+   * Connect with another user (both, initiate and accept a connection)
+   * @param {string} [limit] The amount of times this link can be redeemed, defaults to 0 (unlimited)
+   * @param {Object} [resource] An optional resource that describes the invitation
+   */
+  async invitationsLink(limit: number, resource: any) {
+    const payload = { limit, resource };
+    return this._asyncEmit("invitations:link", payload) as Promise<{ data: string }>;
+  }
+
+  /**
    * List invitations
    * @returns a list of invitations
    */
