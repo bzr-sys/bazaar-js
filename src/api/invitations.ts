@@ -1,3 +1,4 @@
+import { invitePath, rethinkIdUri } from "../constants";
 import { AcceptedInvitation, ListInvitationsOptions, Message, ReceivedInvitation, SubscribeListener } from "../types";
 import { API } from "./raw";
 
@@ -6,21 +7,33 @@ import { API } from "./raw";
  */
 export class InvitationsAPI {
   private api: API;
+  private inviteLinkUri: string;
 
   private onReceivedUnsubscribe: () => Promise<Message>;
   private onAcceptedUnsubscribe: () => Promise<Message>;
 
-  constructor(api: API) {
+  constructor(api: API, uri: string) {
     this.api = api;
+    this.inviteLinkUri = (uri || rethinkIdUri) + invitePath;
   }
 
   /**
-   * Connect with another user (both, initiate and accept a connection)
+   * Invite another user to join you in the current app
    * @param {string} userId The ID of the user
    * @param {Object} [resource] An optional resource that describes the invitation
    */
   async inviteUser(userId: string, resource: any) {
     return this.api.invitationsUser(userId, resource);
+  }
+
+  /**
+   * Create an invitation link
+   * @param {number} [limit] An optional limit on how many times the link can be used
+   * @param {Object} [resource] An optional resource that describes the invitation
+   */
+  async createLink(limit: number, resource: any) {
+    const linkId = await this.api.invitationsLink(limit, resource);
+    return this.inviteLinkUri + linkId.data;
   }
 
   /**
@@ -39,6 +52,12 @@ export class InvitationsAPI {
 
     const recAcc = await this.api.acceptedInvitationsList();
     invites = invites.map((i) => {
+      // Add link
+      if (i.linkId) {
+        i.link = this.inviteLinkUri + i.linkId;
+      }
+
+      // Add accepted
       i.accepted = recAcc.data.filter((a) => {
         return a.invitationId == i.id;
       });
@@ -48,6 +67,10 @@ export class InvitationsAPI {
       return invites;
     }
     invites = invites.filter((i) => {
+      if (i.type == "link") {
+        // TODO filter if limit is reached?
+        return true;
+      }
       return i.accepted.length == 0;
     });
     return invites;

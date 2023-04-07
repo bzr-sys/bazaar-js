@@ -12,14 +12,14 @@ export type AuthOptions = {
   loginRedirectUri: string;
 
   /**
-   * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4444
+   * Optionally set an alternative to the default URI.
    */
   oAuthUri?: string;
 };
 
 export type ApiOptions = {
   /**
-   * Optionally set an alternative to the default URI. e.g. A development URI like http://localhost:4000
+   * Optionally set an alternative to the default URI.
    */
   dataApiUri?: string;
 };
@@ -153,6 +153,8 @@ export type Invitation = {
   type: "user" | "link";
   userId: string | undefined; // ID of invited user (if type='user')
   limit: number | undefined; // the amount of times the invitation can be used (0 = unlimited, if type='link')
+  linkId: string | undefined; // the linkId to create an invitation of type link (see link)
+  link: string | undefined; // The invitation link (if type='link')
   resource: any;
   accepted: AcceptedInvitation[] | undefined;
 };
