@@ -20,41 +20,28 @@ Install your locally built package.
 npm install <../path/to/rethinkid-js-sdk>
 ```
 
+**Note: this package doesn't work currently if installed locally (as opposed to installed via NPM) because of a Vite `query-string` package polyfill issue.**
+
 ## Using via NPM
 
-This repo contains a GitHub Action which triggers when a release is created. The action builds the SDK and publishes to GitHub Packages.
-
-GitHub Packages is added as an NPM registry in `.npmrc`.
-
-To install from GitHub first you must [authenticate](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
-
-Then you can install with NPM as usual.
+Install with NPM:
 
 ```bash
-npm install @mostlytyped/rethinkid-js-sdk
+npm install @rethinkid/rethinkid-js-sdk
 ```
 
-Import the package as usual.
+Import the package:
 
 ```js
-import RethinkID from "@mostlytyped/rethinkid-js-sdk";
+import { RethinkID } from "@rethinkid/rethinkid-js-sdk";
 
 const rid = new RethinkID({
   /* config... */
 });
 ```
 
-## Using via CDN
+## CDN files
 
-The GitHub Action also commits and pushes the built `dist` folder's contents to the public repo [rethinkid-js-sdk-dist](https://github.com/mostlytyped/rethinkid-js-sdk-dist). Files can be accessed their via CDN with [jsDelivr](https://www.jsdelivr.com/?docs=gh). e.g. `https://cdn.jsdelivr.net/gh/mostlytyped/rethinkid-js-sdk-dist/rethinkid-js-sdk.iife.js`
+jsDelivr `@rethinkid/rethinkid-js-sdk` CDN files:
 
-Using the bundled file:
-
-```html
-<script src="https://cdn.jsdelivr.net/gh/mostlytyped/rethinkid-js-sdk-dist/rethinkid-js-sdk.iife.js"></script>
-<script>
-  const rid = new RethinkID({
-    /* config... */
-  });
-</script>
-```
+`https://cdn.jsdelivr.net/npm/@rethinkid/rethinkid-js-sdk/`
