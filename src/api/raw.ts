@@ -222,7 +222,7 @@ export class API {
    */
   async tableSubscribe(
     tableName: string,
-    options: { rowId?: string; filter?: FilterObject; userId?: string },
+    options: { rowId?: string; filter?: FilterObject; userId?: string } = {},
     listener: SubscribeListener,
   ) {
     const payload = { tableName };
@@ -419,7 +419,7 @@ export class API {
    * @param {string} [limit] The amount of times this link can be redeemed, defaults to 0 (unlimited)
    * @param {Object} [resource] An optional resource that describes the invitation
    */
-  async invitationsLink(limit: number, resource: any) {
+  async invitationsLink(limit?: number, resource?: any) {
     const payload = { limit, resource };
     return this._asyncEmit("invitations:link", payload) as Promise<{ data: string }>;
   }
@@ -517,7 +517,7 @@ export class API {
   }
 
   /**
-   * Handle a accepted invitation
+   * Handle an accepted invitation
    * @param {string} invitationId The ID of the accepted invitation
    */
   async acceptedInvitationsHandle(invitationId: string) {
