@@ -19,7 +19,7 @@ export class Auth {
   authUri: string;
 
   /**
-   * URI to complete an OAuth login request, exchanging a auth code for an access token and ID token
+   * URI to complete an OAuth login request, exchanging an auth code for an access token and ID token
    */
   tokenUri: string;
 

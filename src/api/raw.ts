@@ -517,7 +517,7 @@ export class API {
   }
 
   /**
-   * Handle a accepted invitation
+   * Handle an accepted invitation
    * @param {string} invitationId The ID of the accepted invitation
    */
   async acceptedInvitationsHandle(invitationId: string) {
