@@ -22,7 +22,7 @@ export class InvitationsAPI {
    * @param {string} userId The ID of the user
    * @param {Object} [resource] An optional resource that describes the invitation
    */
-  async inviteUser(userId: string, resource: any) {
+  async inviteUser(userId: string, resource?: any) {
     return this.api.invitationsUser(userId, resource);
   }
 
@@ -31,7 +31,7 @@ export class InvitationsAPI {
    * @param {number} [limit] An optional limit on how many times the link can be used
    * @param {Object} [resource] An optional resource that describes the invitation
    */
-  async createLink(limit: number, resource: any) {
+  async createLink(limit?: number, resource?: any) {
     const linkId = await this.api.invitationsLink(limit, resource);
     return this.inviteLinkUri + linkId.data;
   }
