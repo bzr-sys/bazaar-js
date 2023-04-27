@@ -472,19 +472,19 @@ export class API {
 
   /**
    * Accept a received invitation
-   * @param {string} invitationId The ID of the received invitation
+   * @param {string} receivedInvitationId The ID of the received invitation
    */
-  async receivedInvitationsAccept(invitationId: string) {
-    const payload = { invitationId };
+  async receivedInvitationsAccept(receivedInvitationId: string) {
+    const payload = { receivedInvitationId };
     return this._asyncEmit("received_invitations:accept", payload) as Promise<Message>;
   }
 
   /**
    * Delete a received invitation
-   * @param {string} invitationId The ID of the received invitation
+   * @param {string} receivedInvitationId The ID of the received invitation
    */
-  async receivedInvitationsDelete(invitationId: string) {
-    const payload = { invitationId };
+  async receivedInvitationsDelete(receivedInvitationId: string) {
+    const payload = { receivedInvitationId };
     return this._asyncEmit("received_invitations:delete", payload) as Promise<Message>;
   }
 
@@ -518,10 +518,10 @@ export class API {
 
   /**
    * Handle an accepted invitation
-   * @param {string} invitationId The ID of the accepted invitation
+   * @param {string} acceptedInvitationId The ID of the accepted invitation
    */
-  async acceptedInvitationsHandle(invitationId: string) {
-    const payload = { invitationId };
+  async acceptedInvitationsHandle(acceptedInvitationId: string) {
+    const payload = { acceptedInvitationId };
     return this._asyncEmit("accepted_invitations:handle", payload) as Promise<Message>;
   }
 }
