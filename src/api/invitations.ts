@@ -87,10 +87,10 @@ export class InvitationsAPI {
 
   /**
    * Handle an accepted invitation
-   * @param {string} invitationId The ID of the accepted invitation
+   * @param {string} acceptedInvitationId The ID of the accepted invitation
    */
-  async handleAccepted(invitationId: string) {
-    return this.api.acceptedInvitationsHandle(invitationId);
+  async handleAccepted(acceptedInvitationId: string) {
+    return this.api.acceptedInvitationsHandle(acceptedInvitationId);
   }
 
   /**
@@ -136,18 +136,18 @@ export class InvitationsAPI {
 
   /**
    * Accept a received invitation
-   * @param {string} invitationId The ID of the received invitation
+   * @param {string} receivedInvitationId The ID of the received invitation
    */
-  async acceptReceived(invitationId: string) {
-    return this.api.receivedInvitationsAccept(invitationId);
+  async acceptReceived(receivedInvitationId: string) {
+    return this.api.receivedInvitationsAccept(receivedInvitationId);
   }
 
   /**
    * Delete a received invitation
-   * @param {string} invitationId The ID of the received invitation
+   * @param {string} receivedInvitationId The ID of the received invitation
    */
-  async deleteReceived(invitationId: string) {
-    return this.api.receivedInvitationsDelete(invitationId);
+  async deleteReceived(receivedInvitationId: string) {
+    return this.api.receivedInvitationsDelete(receivedInvitationId);
   }
 
   /**
