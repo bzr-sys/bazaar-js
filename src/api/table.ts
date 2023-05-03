@@ -55,9 +55,9 @@ export class TableAPI {
     ) as Promise<Message>;
   }
 
-  async replace(methodOptions: {} = {}) {
+  async replace(row: object, methodOptions: {} = {}) {
     return this.withTable(() =>
-      this.api.tableReplace(this.tableName, { ...this.tableOptions, ...methodOptions }),
+      this.api.tableReplace(this.tableName, row, { ...this.tableOptions, ...methodOptions }),
     ) as Promise<Message>;
   }
 
