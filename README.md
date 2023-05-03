@@ -2,6 +2,18 @@
 
 An SDK for working with RethinkID.
 
+## Publish to NPM
+
+Increment version in `package.json`.
+
+```bash
+npm run build
+```
+
+```bash
+npm publish
+```
+
 ## Using locally
 
 Build the `dist` folder.
