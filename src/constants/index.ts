@@ -10,6 +10,11 @@ export const rethinkIdUri =
 export const invitePath = "/i/";
 
 /**
+ * The URL path for link sharing
+ */
+ export const sharingPath = "/s/";
+
+/**
  * The prefix when namespacing local storage variables
  */
 export const namespacePrefix = "rethinkid_";

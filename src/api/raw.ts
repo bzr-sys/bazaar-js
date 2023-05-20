@@ -14,6 +14,8 @@ import {
   Contact,
   User,
   OrderBy,
+  Sharing,
+  SharedWithMe,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
@@ -405,7 +407,7 @@ export class API {
   }
 
   /**
-   * Connect with another user (both, initiate and accept a connection)
+   * Invite a user by id
    * @param {string} userId The ID of the user
    * @param {Object} [resource] An optional resource that describes the invitation
    */
@@ -415,7 +417,7 @@ export class API {
   }
 
   /**
-   * Connect with another user (both, initiate and accept a connection)
+   * Create an invitation link
    * @param {string} [limit] The amount of times this link can be redeemed, defaults to 0 (unlimited)
    * @param {Object} [resource] An optional resource that describes the invitation
    */
@@ -523,5 +525,89 @@ export class API {
   async acceptedInvitationsHandle(acceptedInvitationId: string) {
     const payload = { acceptedInvitationId };
     return this._asyncEmit("accepted_invitations:handle", payload) as Promise<Message>;
+  }
+
+  /**
+   * Share resource with user ID
+   * @param {string} userId The ID of the user
+   * @param {Object} [resource] An optional resource that describes the invitation
+   */
+   async sharingUser(userId: string, resource: any) {
+    const payload = { userId, resource };
+    return this._asyncEmit("sharing:user", payload) as Promise<Message>;
+  }
+
+  /**
+   * Create a sharing link for a resource
+   * @param {string} [limit] The amount of times this link can be redeemed, defaults to 0 (unlimited)
+   * @param {Object} [resource] An optional resource that describes the invitation
+   */
+  async sharingLink(limit?: number, resource?: any) {
+    const payload = { limit, resource };
+    return this._asyncEmit("sharing:link", payload) as Promise<{ data: string }>;
+  }
+
+  /**
+   * List sharings
+   * @returns a list of sharings
+   */
+  async sharingList() {
+    const payload = {};
+    return this._asyncEmit("sharing:list", payload) as Promise<{ data: Sharing[] }>;
+  }
+
+  /**
+   * Delete a sharing
+   * @param {string} sharingId The ID of the sharing
+   */
+  async sharingDelete(sharingId: string) {
+    const payload = { sharingId };
+    return this._asyncEmit("sharing:delete", payload) as Promise<Message>;
+  }
+
+  /**
+   * List shared with me entries
+   * @returns a list of shared with me entries
+   */
+  async sharedWithMeList() {
+    const payload = {};
+    return this._asyncEmit("shared_with_me:list", payload) as Promise<{ data: SharedWithMe[] }>;
+  }
+
+  /**
+   * Subscribe to received invitation changes
+   * @param {SubscribeListener} listener Function that handles the shared with me updates
+   * @returns An unsubscribe function
+   */
+  async sharedWithMeSubscribe(listener: SubscribeListener) {
+    const payload = {};
+
+    const response = (await this._asyncEmit("shared_with_me:subscribe", payload)) as { data: string }; // where data is the subscription handle
+    const subscriptionHandle = response.data;
+
+    this.dataApi.on(subscriptionHandle, listener);
+
+    return async () => {
+      this.dataApi.off(subscriptionHandle, listener);
+      return this._asyncEmit("shared_with_me:unsubscribe", subscriptionHandle) as Promise<Message>;
+    };
+  }
+
+  /**
+   * Mark a shared with me entry as handled
+   * @param {string} sharedId The ID of the shared with me entry
+   */
+  async sharedWithMeHandle(sharedId: string) {
+    const payload = { sharedId };
+    return this._asyncEmit("shared_with_me:handle", payload) as Promise<Message>;
+  }
+
+  /**
+   * Delete a shared with me entry
+   * @param {string} sharedId The ID of the shared with me entry
+   */
+  async sharedWithMeDelete(sharedId: string) {
+    const payload = { sharedId };
+    return this._asyncEmit("shared_with_me:delete", payload) as Promise<Message>;
   }
 }

@@ -174,6 +174,26 @@ export type AcceptedInvitation = {
   handled: boolean;
 };
 
+export type Sharing = {
+  id: string;
+  type: "user" | "link";
+  userId: string | undefined; // ID of invited user (if type='user')
+  limit: number | undefined; // the amount of times the sharing can be used (0 = unlimited, if type='link')
+  linkId: string | undefined; // the linkId to create a sharing of type link (see link)
+  link: string | undefined; // The sharing link (if type='link')
+  resource: any;
+};
+
+export type SharedWithMe = {
+  id: string;
+  userId: string;
+  hostId: string;
+  appId: string;
+  sharingId: string;
+  resource: any;
+  handled: boolean; // if true, will no longer trigger onSharedWithMe callback
+};
+
 export type TableOptions = {
   onCreate?: () => Promise<void>;
   userId?: string;
@@ -181,5 +201,9 @@ export type TableOptions = {
 
 export type ListInvitationsOptions = {
   includeAccepted?: boolean;
+  type?: string;
+};
+
+export type ListSharingOptions = {
   type?: string;
 };

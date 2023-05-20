@@ -1,4 +1,5 @@
 import { API, ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+import { SharingAPI } from "./api/sharing";
 import { Auth } from "./auth";
 import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType, TableOptions } from "./types";
 
@@ -90,6 +91,11 @@ export class RethinkID {
    */
   invitations: InvitationsAPI;
 
+  /**
+   * Access to the sharing API
+   */
+   sharing: SharingAPI;
+
   constructor(options: Options) {
     if (options.rethinkIdUri) {
       options.dataApiUri = options.rethinkIdUri;
@@ -118,6 +124,7 @@ export class RethinkID {
     this.users = new UsersAPI(this.api);
     this.contacts = new ContactsAPI(this.api);
     this.invitations = new InvitationsAPI(this.api, options.rethinkIdUri);
+    this.sharing = new SharingAPI(this.api, options.rethinkIdUri);
   }
 
   //
