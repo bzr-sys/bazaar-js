@@ -1,6 +1,7 @@
-import { API, ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+import { API, ContactsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+import { SharingAPI } from "./api/sharing";
 import { Auth } from "./auth";
-import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType, TableOptions } from "./types";
+import { ApiOptions, AuthOptions, CommonOptions, LoginType, TableOptions } from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -12,9 +13,6 @@ export {
   User,
   Contact,
   ConnectionRequest,
-  Invitation,
-  ReceivedInvitation,
-  AcceptedInvitation,
   Permission,
   PermissionType,
   PermissionCondition,
@@ -22,7 +20,6 @@ export {
   FilterObject,
   OrderBy,
   Message,
-  ListInvitationsOptions,
 } from "./types";
 
 /**
@@ -86,9 +83,9 @@ export class RethinkID {
   contacts: ContactsAPI;
 
   /**
-   * Access to the invitations API
+   * Access to the sharing API
    */
-  invitations: InvitationsAPI;
+  sharing: SharingAPI;
 
   constructor(options: Options) {
     if (options.rethinkIdUri) {
@@ -117,7 +114,7 @@ export class RethinkID {
     this.permissions = new PermissionsAPI(this.api);
     this.users = new UsersAPI(this.api);
     this.contacts = new ContactsAPI(this.api);
-    this.invitations = new InvitationsAPI(this.api, options.rethinkIdUri);
+    this.sharing = new SharingAPI(this.api, options.rethinkIdUri);
   }
 
   //
