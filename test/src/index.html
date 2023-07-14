@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>RethinkID SDK Test</title>
+    <script type="module" src="app.js"></script>
+    <style>
+      .grid{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "l g"
+          "r s"
+        ;
+      }
+      .hidden {
+        display: none;
+      }
+      .box {
+        padding: 1rem;
+        border: 2px solid salmon;
+      }
+      #login {
+        grid-area: l;
+      }
+      #shared {
+        grid-area: g;
+      }
+      #run {
+        grid-area: r;
+      }
+      #share {
+        grid-area: s;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="grid">
+      <div id="login" class="box">
+        <button onclick="login()" id="login-btn">Login</button>
+        <p id="user">No user info yet</p>
+      </div>
+      <div id="shared" class="box">
+        <p>Shared items:</p>
+        <ul id="shared-output"></ul>
+      </div>
+      <div id="run" class="box">
+        <button onclick="run()" id="run-btn" disabled>Run</button>
+        <!-- <p id="run-p" class="hidden">Running test:</p> -->
+        <ul id="run-output"></ul>
+      </div>
+      <div id="share" class="box">
+        <button onclick="share()" id="share-btn" disabled>Share</button>
+        <input id="share-input" type="text" placeholder="user ID"/>
+        <!-- <p id="run-p" class="hidden">Running test:</p> -->
+        <ul id="share-output"></ul>
+      </div>
+    </div>
+    
+  </body>
+</html>
