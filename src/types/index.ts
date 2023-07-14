@@ -38,7 +38,12 @@ export type Permission = {
   condition?: PermissionCondition;
 };
 
-export type PermissionType = "read" | "insert" | "update" | "delete";
+export enum PermissionType {
+  READ = "read",
+  INSERT = "insert",
+  UPDATE = "update",
+  DELETE =  "delete",
+};
 
 export type PermissionCondition = {
   rowId?: string; // Permission applies to a specific row ID
@@ -48,7 +53,7 @@ export type PermissionCondition = {
 export type PermissionsGetOptions = {
   tableName?: string;
   userId?: string;
-  type?: "read" | "insert" | "update" | "delete";
+  type?: PermissionType;
 };
 
 export type GrantedPermission = {
@@ -108,8 +113,10 @@ export type FilterComparison = {
  * - $and to FilterObject[]. This combines the result of each FilterObject in the array with AND
  * - $or to FilterObject[]. This combines the result of each FilterObject in the array with OR
  * - $not to FilterObject. This applies NOT to the result of the FilterObject
+ * 
  * All fields in a FilterObject are combined with an AND.
  * The FilterObject
+ * ```
  * {
  *   $or: [
  *     {
@@ -127,6 +134,7 @@ export type FilterComparison = {
  *   ],
  *   age: { $lt: 12 },
  * }
+ * ```
  * would result in "((height > 80 AND height < 140) OR (weight > 10 AND weight < 25)) AND (age < 12)"
  */
 export type FilterObject = {

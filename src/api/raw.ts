@@ -14,6 +14,8 @@ import {
   Link,
   GrantedPermission,
   LinksGetOptions,
+  PermissionType,
+  PermissionTemplate,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
@@ -161,7 +163,7 @@ export class API {
     options: {
       tableName?: string;
       userId?: string;
-      type?: "read" | "insert" | "update" | "delete";
+      type?: PermissionType;
     } = {},
   ) {
     return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
@@ -178,9 +180,9 @@ export class API {
   /**
    * Create a permission link (sharing).
    */
-  async permissionsLink(permission: Permission) {
+  async permissionsLink(permission: PermissionTemplate, limit: number) {
     console.log("this", this);
-    return this._asyncEmit("permissions:link", permission) as Promise<{ data: Link }>;
+    return this._asyncEmit("permissions:link", { permission, limit}) as Promise<{ data: Link }>;
   }
 
   /**
@@ -243,7 +245,8 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<Message>;
+      const resp = await this._asyncEmit("table:unsubscribe", subscriptionHandle) as Message;
+      return resp.message;
     };
   }
 

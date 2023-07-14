@@ -7,7 +7,7 @@ import { ApiOptions, AuthOptions, CommonOptions, LoginType, TableOptions } from 
  * Types of errors that can return from the API
  */
 export { ErrorTypes, RethinkIDError } from "./utils";
-export { ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+export { ContactsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
 
 export {
   User,
@@ -39,7 +39,7 @@ export type Options = CommonOptions &
      *
      * e.g. Set state, redirect, etc.
      */
-    onLogin?: (rid: RethinkID) => void;
+    onLogin?: (rid: RethinkID) => Promise<void>;
 
     /**
      * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
@@ -103,10 +103,11 @@ export class RethinkID {
     });
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
-    this.auth = new Auth(options, () => {
+    this.auth = new Auth(options, async () => {
+      console.log("onLogin default")
       this.api._connect();
       if (options.onLogin) {
-        options.onLogin(this);
+        await options.onLogin(this);
       }
     });
 
@@ -126,10 +127,11 @@ export class RethinkID {
    *
    * e.g. Set state, redirect, etc.
    */
-  onLogin(f: (rid: RethinkID) => void) {
-    this.auth.onLogin = () => {
+  onLogin(f: (rid: RethinkID) => Promise<void>) {
+    this.auth.onLogin = async () => {
+      console.log("onLogin set")
       this.api._connect();
-      f(this);
+      await f(this);
     };
   }
 

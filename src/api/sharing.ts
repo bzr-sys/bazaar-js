@@ -24,9 +24,9 @@ export class SharingAPI {
     return this.api.permissionsSet([p]);
   }
 
-  async createLink(permission: PermissionTemplate) {
+  async createLink(permission: PermissionTemplate, limit: number) {
     const p = { ...permission, userId: "*" };
-    const link = await this.api.permissionsLink(p);
+    const link = await this.api.permissionsLink(p, limit);
     return this.linkUri + link.data.id;
   }
 
