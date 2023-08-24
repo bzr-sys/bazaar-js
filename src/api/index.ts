@@ -4,4 +4,3 @@ export { PermissionsAPI } from "./permissions";
 export { TableAPI } from "./table";
 export { UsersAPI } from "./users";
 export { ContactsAPI } from "./contacts";
-export { InvitationsAPI } from "./invitations";

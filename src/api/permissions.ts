@@ -1,4 +1,4 @@
-import { Permission } from "../types";
+import { Permission, PermissionsGetOptions } from "../types";
 import { API } from "./raw";
 
 /**
@@ -16,13 +16,7 @@ export class PermissionsAPI {
    * @param options If no optional params are set, all permissions for the user are returned.
    * @returns All permissions are returned if no options are passed.
    */
-  async get(
-    options: {
-      tableName?: string;
-      userId?: string;
-      type?: "read" | "insert" | "update" | "delete";
-    } = {},
-  ) {
+  async get(options: PermissionsGetOptions = {}) {
     const rec = await this.api.permissionsGet(options);
     return rec.data;
   }

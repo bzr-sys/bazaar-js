@@ -5,9 +5,9 @@ export const rethinkIdUri =
   process.env.NODE_ENV == "development" ? "http://localhost:3377" : "https://id.rethinkdb.cloud";
 
 /**
- * The URL path for link invitations
+ * The URL path for sharing links
  */
-export const invitePath = "/i/";
+export const linkPath = "/l/";
 
 /**
  * The prefix when namespacing local storage variables

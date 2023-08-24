@@ -24,19 +24,58 @@ export type ApiOptions = {
   dataApiUri?: string;
 };
 
+export type PermissionTemplate = {
+  tableName: string;
+  types: PermissionType[];
+  condition?: PermissionCondition;
+};
+
 export type Permission = {
   id?: string; // for permissionSet ID is present if updating, absent if inserting
   tableName: string;
   userId: string;
-  type: PermissionType;
+  types: PermissionType[];
   condition?: PermissionCondition;
 };
 
-export type PermissionType = "read" | "insert" | "update" | "delete";
+export enum PermissionType {
+  READ = "read",
+  INSERT = "insert",
+  UPDATE = "update",
+  DELETE =  "delete",
+};
 
 export type PermissionCondition = {
   rowId?: string; // Permission applies to a specific row ID
   matchUserId?: string; // Permission applies if specified field matches or contains the user's ID
+};
+
+export type PermissionsGetOptions = {
+  tableName?: string;
+  userId?: string;
+  type?: PermissionType;
+};
+
+export type GrantedPermission = {
+  id: string;
+  userId: string;
+  appId: string;
+  hostId: string;
+  permissionId: string;
+  permission: Permission | undefined;
+};
+
+export type Link = {
+  id: string;
+  userId: string;
+  appId: string;
+  permissionId: string;
+  limit: number;
+  users: string[] | undefined;
+};
+
+export type LinksGetOptions = {
+  userId?: string;
 };
 
 /**
@@ -47,25 +86,6 @@ export type PermissionCondition = {
  * "redirect" - Do redirect login. Do not open a pop-up
  */
 export type LoginType = "popup_fallback" | "popup" | "redirect";
-
-export type IdTokenDecoded = {
-  at_hash: string;
-  aud: string[];
-  auth_time: number; // timestamp
-  exp: number; // timestamp
-  iat: number; // timestamp
-  iss: string;
-  jti: string;
-  rat: number; // timestamp
-  sid: string;
-  sub: string; // user ID
-  // Open ID Connect scoped data
-  // - 'email' scope
-  email?: string;
-  email_verified?: boolean;
-  // - 'profile' scope
-  name?: string;
-};
 
 export type SubscribeListener = (changes: { new_val: object; old_val: object }) => void;
 
@@ -93,8 +113,10 @@ export type FilterComparison = {
  * - $and to FilterObject[]. This combines the result of each FilterObject in the array with AND
  * - $or to FilterObject[]. This combines the result of each FilterObject in the array with OR
  * - $not to FilterObject. This applies NOT to the result of the FilterObject
+ * 
  * All fields in a FilterObject are combined with an AND.
  * The FilterObject
+ * ```
  * {
  *   $or: [
  *     {
@@ -112,6 +134,7 @@ export type FilterComparison = {
  *   ],
  *   age: { $lt: 12 },
  * }
+ * ```
  * would result in "((height > 80 AND height < 140) OR (weight > 10 AND weight < 25)) AND (age < 12)"
  */
 export type FilterObject = {
@@ -148,38 +171,7 @@ export type ConnectionRequest = {
   contactId: string;
 };
 
-export type Invitation = {
-  id: string;
-  type: "user" | "link";
-  userId: string | undefined; // ID of invited user (if type='user')
-  limit: number | undefined; // the amount of times the invitation can be used (0 = unlimited, if type='link')
-  linkId: string | undefined; // the linkId to create an invitation of type link (see link)
-  link: string | undefined; // The invitation link (if type='link')
-  resource: any;
-  accepted: AcceptedInvitation[] | undefined;
-};
-
-export type ReceivedInvitation = {
-  id: string;
-  userId: string;
-  hostId: string;
-  appId: string;
-  invitationId: string;
-};
-
-export type AcceptedInvitation = {
-  id: string;
-  invitationId: string;
-  userId: string;
-  handled: boolean;
-};
-
 export type TableOptions = {
   onCreate?: () => Promise<void>;
   userId?: string;
-};
-
-export type ListInvitationsOptions = {
-  includeAccepted?: boolean;
-  type?: string;
 };

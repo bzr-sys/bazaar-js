@@ -7,13 +7,15 @@ import {
   SubscribeListener,
   Message,
   FilterObject,
-  AcceptedInvitation,
-  ReceivedInvitation,
-  Invitation,
   ConnectionRequest,
   Contact,
   User,
   OrderBy,
+  Link,
+  GrantedPermission,
+  LinksGetOptions,
+  PermissionType,
+  PermissionTemplate,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
@@ -161,7 +163,7 @@ export class API {
     options: {
       tableName?: string;
       userId?: string;
-      type?: "read" | "insert" | "update" | "delete";
+      type?: PermissionType;
     } = {},
   ) {
     return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
@@ -173,6 +175,14 @@ export class API {
   async permissionsSet(permissions: Permission[]) {
     console.log("this", this);
     return this._asyncEmit("permissions:set", permissions) as Promise<Message>;
+  }
+
+  /**
+   * Create a permission link (sharing).
+   */
+  async permissionsLink(permission: PermissionTemplate, limit: number) {
+    console.log("this", this);
+    return this._asyncEmit("permissions:link", { permission, limit}) as Promise<{ data: Link }>;
   }
 
   /**
@@ -235,7 +245,8 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("table:unsubscribe", subscriptionHandle) as Promise<Message>;
+      const resp = await this._asyncEmit("table:unsubscribe", subscriptionHandle) as Message;
+      return resp.message;
     };
   }
 
@@ -313,11 +324,11 @@ export class API {
   }
 
   /**
-   * Remove a user ID from your contacts
-   * @param {string} userID The ID of the user
+   * Remove a user from your contacts
+   * @param {string} contactId The ID of the contact
    */
-  async contactsRemove(userId: string) {
-    const payload = { userId };
+  async contactsRemove(contactId: string) {
+    const payload = { contactId };
     return this._asyncEmit("contacts:remove", payload) as Promise<Message>;
   }
 
@@ -405,123 +416,48 @@ export class API {
   }
 
   /**
-   * Connect with another user (both, initiate and accept a connection)
-   * @param {string} userId The ID of the user
-   * @param {Object} [resource] An optional resource that describes the invitation
+   * List granted permissions
+   * @returns a list of granted permissions
    */
-  async invitationsUser(userId: string, resource: any) {
-    const payload = { userId, resource };
-    return this._asyncEmit("invitations:user", payload) as Promise<Message>;
-  }
-
-  /**
-   * Connect with another user (both, initiate and accept a connection)
-   * @param {string} [limit] The amount of times this link can be redeemed, defaults to 0 (unlimited)
-   * @param {Object} [resource] An optional resource that describes the invitation
-   */
-  async invitationsLink(limit?: number, resource?: any) {
-    const payload = { limit, resource };
-    return this._asyncEmit("invitations:link", payload) as Promise<{ data: string }>;
-  }
-
-  /**
-   * List invitations
-   * @returns a list of invitations
-   */
-  async invitationsList() {
+  async grantedPermissionsList() {
     const payload = {};
-    return this._asyncEmit("invitations:list", payload) as Promise<{ data: Invitation[] }>;
+    return this._asyncEmit("granted_permissions:list", payload) as Promise<{ data: GrantedPermission[] }>;
   }
 
   /**
-   * Delete an invitation
-   * @param {string} invitationId The ID of the invitation
-   */
-  async invitationsDelete(invitationId: string) {
-    const payload = { invitationId };
-    return this._asyncEmit("invitations:delete", payload) as Promise<Message>;
-  }
-
-  /**
-   * List received invitations
-   * @returns a list of received invitations
-   */
-  async receivedInvitationsList() {
-    const payload = {};
-    return this._asyncEmit("received_invitations:list", payload) as Promise<{ data: ReceivedInvitation[] }>;
-  }
-
-  /**
-   * Subscribe to received invitation changes
-   * @param {SubscribeListener} listener Function that handles the received invitation updates
+   * Subscribe to granted permissions changes
+   * @param {SubscribeListener} listener Function that handles the granted permissions updates
    * @returns An unsubscribe function
    */
-  async receivedInvitationsSubscribe(listener: SubscribeListener) {
+  async grantedPermissionsSubscribe(listener: SubscribeListener) {
     const payload = {};
 
-    const response = (await this._asyncEmit("received_invitations:subscribe", payload)) as { data: string }; // where data is the subscription handle
+    const response = (await this._asyncEmit("granted_permissions:subscribe", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("received_invitations:unsubscribe", subscriptionHandle) as Promise<Message>;
+      return this._asyncEmit("granted_permissions:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
 
   /**
-   * Accept a received invitation
-   * @param {string} receivedInvitationId The ID of the received invitation
+   * Delete a granted permission
+   * @param {string} permissionId The ID of the granted permission
    */
-  async receivedInvitationsAccept(receivedInvitationId: string) {
-    const payload = { receivedInvitationId };
-    return this._asyncEmit("received_invitations:accept", payload) as Promise<Message>;
+  async grantedPermissionsDelete(permissionId: string) {
+    const payload = { permissionId };
+    return this._asyncEmit("granted_permissions:delete", payload) as Promise<Message>;
   }
 
   /**
-   * Delete a received invitation
-   * @param {string} receivedInvitationId The ID of the received invitation
+   * Get permission links.
+   * @param options If no optional params are set, all links for the user/app are returned.
+   * @returns All links are returned if no options are passed.
    */
-  async receivedInvitationsDelete(receivedInvitationId: string) {
-    const payload = { receivedInvitationId };
-    return this._asyncEmit("received_invitations:delete", payload) as Promise<Message>;
-  }
-
-  /**
-   * List accepted invitations
-   * @returns a list of accepted invitations
-   */
-  async acceptedInvitationsList() {
-    const payload = {};
-    return this._asyncEmit("accepted_invitations:list", payload) as Promise<{ data: AcceptedInvitation[] }>;
-  }
-
-  /**
-   * Subscribe to accepted invitation changes
-   * @param {SubscribeListener} listener Function that handles the accepted invitation updates
-   * @returns An unsubscribe function
-   */
-  async acceptedInvitationsSubscribe(listener: SubscribeListener) {
-    const payload = {};
-
-    const response = (await this._asyncEmit("accepted_invitations:subscribe", payload)) as { data: string }; // where data is the subscription handle
-    const subscriptionHandle = response.data;
-
-    this.dataApi.on(subscriptionHandle, listener);
-
-    return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("accepted_invitations:unsubscribe", subscriptionHandle) as Promise<Message>;
-    };
-  }
-
-  /**
-   * Handle an accepted invitation
-   * @param {string} acceptedInvitationId The ID of the accepted invitation
-   */
-  async acceptedInvitationsHandle(acceptedInvitationId: string) {
-    const payload = { acceptedInvitationId };
-    return this._asyncEmit("accepted_invitations:handle", payload) as Promise<Message>;
+  async linksGet(options: LinksGetOptions = {}) {
+    return this._asyncEmit("links:get", options) as Promise<{ data: Link[] }>;
   }
 }

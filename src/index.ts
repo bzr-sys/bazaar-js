@@ -1,20 +1,18 @@
-import { API, ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+import { API, ContactsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+import { SharingAPI } from "./api/sharing";
 import { Auth } from "./auth";
-import { ApiOptions, AuthOptions, CommonOptions, IdTokenDecoded, LoginType, TableOptions } from "./types";
+import { ApiOptions, AuthOptions, CommonOptions, LoginType, TableOptions } from "./types";
 
 /**
  * Types of errors that can return from the API
  */
 export { ErrorTypes, RethinkIDError } from "./utils";
-export { ContactsAPI, InvitationsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+export { ContactsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
 
 export {
   User,
   Contact,
   ConnectionRequest,
-  Invitation,
-  ReceivedInvitation,
-  AcceptedInvitation,
   Permission,
   PermissionType,
   PermissionCondition,
@@ -22,7 +20,6 @@ export {
   FilterObject,
   OrderBy,
   Message,
-  ListInvitationsOptions,
 } from "./types";
 
 /**
@@ -42,7 +39,7 @@ export type Options = CommonOptions &
      *
      * e.g. Set state, redirect, etc.
      */
-    onLogin?: (rid: RethinkID) => void;
+    onLogin?: (rid: RethinkID) => Promise<void>;
 
     /**
      * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
@@ -86,9 +83,9 @@ export class RethinkID {
   contacts: ContactsAPI;
 
   /**
-   * Access to the invitations API
+   * Access to the sharing API
    */
-  invitations: InvitationsAPI;
+  sharing: SharingAPI;
 
   constructor(options: Options) {
     if (options.rethinkIdUri) {
@@ -106,10 +103,11 @@ export class RethinkID {
     });
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
-    this.auth = new Auth(options, () => {
+    this.auth = new Auth(options, async () => {
+      console.log("onLogin default")
       this.api._connect();
       if (options.onLogin) {
-        options.onLogin(this);
+        await options.onLogin(this);
       }
     });
 
@@ -117,7 +115,7 @@ export class RethinkID {
     this.permissions = new PermissionsAPI(this.api);
     this.users = new UsersAPI(this.api);
     this.contacts = new ContactsAPI(this.api);
-    this.invitations = new InvitationsAPI(this.api, options.rethinkIdUri);
+    this.sharing = new SharingAPI(this.api, options.rethinkIdUri);
   }
 
   //
@@ -129,10 +127,11 @@ export class RethinkID {
    *
    * e.g. Set state, redirect, etc.
    */
-  onLogin(f: (rid: RethinkID) => void) {
-    this.auth.onLogin = () => {
+  onLogin(f: (rid: RethinkID) => Promise<void>) {
+    this.auth.onLogin = async () => {
+      console.log("onLogin set")
       this.api._connect();
-      f(this);
+      await f(this);
     };
   }
 
