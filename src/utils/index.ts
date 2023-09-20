@@ -4,8 +4,8 @@
 export const ErrorTypes = {
   Unspecified: 1,
   NoPermission: 2,
-  ReservedTableName: 3,
-  TableDoesNotExist: 4,
+  ReservedCollectionName: 3,
+  CollectionDoesNotExist: 4,
   DatabaseDoesNotExist: 5,
 };
 

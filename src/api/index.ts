@@ -1,6 +1,5 @@
 export { API } from "./raw";
-export { TablesAPI } from "./tables";
+export { CollectionAPI } from "./collection";
+export { CollectionsAPI } from "./collections";
 export { PermissionsAPI } from "./permissions";
-export { TableAPI } from "./table";
-export { UsersAPI } from "./users";
-export { ContactsAPI } from "./contacts";
+export { SocialAPI } from "./social";

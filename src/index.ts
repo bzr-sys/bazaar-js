@@ -1,22 +1,19 @@
-import { API, ContactsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
-import { SharingAPI } from "./api/sharing";
+import { API, CollectionAPI, CollectionsAPI, PermissionsAPI, SocialAPI } from "./api";
 import { Auth } from "./auth";
-import { ApiOptions, AuthOptions, CommonOptions, LoginType, TableOptions } from "./types";
+import { ApiOptions, AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
  */
 export { ErrorTypes, RethinkIDError } from "./utils";
-export { ContactsAPI, PermissionsAPI, TableAPI, TablesAPI, UsersAPI } from "./api";
+export { PermissionsAPI, CollectionAPI, CollectionsAPI, SocialAPI } from "./api";
 
 export {
   User,
   Contact,
-  ConnectionRequest,
   Permission,
   PermissionType,
   PermissionCondition,
-  TableOptions,
   FilterObject,
   OrderBy,
   Message,
@@ -42,6 +39,11 @@ export type Options = CommonOptions &
     onLogin?: (rid: RethinkID) => Promise<void>;
 
     /**
+     * Provide a callback to handle API connections. Will be called after login and any subsequent re-connection.
+     */
+    onApiConnect?: (rid: RethinkID) => void;
+
+    /**
      * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
      */
     onApiConnectError?: (rid: RethinkID, message: string) => void;
@@ -63,9 +65,9 @@ export class RethinkID {
   private api: API;
 
   /**
-   * Access to the tables API
+   * Access to the collections API
    */
-  tables: TablesAPI;
+  collections: CollectionsAPI;
 
   /**
    * Access to the permissions API
@@ -73,19 +75,9 @@ export class RethinkID {
   permissions: PermissionsAPI;
 
   /**
-   * Access to the users API
+   * Access to the social API
    */
-  users: UsersAPI;
-
-  /**
-   * Access to the contacts API
-   */
-  contacts: ContactsAPI;
-
-  /**
-   * Access to the sharing API
-   */
-  sharing: SharingAPI;
+  social: SocialAPI;
 
   constructor(options: Options) {
     if (options.rethinkIdUri) {
@@ -94,28 +86,36 @@ export class RethinkID {
     }
 
     // Initialize API and make a connection to the Data API if logged in
-    this.api = new API(options, (message: string) => {
-      if (options.onApiConnectError) {
-        options.onApiConnectError(this, message);
-        return;
-      }
-      console.error("Connection error:", message);
-    });
+    this.api = new API(
+      options,
+      () => {
+        if (options.onApiConnect) {
+          options.onApiConnect(this);
+          return;
+        }
+        console.log("API connected");
+      },
+      (message: string) => {
+        if (options.onApiConnectError) {
+          options.onApiConnectError(this, message);
+          return;
+        }
+        console.error("API connection error:", message);
+      },
+    );
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
     this.auth = new Auth(options, async () => {
-      console.log("onLogin default")
+      console.log("onLogin default");
       this.api._connect();
       if (options.onLogin) {
         await options.onLogin(this);
       }
     });
 
-    this.tables = new TablesAPI(this.api);
-    this.permissions = new PermissionsAPI(this.api);
-    this.users = new UsersAPI(this.api);
-    this.contacts = new ContactsAPI(this.api);
-    this.sharing = new SharingAPI(this.api, options.rethinkIdUri);
+    this.collections = new CollectionsAPI(this.api);
+    this.permissions = new PermissionsAPI(this.api, options.rethinkIdUri);
+    this.social = new SocialAPI(this.api);
   }
 
   //
@@ -160,11 +160,11 @@ export class RethinkID {
   }
 
   /**
-   * Get a table interface (API access to the specified table)
-   * @param {string} tableName The name of the table to create the interface for.
-   * @param {TableOptions} [tableOptions] An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user. The onCreate hook sets up a table when it is created (e.g., to set up permissions)
+   * Get a collection interface (API access to the specified collection)
+   * @param {string} collectionName The name of the collection to create the interface for.
+   * @param {TableOptions} [collectionOptions] An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user. The onCreate hook sets up a collection when it is created (e.g., to set up permissions)
    */
-  table(tableName: string, tableOptions?: TableOptions): TableAPI {
-    return new TableAPI(this.api, tableName, tableOptions);
+  collection(collectionName: string, collectionOptions?: CollectionOptions): CollectionAPI {
+    return new CollectionAPI(this.api, collectionName, collectionOptions);
   }
 }
