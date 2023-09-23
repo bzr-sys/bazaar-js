@@ -25,35 +25,29 @@ export type ApiOptions = {
 };
 
 export type PermissionTemplate = {
-  tableName: string;
+  collectionName: string;
   types: PermissionType[];
-  condition?: PermissionCondition;
+  filter?: FilterObject;
 };
 
 export type Permission = {
-  id?: string; // for permissionSet ID is present if updating, absent if inserting
-  tableName: string;
+  id?: string;
+  collectionName: string;
   userId: string;
   types: PermissionType[];
-  condition?: PermissionCondition;
+  filter?: FilterObject;
 };
 
 export enum PermissionType {
   READ = "read",
   INSERT = "insert",
   UPDATE = "update",
-  DELETE =  "delete",
-};
+  DELETE = "delete",
+}
 
 export type PermissionCondition = {
   rowId?: string; // Permission applies to a specific row ID
   matchUserId?: string; // Permission applies if specified field matches or contains the user's ID
-};
-
-export type PermissionsGetOptions = {
-  tableName?: string;
-  userId?: string;
-  type?: PermissionType;
 };
 
 export type GrantedPermission = {
@@ -69,13 +63,10 @@ export type Link = {
   id: string;
   userId: string;
   appId: string;
-  permissionId: string;
+  permission: PermissionTemplate;
   limit: number;
   users: string[] | undefined;
-};
-
-export type LinksGetOptions = {
-  userId?: string;
+  url: string | undefined;
 };
 
 /**
@@ -113,7 +104,7 @@ export type FilterComparison = {
  * - $and to FilterObject[]. This combines the result of each FilterObject in the array with AND
  * - $or to FilterObject[]. This combines the result of each FilterObject in the array with OR
  * - $not to FilterObject. This applies NOT to the result of the FilterObject
- * 
+ *
  * All fields in a FilterObject are combined with an AND.
  * The FilterObject
  * ```
@@ -140,7 +131,7 @@ export type FilterComparison = {
 export type FilterObject = {
   $and?: FilterObject[];
   $or?: FilterObject[];
-  $not: FilterObject;
+  $not?: FilterObject;
   // Arbitrary fields cannot be FilterObject or FilterObject[]. These types are declared as options because typescript requires it.
   [field: string]: FilterComparison | string | number | boolean | null | FilterObject | FilterObject[];
 };
@@ -157,6 +148,7 @@ export type User = {
   id: string;
   name: string | undefined;
   email: string | undefined;
+  status: "self" | "stranger" | "contact" | "connected";
 };
 
 export type Contact = {
@@ -165,13 +157,8 @@ export type Contact = {
   contactId: string;
   connected: boolean; // flag to signal if contact is connected (you are trusted by this contact)
 };
-export type ConnectionRequest = {
-  id: string;
-  userId: string;
-  contactId: string;
-};
 
-export type TableOptions = {
+export type CollectionOptions = {
   onCreate?: () => Promise<void>;
   userId?: string;
 };

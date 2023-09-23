@@ -7,13 +7,11 @@ import {
   SubscribeListener,
   Message,
   FilterObject,
-  ConnectionRequest,
   Contact,
   User,
   OrderBy,
   Link,
   GrantedPermission,
-  LinksGetOptions,
   PermissionType,
   PermissionTemplate,
 } from "../types";
@@ -24,6 +22,11 @@ import { rethinkIdUri, namespacePrefix } from "../constants";
  * The class that encapsulates the low level data API
  */
 export class API {
+  /**
+   * Version of the API
+   */
+  private version = "v1";
+
   /**
    * URI for the Data API, RethinkID's realtime data storage service.
    * Currently implemented with Socket.IO + RethinkDB
@@ -43,15 +46,21 @@ export class API {
   private dataApi;
 
   /**
+   * A callback to do something upon Data API connection
+   */
+  private onConnect: () => void;
+
+  /**
    * A callback to do something when a Data API connection error occurs
    */
   private onConnectError: (message: string) => void;
 
-  constructor(options: CommonOptions & ApiOptions, onConnectError: (message: string) => void) {
+  constructor(options: CommonOptions & ApiOptions, onConnect: () => void, onConnectError: (message: string) => void) {
     if (options.dataApiUri) {
       this.dataApiUri = options.dataApiUri;
     }
 
+    this.onConnect = onConnect;
     this.onConnectError = onConnectError;
 
     /**
@@ -80,6 +89,7 @@ export class API {
 
     this.dataApi.on("connect", () => {
       console.log("sdk: connected. dataApi.id:", this.dataApi.id);
+      this.onConnect();
     });
 
     this.dataApi.on("connect_error", (error) => {
@@ -116,7 +126,7 @@ export class API {
 
   /**
    * Promisifies a dataApi.io emit event
-   * @param event A dataApi.io event name, like `tables:create`
+   * @param event A dataApi.io event name, like `collections:create`
    * @param payload
    */
   private _asyncEmit = async (event: string, payload: any) => {
@@ -132,83 +142,44 @@ export class API {
     });
   };
 
-  /**
-   * Create a table.
-   */
-  async tablesCreate(tableName: string) {
-    return this._asyncEmit("tables:create", { tableName }) as Promise<Message>;
-  }
+  //
+  // Collection API
+  //
 
   /**
-   * Drop a table.
+   * Get a collection doc
+   * @param {string} collectionName The name of the collection to read
+   * @param {string} docId - The docId
+   * @param {Object} [options={}] An optional object for specifying query options.
+   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
+   * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async tablesDrop(tableName: string) {
-    return this._asyncEmit("tables:drop", { tableName }) as Promise<Message>;
-  }
-
-  /**
-   * List all table names.
-   * @returns Where `data` is an array of table names
-   */
-  async tablesList() {
-    return this._asyncEmit("tables:list", null) as Promise<{ data: string[] }>;
-  }
-
-  /**
-   * Get permissions for a table.
-   * @param options If no optional params are set, all permissions for the user are returned.
-   * @returns All permissions are returned if no options are passed.
-   */
-  async permissionsGet(
+  async collectionGetOne(
+    collectionName: string,
+    docId: string,
     options: {
-      tableName?: string;
       userId?: string;
-      type?: PermissionType;
     } = {},
   ) {
-    return this._asyncEmit("permissions:get", options) as Promise<{ data: Permission[] }>;
+    const payload = { collectionName, docId };
+    Object.assign(payload, options);
+    return this._asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: object | null }>;
   }
 
   /**
-   * Set (insert/update) permissions for a table.
-   */
-  async permissionsSet(permissions: Permission[]) {
-    console.log("this", this);
-    return this._asyncEmit("permissions:set", permissions) as Promise<Message>;
-  }
-
-  /**
-   * Create a permission link (sharing).
-   */
-  async permissionsLink(permission: PermissionTemplate, limit: number) {
-    console.log("this", this);
-    return this._asyncEmit("permissions:link", { permission, limit}) as Promise<{ data: Link }>;
-  }
-
-  /**
-   * Delete permissions for a table.
-   * @param options An optional object for specifying a permission ID to delete. All permissions are deleted if no permission ID option is passed.
-   */
-  async permissionsDelete(options: { permissionId?: string } = {}) {
-    return this._asyncEmit("permissions:delete", options) as Promise<Message>;
-  }
-
-  /**
-   * Read all table rows, or a single row if row ID passed. Private by default, or public with read permission.
-   * @param {string} tableName The name of the table to read
+   * Get all collection docs for a given filter
+   * @param {string} collectionName The name of the collection to read
    * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {string} [options.rowId] - The rowId
    * @param {number} [options.startOffset] - An optional start offset. Default 0 (including)
    * @param {number} [options.endOffset] - An optional end offset. Default null (excluding)
    * @param {OrderBy} [options.orderBy] - An optional OrderBy object
    * @param {FilterObject} [options.filter] - An optional Filter object
-   * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
-   * @returns Specify a row ID to get a specific row, otherwise all rows are returned. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
+   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
+   * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async tableRead(
-    tableName: string,
+  async collectionGetAll(
+    collectionName: string,
     options: {
-      rowId?: string;
       startOffset?: number;
       endOffset?: number;
       orderBy?: OrderBy;
@@ -216,212 +187,239 @@ export class API {
       userId?: string;
     } = {},
   ) {
-    const payload = { tableName };
+    const payload = { collectionName };
     Object.assign(payload, options);
-    return this._asyncEmit("table:read", payload) as Promise<{ data: any[] | object }>;
+    return this._asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: any[] }>;
   }
 
   /**
-   * Subscribe to table changes. Private by default, or public with read permission.
-   * @param {string} tableName The name of the table to subscribe to
+   * Subscribe to doc changes.
+   * @param {string} collectionName The name of the collection to subscribe to
+   * @param {string} docId - The docId
    * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {string} [options.rowId] - The rowId
-   * @param {FilterObject} [options.filter] - An optional Filter object
-   * @param {string} [options.userId] - An optional user ID of the owner of the table to read. Defaults to own ID.
+   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async tableSubscribe(
-    tableName: string,
-    options: { rowId?: string; filter?: FilterObject; userId?: string } = {},
+  async collectionSubscribeOne(
+    collectionName: string,
+    docId: string,
+    options: { userId?: string } = {},
     listener: SubscribeListener,
   ) {
-    const payload = { tableName };
+    const payload = { collectionName, docId };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("table:subscribe", payload)) as { data: string }; // where data is the subscription handle
+    const response = (await this._asyncEmit(this.version + ":collection:subscribeOne", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = await this._asyncEmit("table:unsubscribe", subscriptionHandle) as Message;
+      const resp = (await this._asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
       return resp.message;
     };
   }
 
   /**
-   * Insert a table row. Private by default, or public with insert permission
-   * @param tableName The name of the table to operate on.
-   * @param rowOrRows The row or rows to insert.
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   * @returns Where `data` is the array of new row IDs (only generated IDs)
-   */
-  async tableInsert(tableName: string, rowOrRows: object | object[], options: { userId?: string } = {}) {
-    const payload = { tableName, rowOrRows };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:insert", payload) as Promise<{ data: string[] }>;
-  }
-
-  /**
-   * Update all table rows, or a single row if row ID exists. Private by default, or public with update permission
-   * @param tableName The name of the table to operate on.
-   * @param row Note! If row.id not present, updates all rows
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableUpdate(tableName: string, row: object, options: { userId?: string } = {}) {
-    const payload = { tableName, row };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:update", payload) as Promise<Message>;
-  }
-
-  /**
-   * Replace a table row. Private by default, or public with insert, update, delete permissions.
-   * @param tableName The name of the table to operate on.
-   * @param row Must contain a row ID.
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableReplace(tableName: string, row: object, options: { userId?: string } = {}) {
-    const payload = { tableName, row };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:replace", payload) as Promise<Message>;
-  }
-
-  /**
-   * Deletes all table rows, or a single row if row ID passed. Private by default, or public with delete permission.
-   * @param tableName The name of the table to operate on.
-   * @param options An optional object for specifying a row ID and/or user ID. Specify a row ID to delete a specific row, otherwise all rows are deleted. Specify a user ID to operate on a table owned by that user ID. Otherwise operates on a table owned by the authenticated user.
-   */
-  async tableDelete(tableName: string, options: { rowId?: string; userId?: string } = {}) {
-    const payload = { tableName };
-    Object.assign(payload, options);
-
-    return this._asyncEmit("table:delete", payload) as Promise<Message>;
-  }
-
-  /**
-   * Add a user ID to your contacts
-   * @param {string} userID The ID of the user
-   */
-  async usersInfo(userId?: string) {
-    let payload = {};
-    if (userId) {
-      payload = { userId };
-    }
-    return this._asyncEmit("users:info", payload) as Promise<{ data: User }>;
-  }
-
-  /**
-   * Add a user ID to your contacts
-   * @param {string} userID The ID of the user
-   */
-  async contactsAdd(userId: string) {
-    const payload = { userId };
-    return this._asyncEmit("contacts:add", payload) as Promise<Message>;
-  }
-
-  /**
-   * Remove a user from your contacts
-   * @param {string} contactId The ID of the contact
-   */
-  async contactsRemove(contactId: string) {
-    const payload = { contactId };
-    return this._asyncEmit("contacts:remove", payload) as Promise<Message>;
-  }
-
-  /**
-   * List contacts
-   * @returns a list of contacts
-   */
-  async contactsList() {
-    const payload = {};
-    return this._asyncEmit("contacts:list", payload) as Promise<{ data: Contact[] }>;
-  }
-
-  /**
-   * Subscribe to contact changes
-   * @param {SubscribeListener} listener Function that handles the contact updates
+   * Subscribe to collection changes. Private by default, or public with read permission.
+   * @param {string} collectionName The name of the collection to subscribe to
+   * @param {Object} [options={}] An optional object for specifying query options.
+   * @param {FilterObject} [options.filter] - An optional Filter object
+   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async contactsSubscribe(listener: SubscribeListener) {
-    const payload = {};
+  async collectionSubscribeAll(
+    collectionName: string,
+    options: { filter?: FilterObject; userId?: string } = {},
+    listener: SubscribeListener,
+  ) {
+    const payload = { collectionName };
+    Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("contacts:subscribe", payload)) as { data: string }; // where data is the subscription handle
+    const response = (await this._asyncEmit(this.version + ":collection:subscribeAll", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("contacts:unsubscribe", subscriptionHandle) as Promise<Message>;
+      const resp = (await this._asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
+      return resp.message;
     };
   }
 
   /**
-   * Connect with another user (both, initiate and accept a connection)
-   * @param {string} userId The ID of the user
+   * Insert a collection doc.
+   * @param collectionName The name of the collection to operate on.
+   * @param doc The doc to insert.
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   * @returns Where `data` is the array of new doc IDs (only generated IDs)
    */
-  async contactsConnect(userId: string) {
-    const payload = { userId };
-    return this._asyncEmit("contacts:connect", payload) as Promise<Message>;
+  async collectionInsertOne(collectionName: string, doc: object, options: { userId?: string } = {}) {
+    const payload = { collectionName, doc };
+    Object.assign(payload, options);
+
+    return this._asyncEmit(this.version + ":collection:insertOne", payload) as Promise<{ data: string }>;
   }
 
   /**
-   * Disconnect from another user
-   * @param {string} userID The ID of the user
+   * Update all collection docs, or a single doc if doc ID exists.
+   * @param collectionName The name of the collection to operate on.
+   * @param docId - ID of document to update
+   * @param doc Document changes
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async contactsDisconnect(userId: string) {
-    const payload = { userId };
-    return this._asyncEmit("contacts:disconnect", payload) as Promise<Message>;
+  async collectionUpdateOne(collectionName: string, docId: string, doc: object, options: { userId?: string } = {}) {
+    const payload = { collectionName, docId, doc };
+    Object.assign(payload, options);
+
+    return this._asyncEmit(this.version + ":collection:updateOne", payload) as Promise<Message>;
   }
 
   /**
-   * List connection requests
-   * @returns a list of connection requests
+   * Replace a collection doc. Private by default, or public with insert, update, delete permissions.
+   * @param collectionName The name of the collection to operate on.
+   * @param docId - ID of document to replace
+   * @param doc The new doc
+   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async connectionRequestsList() {
-    const payload = {};
-    return this._asyncEmit("connection_requests:list", payload) as Promise<{ data: ConnectionRequest[] }>;
+  async collectionReplaceOne(collectionName: string, docId: string, doc: object, options: { userId?: string } = {}) {
+    const payload = { collectionName, docId, doc };
+    Object.assign(payload, options);
+
+    return this._asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<Message>;
   }
 
   /**
-   * Subscribe to connection requests changes
-   * @param {SubscribeListener} listener Function that handles the connection request updates
-   * @returns An unsubscribe function
+   * Deletes a doc
+   * @param collectionName The name of the collection to operate on.
+   * @param docId - ID of document to delete
+   * @param options An optional object for specifying a doc ID and/or user ID. Specify a doc ID to delete a specific doc, otherwise all docs are deleted. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async connectionRequestsSubscribe(listener: SubscribeListener) {
-    const payload = {};
+  async collectionDeleteOne(collectionName: string, docId: string, options: { userId?: string } = {}) {
+    const payload = { collectionName, docId };
+    Object.assign(payload, options);
 
-    const response = (await this._asyncEmit("connection_requests:subscribe", payload)) as { data: string }; // where data is the subscription handle
-    const subscriptionHandle = response.data;
-
-    this.dataApi.on(subscriptionHandle, listener);
-
-    return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("connection_requests:unsubscribe", subscriptionHandle) as Promise<Message>;
-    };
+    return this._asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<Message>;
   }
 
   /**
-   * Delete a connection request
-   * @param {string} requestId The ID of the user
+   * Deletes all collection docs matching an optional filter.
+   * @param collectionName The name of the collection to operate on.
+   * @param options An optional object for specifying a doc ID and/or user ID. Specify a doc ID to delete a specific doc, otherwise all docs are deleted. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async connectionRequestsDelete(requestId: string) {
-    const payload = { requestId };
-    return this._asyncEmit("connection_requests:delete", payload) as Promise<Message>;
+  async collectionDeleteAll(collectionName: string, options: { filter?: FilterObject; userId?: string } = {}) {
+    const payload = { collectionName };
+    Object.assign(payload, options);
+
+    return this._asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<Message>;
+  }
+
+  //
+  // Collections API
+  //
+
+  /**
+   * Create a collection.
+   */
+  async collectionsCreate(collectionName: string) {
+    return this._asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<Message>;
+  }
+
+  /**
+   * Drop a collection.
+   */
+  async collectionsDrop(collectionName: string) {
+    return this._asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<Message>;
+  }
+
+  /**
+   * List all collection names.
+   * @returns Where `data` is an array of collection names
+   */
+  async collectionsList() {
+    return this._asyncEmit(this.version + ":collections:list", null) as Promise<{ data: string[] }>;
+  }
+
+  //
+  // Sharing API (permissions, links, granted_permissions)
+  //
+
+  /**
+   * List permissions.
+   * @param options If no optional params are set, all permissions for the user are returned.
+   * @returns All permissions matching options.
+   */
+  async permissionsList(
+    options: {
+      collectionName?: string;
+      userId?: string;
+      type?: PermissionType;
+    } = {},
+  ) {
+    return this._asyncEmit(this.version + ":permissions:list", options) as Promise<{ data: Permission[] }>;
+  }
+
+  /**
+   * Create a permission.
+   */
+  async permissionsCreate(permission: Permission) {
+    console.log("this", this);
+    return this._asyncEmit(this.version + ":permissions:create", { permission }) as Promise<Message>;
+  }
+
+  /**
+   * Delete a permission.
+   * @param permissionId The permission ID to delete.
+   */
+  async permissionsDelete(permissionId: string) {
+    return this._asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<Message>;
+  }
+
+  /**
+   * Create a permission link.
+   */
+  async linksCreate(permission: PermissionTemplate, limit: number = 0) {
+    console.log("this", this);
+    return this._asyncEmit(this.version + ":links:create", { permission, limit }) as Promise<{ data: Link }>;
+  }
+
+  /**
+   * List permission links.
+   * @param options If no optional params are set, all links for the user/app are returned.
+   * @returns All links are returned if no options are passed.
+   */
+  async linksList(
+    options: {
+      collectionName?: string;
+      type?: PermissionType;
+    } = {},
+  ) {
+    return this._asyncEmit(this.version + ":links:list", options) as Promise<{ data: Link[] }>;
+  }
+
+  /**
+   * Delete permission links.
+   */
+  async linksDelete(linkId: string) {
+    return this._asyncEmit(this.version + ":links:delete", linkId) as Promise<Message>;
   }
 
   /**
    * List granted permissions
    * @returns a list of granted permissions
    */
-  async grantedPermissionsList() {
-    const payload = {};
-    return this._asyncEmit("granted_permissions:list", payload) as Promise<{ data: GrantedPermission[] }>;
+  async grantedPermissionsList(
+    options: {
+      collectionName?: string;
+      userId?: string;
+      type?: PermissionType;
+    } = {},
+  ) {
+    return this._asyncEmit(this.version + ":granted_permissions:list", options) as Promise<{
+      data: GrantedPermission[];
+    }>;
   }
 
   /**
@@ -429,17 +427,24 @@ export class API {
    * @param {SubscribeListener} listener Function that handles the granted permissions updates
    * @returns An unsubscribe function
    */
-  async grantedPermissionsSubscribe(listener: SubscribeListener) {
-    const payload = {};
-
-    const response = (await this._asyncEmit("granted_permissions:subscribe", payload)) as { data: string }; // where data is the subscription handle
+  async grantedPermissionsSubscribe(
+    options: {
+      collectionName?: string;
+      userId?: string;
+      type?: PermissionType;
+    } = {},
+    listener: SubscribeListener,
+  ) {
+    const response = (await this._asyncEmit(this.version + ":granted_permissions:subscribe", options)) as {
+      data: string;
+    }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit("granted_permissions:unsubscribe", subscriptionHandle) as Promise<Message>;
+      return this._asyncEmit(this.version + ":granted_permissions:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
 
@@ -449,15 +454,31 @@ export class API {
    */
   async grantedPermissionsDelete(permissionId: string) {
     const payload = { permissionId };
-    return this._asyncEmit("granted_permissions:delete", payload) as Promise<Message>;
+    return this._asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<Message>;
+  }
+
+  //
+  // Social API
+  //
+
+  /**
+   * Add a user ID to your contacts
+   * @param {string} userID The ID of the user
+   */
+  async usersGet(userId?: string) {
+    let payload = {};
+    if (userId) {
+      payload = { userId };
+    }
+    return this._asyncEmit(this.version + ":users:get", payload) as Promise<{ data: User }>;
   }
 
   /**
-   * Get permission links.
-   * @param options If no optional params are set, all links for the user/app are returned.
-   * @returns All links are returned if no options are passed.
+   * List contacts
+   * @returns a list of contacts
    */
-  async linksGet(options: LinksGetOptions = {}) {
-    return this._asyncEmit("links:get", options) as Promise<{ data: Link[] }>;
+  async contactsList() {
+    const payload = {};
+    return this._asyncEmit(this.version + ":contacts:list", payload) as Promise<{ data: Contact[] }>;
   }
 }
