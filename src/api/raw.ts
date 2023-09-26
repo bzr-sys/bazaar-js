@@ -413,7 +413,7 @@ export class API {
   async grantedPermissionsList(
     options: {
       collectionName?: string;
-      hostId?: string;
+      ownerId?: string;
       type?: PermissionType;
     } = {},
   ) {

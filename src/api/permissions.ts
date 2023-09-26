@@ -103,7 +103,7 @@ export class PermissionsAPI {
     list: async (
       options: {
         collectionName?: string;
-        hostId?: string;
+        ownerId?: string;
         type?: PermissionType;
       } = {},
     ) => {
