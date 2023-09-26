@@ -15,12 +15,12 @@ export class CollectionAPI {
 
   /**
    *
-   * @param rowId
+   * @param docId
    * @returns
    */
-  async getOne(rowId: string) {
+  async getOne(docId: string) {
     return this.withCollection(async () => {
-      const rec = await this.api.collectionGetOne(this.collectionName, rowId, this.collectionOptions);
+      const rec = await this.api.collectionGetOne(this.collectionName, docId, this.collectionOptions);
       return rec.data;
     }) as Promise<object | null>;
   }
@@ -73,9 +73,9 @@ export class CollectionAPI {
   /**
    * @returns An unsubscribe function
    */
-  async subscribeOne(rowId: string, listener: SubscribeListener) {
+  async subscribeOne(docId: string, listener: SubscribeListener) {
     return this.withCollection(() =>
-      this.api.collectionSubscribeOne(this.collectionName, rowId, this.collectionOptions, listener),
+      this.api.collectionSubscribeOne(this.collectionName, docId, this.collectionOptions, listener),
     ) as Promise<() => Promise<Message>>;
   }
 
