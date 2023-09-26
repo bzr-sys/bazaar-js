@@ -8,16 +8,7 @@ import { ApiOptions, AuthOptions, CollectionOptions, CommonOptions, LoginType } 
 export { ErrorTypes, RethinkIDError } from "./utils";
 export { PermissionsAPI, CollectionAPI, CollectionsAPI, SocialAPI } from "./api";
 
-export {
-  User,
-  Contact,
-  Permission,
-  PermissionType,
-  PermissionCondition,
-  FilterObject,
-  OrderBy,
-  Message,
-} from "./types";
+export { User, Contact, Permission, PermissionType, FilterObject, OrderBy, Message } from "./types";
 
 /**
  * RethinkID constructor options
@@ -129,7 +120,7 @@ export class RethinkID {
    */
   onLogin(f: (rid: RethinkID) => Promise<void>) {
     this.auth.onLogin = async () => {
-      console.log("onLogin set")
+      console.log("onLogin set");
       this.api._connect();
       await f(this);
     };
