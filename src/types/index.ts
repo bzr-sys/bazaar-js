@@ -54,7 +54,7 @@ export type GrantedPermission = {
   id: string;
   userId: string;
   appId: string;
-  hostId: string;
+  ownerId: string;
   permissionId: string;
   permission: Permission | undefined;
 };

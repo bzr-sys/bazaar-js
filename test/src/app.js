@@ -10,9 +10,9 @@ function output(id, msg) {
 
 const config = {
   appId: "test",
-  loginRedirectUri: window.location.origin ,
+  loginRedirectUri: window.location.origin,
   onApiConnectError: function (rid, msg) {
-    console.log("API connection error: "+ msg)
+    console.log("API connection error: " + msg);
     rid.logOut();
   },
 };
@@ -51,7 +51,7 @@ rid.onLogin(async () => {
   // set up shared items
   // const shared = await rid.sharing.listShared()
   // for (let gp of shared){
-  //   const msg = "App: "+gp.appId+" - Host: "+gp.hostId+" - Table: "+gp.permission.collectionName+" - Type: "+gp.permission.types[0];
+  //   const msg = "App: "+gp.appId+" - Owner: "+gp.ownerId+" - Table: "+gp.permission.collectionName+" - Type: "+gp.permission.types[0];
   //   output("shared-output", msg)
   // }
 
@@ -59,8 +59,8 @@ rid.onLogin(async () => {
     const msg =
       "App: " +
       gp.appId +
-      " - Host: " +
-      gp.hostId +
+      " - Owner: " +
+      gp.ownerId +
       " - Table: " +
       gp.permission.collectionName +
       " - Type: " +
