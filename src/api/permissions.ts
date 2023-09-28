@@ -124,7 +124,7 @@ export class PermissionsAPI {
     subscribe: async (
       options: {
         collectionName?: string;
-        userId?: string;
+        ownerId?: string;
         type?: PermissionType;
       } = {},
       listener: SubscribeListener,

@@ -45,11 +45,6 @@ export enum PermissionType {
   DELETE = "delete",
 }
 
-export type PermissionCondition = {
-  rowId?: string; // Permission applies to a specific row ID
-  matchUserId?: string; // Permission applies if specified field matches or contains the user's ID
-};
-
 export type GrantedPermission = {
   id: string;
   userId: string;
