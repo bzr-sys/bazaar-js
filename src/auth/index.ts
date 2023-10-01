@@ -1,4 +1,4 @@
-import ClientOAuth2 from "client-oauth2";
+import { OAuth2Client, generateCodeVerifier } from "@badgateway/oauth2-client";
 
 import { CommonOptions, AuthOptions, LoginType } from "../types";
 import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "../utils";
@@ -30,7 +30,7 @@ export class Auth {
   pkceStateKeyName: string;
   pkceCodeVerifierKeyName: string;
 
-  oAuthClient;
+  oAuthClient: OAuth2Client;
 
   /**
    * An app's base URL
@@ -69,9 +69,6 @@ export class Auth {
       this.oAuthUri = options.oAuthUri;
     }
 
-    this.authUri = `${this.oAuthUri}/oauth2`;
-    this.tokenUri = `${this.oAuthUri}/api/v1/oauth2/token`;
-
     this.onLogin = onLogin;
 
     /**
@@ -82,12 +79,11 @@ export class Auth {
     this.pkceStateKeyName = `${namespace}_pkce_state`;
     this.pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
 
-    this.oAuthClient = new ClientOAuth2({
+    this.oAuthClient = new OAuth2Client({
+      server: this.oAuthUri,
       clientId: options.appId,
-      redirectUri: options.loginRedirectUri,
-      accessTokenUri: this.tokenUri,
-      authorizationUri: this.authUri,
-      scopes: ["openid", "profile", "email"],
+      tokenEndpoint: "/api/v1/oauth2/token",
+      authorizationEndpoint: "/oauth2",
     });
 
     /**
@@ -117,18 +113,15 @@ export class Auth {
     localStorage.setItem(this.pkceStateKeyName, state);
 
     // Create and store a new PKCE code_verifier (the plaintext random secret)
-    const codeVerifier = generateRandomString();
+    // The OAuth client handles the code challenge
+    const codeVerifier = await generateCodeVerifier();
     localStorage.setItem(this.pkceCodeVerifierKeyName, codeVerifier);
 
-    // Hash and base64-urlencode the secret to use as the challenge
-    const codeChallenge = await pkceChallengeFromVerifier(codeVerifier);
-
-    return this.oAuthClient.code.getUri({
-      state: state,
-      query: {
-        code_challenge: codeChallenge,
-        code_challenge_method: "S256",
-      },
+    return this.oAuthClient.authorizationCode.getAuthorizeUri({
+      redirectUri: this.loginRedirectUri,
+      state,
+      codeVerifier,
+      scope: ["openid", "profile", "email"],
     });
   }
 
@@ -259,50 +252,36 @@ export class Auth {
    * Performs after login actions.
    */
   private async _completeLogin(loginQueryParams: string): Promise<void> {
-    const params = new URLSearchParams(loginQueryParams);
+    const state = localStorage.getItem(this.pkceStateKeyName);
+    const codeVerifier = localStorage.getItem(this.pkceCodeVerifierKeyName);
 
-    // Check if the auth server returned an error string
-    const error = params.get("error");
-    if (error) {
-      throw new Error(`An error occurred: ${error}`);
-    }
-
-    // Make sure the auth server returned a code
-    const code = params.get("code");
-    if (!code) {
-      throw new Error(`No query param code`);
-    }
-
-    // Verify state matches the value set when the login request was initiated to mitigate CSRF attacks
-    if (localStorage.getItem(this.pkceStateKeyName) !== params.get("state")) {
-      throw new Error(`State did not match. Possible CSRF attack`);
-    }
-
-    // Exchange auth code for access and ID tokens
-    let getTokenResponse;
     const uri = `${this.loginRedirectUri}${loginQueryParams}`;
-    try {
-      getTokenResponse = await this.oAuthClient.code.getToken(uri, {
-        body: {
-          code_verifier: localStorage.getItem(this.pkceCodeVerifierKeyName) || "",
-        },
-      });
-    } catch (error) {
-      throw new Error(`Error getting token: ${error.message}`);
+
+    const oAuth2Token = await this.oAuthClient.authorizationCode.getTokenFromCodeRedirect(uri, {
+      /**
+       * The redirect URI is not actually used for any redirects, but MUST be the
+       * same as what you passed earlier to "authorizationCode"
+       */
+      redirectUri: this.loginRedirectUri,
+      state,
+      codeVerifier,
+    });
+
+    const token = oAuth2Token.accessToken;
+
+    // getTokenFromCodeRedirect() can return a successful response with empty values
+    // if the get token response body does not contain the properties it expects
+    // e.g. the response body contains `accessToken` instead of `access_token`.
+    if (!token) {
+      throw new Error("No token");
     }
 
-    if (!getTokenResponse) {
-      throw new Error(`No token response`);
-    }
+    // Store token in local storage
+    localStorage.setItem(this.tokenKeyName, token);
 
     // Clean these up since we don't need them anymore
     localStorage.removeItem(this.pkceStateKeyName);
     localStorage.removeItem(this.pkceCodeVerifierKeyName);
-
-    // Store tokens in local storage
-    const token: string = getTokenResponse.data.accessToken;
-
-    localStorage.setItem(this.tokenKeyName, token);
 
     /**
      * Do after login actions

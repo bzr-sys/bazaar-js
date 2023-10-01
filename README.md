@@ -32,8 +32,6 @@ Install your locally built package.
 npm install <../path/to/rethinkid-js-sdk>
 ```
 
-**Note: this package doesn't work currently if installed locally (as opposed to installed via NPM) because of a Vite `query-string` package polyfill issue.**
-
 ## Using via NPM
 
 Install with NPM:
