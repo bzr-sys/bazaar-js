@@ -109,6 +109,28 @@ export class RethinkID {
     this.social = new SocialAPI(this.api);
   }
 
+  /**
+   * Set a callback function an app can run when it connects or re-connects to the API.
+   */
+  onApiConnect(f: (rid: RethinkID) => void) {
+    this.api.onConnect = () => {
+      console.log("onConnect set");
+      f(this);
+    };
+  }
+
+  /**
+   * Set a callback function an app can run when an API disconnection occurs.
+   *
+   * e.g. Invalid access token
+   */
+  onApiConnectError(f: (rid: RethinkID, message: string) => void) {
+    this.api.onConnectError = (message) => {
+      console.log("onConnectError set");
+      f(this, message);
+    };
+  }
+
   //
   // Login methods
   //
