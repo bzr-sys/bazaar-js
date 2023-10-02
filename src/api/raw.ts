@@ -142,6 +142,18 @@ export class API {
     });
   };
 
+  /**
+   * Set options after an API instance is initialized
+   */
+  setOptions(options: { onConnect?: () => void; onConnectError?: (message: string) => void }) {
+    if (options.onConnect) {
+      this.onConnect = options.onConnect;
+    }
+    if (options.onConnectError) {
+      this.onConnectError = options.onConnectError;
+    }
+  }
+
   //
   // Collection API
   //

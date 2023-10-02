@@ -109,6 +109,28 @@ export class RethinkID {
     this.social = new SocialAPI(this.api);
   }
 
+  /**
+   * Set options after an SDK instance is initialized
+   */
+  setOptions(options: {
+    onLogin?: (rid: RethinkID) => Promise<void>;
+    onApiConnect?: (rid: RethinkID) => void;
+    onApiConnectError?: (rid: RethinkID, message: string) => void;
+  }) {
+    if (options.onLogin) {
+      this.onLogin(options.onLogin);
+    }
+
+    const apiOptions: { onConnect?: () => void; onConnectError?: (message: string) => void } = {};
+    if (options.onApiConnect) {
+      apiOptions.onConnect = () => options.onApiConnect(this);
+    }
+    if (options.onApiConnectError) {
+      apiOptions.onConnectError = (message: string) => options.onApiConnectError(this, message);
+    }
+    this.api.setOptions(apiOptions);
+  }
+
   //
   // Login methods
   //
