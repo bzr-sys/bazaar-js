@@ -48,12 +48,12 @@ export class API {
   /**
    * A callback to do something upon Data API connection
    */
-  private onConnect: () => void;
+  onConnect: () => void;
 
   /**
    * A callback to do something when a Data API connection error occurs
    */
-  private onConnectError: (message: string) => void;
+  onConnectError: (message: string) => void;
 
   constructor(options: CommonOptions & ApiOptions, onConnect: () => void, onConnectError: (message: string) => void) {
     if (options.dataApiUri) {
