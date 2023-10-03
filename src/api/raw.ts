@@ -48,14 +48,18 @@ export class API {
   /**
    * A callback to do something upon Data API connection
    */
-  onConnect: () => void;
+  onConnect: () => Promise<void>;
 
   /**
    * A callback to do something when a Data API connection error occurs
    */
-  onConnectError: (message: string) => void;
+  onConnectError: (message: string) => Promise<void>;
 
-  constructor(options: CommonOptions & ApiOptions, onConnect: () => void, onConnectError: (message: string) => void) {
+  constructor(
+    options: CommonOptions & ApiOptions,
+    onConnect: () => Promise<void>,
+    onConnectError: (message: string) => Promise<void>,
+  ) {
     if (options.dataApiUri) {
       this.dataApiUri = options.dataApiUri;
     }
