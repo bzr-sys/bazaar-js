@@ -403,7 +403,7 @@ export class API {
    * Delete permission links.
    */
   async linksDelete(linkId: string) {
-    return this._asyncEmit(this.version + ":links:delete", linkId) as Promise<Message>;
+    return this._asyncEmit(this.version + ":links:delete", { linkId }) as Promise<Message>;
   }
 
   /**
