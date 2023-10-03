@@ -32,12 +32,12 @@ export type Options = CommonOptions &
     /**
      * Provide a callback to handle API connections. Will be called after login and any subsequent re-connection.
      */
-    onApiConnect?: (rid: RethinkID) => void;
+    onApiConnect?: (rid: RethinkID) => Promise<void>;
 
     /**
      * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
      */
-    onApiConnectError?: (rid: RethinkID, message: string) => void;
+    onApiConnectError?: (rid: RethinkID, message: string) => Promise<void>;
   };
 
 /**
@@ -79,16 +79,16 @@ export class RethinkID {
     // Initialize API and make a connection to the Data API if logged in
     this.api = new API(
       options,
-      () => {
+      async () => {
         if (options.onApiConnect) {
-          options.onApiConnect(this);
+          await options.onApiConnect(this);
           return;
         }
         console.log("API connected");
       },
-      (message: string) => {
+      async (message: string) => {
         if (options.onApiConnectError) {
-          options.onApiConnectError(this, message);
+          await options.onApiConnectError(this, message);
           return;
         }
         console.error("API connection error:", message);
@@ -113,10 +113,10 @@ export class RethinkID {
   /**
    * Set a callback function an app can run when it connects or re-connects to the API.
    */
-  onApiConnect(f: (rid: RethinkID) => void) {
-    this.api.onConnect = () => {
+  onApiConnect(f: (rid: RethinkID) => Promise<void>) {
+    this.api.onConnect = async () => {
       console.log("onConnect set");
-      f(this);
+      await f(this);
     };
   }
 
@@ -125,10 +125,10 @@ export class RethinkID {
    *
    * e.g. Invalid access token
    */
-  onApiConnectError(f: (rid: RethinkID, message: string) => void) {
-    this.api.onConnectError = (message) => {
+  onApiConnectError(f: (rid: RethinkID, message: string) => Promise<void>) {
+    this.api.onConnectError = async (message) => {
       console.log("onConnectError set");
-      f(this, message);
+      await f(this, message);
     };
   }
 
