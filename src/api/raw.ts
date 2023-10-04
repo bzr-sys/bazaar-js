@@ -370,7 +370,7 @@ export class API {
    */
   async permissionsCreate(permission: Permission) {
     console.log("this", this);
-    return this.asyncEmit(this.version + ":permissions:create", { permission }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":permissions:create", { permission }) as Promise<{ id: string }>;
   }
 
   /**

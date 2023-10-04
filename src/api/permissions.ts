@@ -59,17 +59,14 @@ export class PermissionsAPI {
     /**
      * Create a link
      */
-    // create: this.createLink,
-
     create: async (permission: PermissionTemplate, limit: number = 0) => {
-      console.log("linksCreate", this);
-      console.log(this.api);
-      const link = await this.api.linksCreate(permission, limit);
-      return this.linkUri + link.data.id;
+      const { data: link } = await this.api.linksCreate(permission, limit);
+      link.url = this.linkUri + link.id;
+      return link;
     },
 
     /**
-     * List links.
+     * List links
      */
     list: async (
       options: {
