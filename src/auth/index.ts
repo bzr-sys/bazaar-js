@@ -94,7 +94,7 @@ export class Auth {
 
     this.loginRedirectUri = options.loginRedirectUri;
 
-    this._checkLoginQueryParams();
+    this.checkLoginQueryParams();
   }
 
   /**
@@ -143,7 +143,7 @@ export class Auth {
     const windowName = "rethinkid-login-window";
 
     // remove any existing event listeners
-    window.removeEventListener("message", this._receiveLoginWindowMessage);
+    window.removeEventListener("message", this.receiveLoginWindowMessage);
 
     if (this.loginWindowReference === null || this.loginWindowReference.closed) {
       /**
@@ -179,7 +179,7 @@ export class Auth {
     }
 
     // add the listener for receiving a message from the pop-up
-    window.addEventListener("message", (event) => this._receiveLoginWindowMessage(event), false);
+    window.addEventListener("message", (event) => this.receiveLoginWindowMessage(event), false);
     // assign the previous URL
     this.loginWindowPreviousUrl = url;
   }
@@ -189,7 +189,7 @@ export class Auth {
    * Handles messages sent from the login pop-up window to its opener window.
    * @param event A postMessage event object
    */
-  private _receiveLoginWindowMessage(event): void {
+  private receiveLoginWindowMessage(event): void {
     // Make sure to check origin and source to mitigate XSS attacks
 
     // Do we trust the sender of this message? (might be
@@ -200,7 +200,7 @@ export class Auth {
 
     // if we trust the sender and the source is our pop-up
     if (event.source === this.loginWindowReference) {
-      this._completeLogin(event.data);
+      this.completeLogin(event.data);
     }
   }
 
@@ -211,7 +211,7 @@ export class Auth {
    *
    * @returns string to indicate login type
    */
-  private async _checkLoginQueryParams(): Promise<string> {
+  private async checkLoginQueryParams(): Promise<string> {
     // Only attempt to complete login if actually logging in.
     if (!Auth.hasLoginQueryParams()) return;
 
@@ -219,7 +219,7 @@ export class Auth {
      * If completing redirect login
      */
     if (!window.opener) {
-      await this._completeLogin(location.search);
+      await this.completeLogin(location.search);
       return "redirect";
     }
 
@@ -228,7 +228,7 @@ export class Auth {
      */
     // Send message to parent/opener window with login query params
     // Specify `baseUrl` targetOrigin for security
-    window.opener.postMessage(location.search, this.baseUrl); // handled by _receiveLoginWindowMessage
+    window.opener.postMessage(location.search, this.baseUrl); // handled by receiveLoginWindowMessage
 
     // Close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
     window.close();
@@ -251,7 +251,7 @@ export class Auth {
    *
    * Performs after login actions.
    */
-  private async _completeLogin(loginQueryParams: string): Promise<void> {
+  private async completeLogin(loginQueryParams: string): Promise<void> {
     const state = localStorage.getItem(this.pkceStateKeyName);
     const codeVerifier = localStorage.getItem(this.pkceCodeVerifierKeyName);
 
