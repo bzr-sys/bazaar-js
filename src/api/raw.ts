@@ -4,6 +4,7 @@ import {
   CommonOptions,
   ApiOptions,
   Permission,
+  NewPermission,
   SubscribeListener,
   Message,
   FilterObject,
@@ -368,7 +369,7 @@ export class API {
   /**
    * Create a permission.
    */
-  async permissionsCreate(permission: Permission) {
+  async permissionsCreate(permission: NewPermission) {
     console.log("this", this);
     return this.asyncEmit(this.version + ":permissions:create", { permission }) as Promise<{ id: string }>;
   }

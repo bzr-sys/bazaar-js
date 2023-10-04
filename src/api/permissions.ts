@@ -2,7 +2,7 @@ import { linkPath, rethinkIdUri } from "../constants";
 import {
   GrantedPermission,
   Message,
-  Permission,
+  NewPermission,
   PermissionTemplate,
   PermissionType,
   SubscribeListener,
@@ -24,7 +24,7 @@ export class PermissionsAPI {
   /**
    * Create permission for a collection.
    */
-  async create(permission: Permission) {
+  async create(permission: NewPermission) {
     return this.api.permissionsCreate(permission);
   }
 

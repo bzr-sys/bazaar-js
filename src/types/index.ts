@@ -31,12 +31,18 @@ export type PermissionTemplate = {
 };
 
 export type Permission = {
-  id?: string;
+  id: string;
   collectionName: string;
   userId: string;
   types: PermissionType[];
   filter?: FilterObject;
 };
+
+/**
+ * Represents a permission object that is yet to be persisted.
+ * It has the same structure as {@link Permission} but without the `id` field.
+ */
+export type NewPermission = Omit<Permission, "id">;
 
 export enum PermissionType {
   READ = "read",
