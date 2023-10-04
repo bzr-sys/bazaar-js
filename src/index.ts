@@ -115,7 +115,6 @@ export class RethinkID {
    */
   onApiConnect(f: (rid: RethinkID) => Promise<void>) {
     this.api.onConnect = async () => {
-      console.log("onConnect set");
       await f(this);
     };
   }
@@ -127,7 +126,6 @@ export class RethinkID {
    */
   onApiConnectError(f: (rid: RethinkID, message: string) => Promise<void>) {
     this.api.onConnectError = async (message) => {
-      console.log("onConnectError set");
       await f(this, message);
     };
   }
@@ -143,7 +141,6 @@ export class RethinkID {
    */
   onLogin(f: (rid: RethinkID) => Promise<void>) {
     this.auth.onLogin = async () => {
-      console.log("onLogin set");
       this.api.connect();
       await f(this);
     };
