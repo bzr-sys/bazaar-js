@@ -407,11 +407,7 @@ export class API {
    * Delete permission links.
    */
   async linksDelete(linkId: string) {
-<<<<<<< HEAD
     return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<Message>;
-=======
-    return this._asyncEmit(this.version + ":links:delete", { linkId }) as Promise<Message>;
->>>>>>> bf4b485 (Fix delete link)
   }
 
   /**
