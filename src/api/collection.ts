@@ -20,8 +20,8 @@ export class CollectionAPI {
    */
   async getOne(docId: string) {
     return this.withCollection(async () => {
-      const rec = await this.api.collectionGetOne(this.collectionName, docId, this.collectionOptions);
-      return rec.data;
+      const res = await this.api.collectionGetOne(this.collectionName, docId, this.collectionOptions);
+      return res.data;
     }) as Promise<object | null>;
   }
 
@@ -40,12 +40,12 @@ export class CollectionAPI {
     } = {},
   ) {
     return this.withCollection(async () => {
-      const rec = await this.api.collectionGetAll(this.collectionName, {
+      const res = await this.api.collectionGetAll(this.collectionName, {
         ...this.collectionOptions,
         ...options,
         filter,
       });
-      return rec.data;
+      return res.data;
     }) as Promise<any[]>;
   }
 
@@ -90,8 +90,8 @@ export class CollectionAPI {
 
   async insertOne(doc: object) {
     return this.withCollection(async () => {
-      const rec = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionOptions);
-      return rec.data;
+      const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionOptions);
+      return res.data;
     }) as Promise<string>;
   }
 

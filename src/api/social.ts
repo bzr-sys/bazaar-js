@@ -15,8 +15,8 @@ export class SocialAPI {
    * @param {string} userID The ID of the user, defaults to logged in user's ID.
    */
   async getUser(userId?: string) {
-    const rec = await this.api.usersGet(userId);
-    return rec.data;
+    const res = await this.api.usersGet(userId);
+    return res.data;
   }
 
   /**
@@ -24,7 +24,7 @@ export class SocialAPI {
    * @returns a list of contacts
    */
   async listContacts() {
-    const rec = await this.api.contactsList();
-    return rec.data;
+    const res = await this.api.contactsList();
+    return res.data;
   }
 }

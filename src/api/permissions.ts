@@ -40,8 +40,8 @@ export class PermissionsAPI {
       type?: PermissionType;
     } = {},
   ) {
-    const rec = await this.api.permissionsList(options);
-    return rec.data;
+    const res = await this.api.permissionsList(options);
+    return res.data;
   }
 
   /**
@@ -74,12 +74,12 @@ export class PermissionsAPI {
         type?: PermissionType;
       } = {},
     ) => {
-      const rec = await this.api.linksList(options);
-      let links = rec.data;
+      const res = await this.api.linksList(options);
+      let links = res.data;
       for (let i in links) {
         links[i].url = this.linkUri + links[i].id;
       }
-      return rec.data;
+      return res.data;
     },
 
     /**
@@ -104,8 +104,8 @@ export class PermissionsAPI {
         type?: PermissionType;
       } = {},
     ) => {
-      const rec = await this.api.grantedPermissionsList(options);
-      return rec.data;
+      const res = await this.api.grantedPermissionsList(options);
+      return res.data;
     },
 
     /**
