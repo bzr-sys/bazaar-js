@@ -97,11 +97,12 @@ export class RethinkID {
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
     this.auth = new Auth(options, async () => {
-      console.log("onLogin default");
       this.api.connect();
       if (options.onLogin) {
         await options.onLogin(this);
+        return;
       }
+      console.log("onLogin default");
     });
 
     this.collections = new CollectionsAPI(this.api);
