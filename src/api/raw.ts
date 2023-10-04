@@ -74,13 +74,13 @@ export class API {
     this.tokenKeyName = `${namespace}_token`;
 
     // Make a connection to the Data API if logged in
-    this._connect();
+    this.connect();
   }
 
   /**
    * Creates a Data API connection with an auth token
    */
-  _connect(): void {
+  connect(): void {
     const token = localStorage.getItem(this.tokenKeyName);
 
     if (!token) {
@@ -112,7 +112,7 @@ export class API {
   /**
    * Make sure a connection to the Data API has been made.
    */
-  private _waitForConnection: () => Promise<true> = () => {
+  private waitForConnection: () => Promise<true> = () => {
     return new Promise((resolve, reject) => {
       if (this.dataApi.connected) {
         resolve(true);
@@ -133,8 +133,8 @@ export class API {
    * @param event A dataApi.io event name, like `collections:create`
    * @param payload
    */
-  private _asyncEmit = async (event: string, payload: any) => {
-    await this._waitForConnection();
+  private asyncEmit = async (event: string, payload: any) => {
+    await this.waitForConnection();
     return new Promise((resolve, reject) => {
       this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
@@ -167,7 +167,7 @@ export class API {
   ) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
-    return this._asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: object | null }>;
+    return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: object | null }>;
   }
 
   /**
@@ -193,7 +193,7 @@ export class API {
   ) {
     const payload = { collectionName };
     Object.assign(payload, options);
-    return this._asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: any[] }>;
+    return this.asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: any[] }>;
   }
 
   /**
@@ -213,14 +213,14 @@ export class API {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit(this.version + ":collection:subscribeOne", payload)) as { data: string }; // where data is the subscription handle
+    const response = (await this.asyncEmit(this.version + ":collection:subscribeOne", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = (await this._asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
+      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
       return resp.message;
     };
   }
@@ -241,14 +241,14 @@ export class API {
     const payload = { collectionName };
     Object.assign(payload, options);
 
-    const response = (await this._asyncEmit(this.version + ":collection:subscribeAll", payload)) as { data: string }; // where data is the subscription handle
+    const response = (await this.asyncEmit(this.version + ":collection:subscribeAll", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
     this.dataApi.on(subscriptionHandle, listener);
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = (await this._asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
+      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
       return resp.message;
     };
   }
@@ -264,7 +264,7 @@ export class API {
     const payload = { collectionName, doc };
     Object.assign(payload, options);
 
-    return this._asyncEmit(this.version + ":collection:insertOne", payload) as Promise<{ data: string }>;
+    return this.asyncEmit(this.version + ":collection:insertOne", payload) as Promise<{ data: string }>;
   }
 
   /**
@@ -278,7 +278,7 @@ export class API {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
-    return this._asyncEmit(this.version + ":collection:updateOne", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:updateOne", payload) as Promise<Message>;
   }
 
   /**
@@ -292,7 +292,7 @@ export class API {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
-    return this._asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<Message>;
   }
 
   /**
@@ -305,7 +305,7 @@ export class API {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
 
-    return this._asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<Message>;
   }
 
   /**
@@ -317,7 +317,7 @@ export class API {
     const payload = { collectionName };
     Object.assign(payload, options);
 
-    return this._asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<Message>;
   }
 
   //
@@ -328,14 +328,14 @@ export class API {
    * Create a collection.
    */
   async collectionsCreate(collectionName: string) {
-    return this._asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<Message>;
   }
 
   /**
    * Drop a collection.
    */
   async collectionsDrop(collectionName: string) {
-    return this._asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<Message>;
   }
 
   /**
@@ -343,7 +343,7 @@ export class API {
    * @returns Where `data` is an array of collection names
    */
   async collectionsList() {
-    return this._asyncEmit(this.version + ":collections:list", null) as Promise<{ data: string[] }>;
+    return this.asyncEmit(this.version + ":collections:list", null) as Promise<{ data: string[] }>;
   }
 
   //
@@ -362,7 +362,7 @@ export class API {
       type?: PermissionType;
     } = {},
   ) {
-    return this._asyncEmit(this.version + ":permissions:list", options) as Promise<{ data: Permission[] }>;
+    return this.asyncEmit(this.version + ":permissions:list", options) as Promise<{ data: Permission[] }>;
   }
 
   /**
@@ -370,7 +370,7 @@ export class API {
    */
   async permissionsCreate(permission: Permission) {
     console.log("this", this);
-    return this._asyncEmit(this.version + ":permissions:create", { permission }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":permissions:create", { permission }) as Promise<Message>;
   }
 
   /**
@@ -378,7 +378,7 @@ export class API {
    * @param permissionId The permission ID to delete.
    */
   async permissionsDelete(permissionId: string) {
-    return this._asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<Message>;
   }
 
   /**
@@ -386,7 +386,7 @@ export class API {
    */
   async linksCreate(permission: PermissionTemplate, limit: number = 0) {
     console.log("this", this);
-    return this._asyncEmit(this.version + ":links:create", { permission, limit }) as Promise<{ data: Link }>;
+    return this.asyncEmit(this.version + ":links:create", { permission, limit }) as Promise<{ data: Link }>;
   }
 
   /**
@@ -400,14 +400,14 @@ export class API {
       type?: PermissionType;
     } = {},
   ) {
-    return this._asyncEmit(this.version + ":links:list", options) as Promise<{ data: Link[] }>;
+    return this.asyncEmit(this.version + ":links:list", options) as Promise<{ data: Link[] }>;
   }
 
   /**
    * Delete permission links.
    */
   async linksDelete(linkId: string) {
-    return this._asyncEmit(this.version + ":links:delete", { linkId }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<Message>;
   }
 
   /**
@@ -421,7 +421,7 @@ export class API {
       type?: PermissionType;
     } = {},
   ) {
-    return this._asyncEmit(this.version + ":granted_permissions:list", options) as Promise<{
+    return this.asyncEmit(this.version + ":granted_permissions:list", options) as Promise<{
       data: GrantedPermission[];
     }>;
   }
@@ -439,7 +439,7 @@ export class API {
     } = {},
     listener: SubscribeListener,
   ) {
-    const response = (await this._asyncEmit(this.version + ":granted_permissions:subscribe", options)) as {
+    const response = (await this.asyncEmit(this.version + ":granted_permissions:subscribe", options)) as {
       data: string;
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
@@ -448,7 +448,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this._asyncEmit(this.version + ":granted_permissions:unsubscribe", subscriptionHandle) as Promise<Message>;
+      return this.asyncEmit(this.version + ":granted_permissions:unsubscribe", subscriptionHandle) as Promise<Message>;
     };
   }
 
@@ -458,7 +458,7 @@ export class API {
    */
   async grantedPermissionsDelete(permissionId: string) {
     const payload = { permissionId };
-    return this._asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<Message>;
   }
 
   //
@@ -474,7 +474,7 @@ export class API {
     if (userId) {
       payload = { userId };
     }
-    return this._asyncEmit(this.version + ":users:get", payload) as Promise<{ data: User }>;
+    return this.asyncEmit(this.version + ":users:get", payload) as Promise<{ data: User }>;
   }
 
   /**
@@ -483,6 +483,6 @@ export class API {
    */
   async contactsList() {
     const payload = {};
-    return this._asyncEmit(this.version + ":contacts:list", payload) as Promise<{ data: Contact[] }>;
+    return this.asyncEmit(this.version + ":contacts:list", payload) as Promise<{ data: Contact[] }>;
   }
 }

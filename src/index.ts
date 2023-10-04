@@ -97,7 +97,7 @@ export class RethinkID {
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
     this.auth = new Auth(options, async () => {
-      this.api._connect();
+      this.api.connect();
       if (options.onLogin) {
         await options.onLogin(this);
         return;
@@ -141,7 +141,7 @@ export class RethinkID {
    */
   onLogin(f: (rid: RethinkID) => Promise<void>) {
     this.auth.onLogin = async () => {
-      this.api._connect();
+      this.api.connect();
       await f(this);
     };
   }
