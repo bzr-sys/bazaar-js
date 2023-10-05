@@ -5,13 +5,12 @@
     <title>RethinkID SDK Test</title>
     <script type="module" src="app.js"></script>
     <style>
-      .grid{
+      .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         grid-template-areas:
           "l g"
-          "r s"
-        ;
+          "r s";
       }
       .hidden {
         display: none;
@@ -41,6 +40,10 @@
         <button onclick="login()" id="login-btn">Login</button>
         <p id="user">No user info yet</p>
       </div>
+      <div id="modal" class="box">
+        <button onclick="modalSocial()" id="modal-btn">Open Social Modal</button>
+        <button onclick="modalPermission()" id="modal-btn">Open Permission Modal</button>
+      </div>
       <div id="shared" class="box">
         <p>Shared items:</p>
         <ul id="shared-output"></ul>
@@ -52,11 +55,10 @@
       </div>
       <div id="share" class="box">
         <button onclick="share()" id="share-btn" disabled>Share</button>
-        <input id="share-input" type="text" placeholder="user ID"/>
+        <input id="share-input" type="text" placeholder="user ID" />
         <!-- <p id="run-p" class="hidden">Running test:</p> -->
         <ul id="share-output"></ul>
       </div>
     </div>
-    
   </body>
 </html>

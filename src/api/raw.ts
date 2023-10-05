@@ -56,6 +56,12 @@ export class API {
    */
   onConnectError: (message: string) => Promise<void>;
 
+  /**
+   * The modal and iframe element to perform actions within the RethinkID context
+   */
+  private modal: HTMLDialogElement;
+  private iframe: HTMLIFrameElement;
+
   constructor(
     options: CommonOptions & ApiOptions,
     onConnect: () => Promise<void>,
@@ -76,6 +82,40 @@ export class API {
 
     // Make a connection to the Data API if logged in
     this.connect();
+
+    // Initialize modal
+    this.modal = document.createElement("dialog");
+    this.modal.style.width = "min(700px, 100vh)";
+    this.modal.style.borderWidth = "0";
+    this.modal.style.padding = "0";
+
+    const header = document.createElement("div");
+    header.style.width = "100%";
+    header.style.display = "flex";
+    header.style.alignItems = "flex-end";
+    this.modal.appendChild(header);
+
+    const button = document.createElement("button");
+    button.style.marginLeft = "auto";
+    button.style.borderWidth = "0";
+    button.style.backgroundColor = "white";
+    button.innerHTML = "X";
+    button.onclick = () => this.modal.close();
+    header.appendChild(button);
+
+    this.iframe = document.createElement("iframe");
+    // Note: using a sandbox with allow-scripts and allow-same-origin
+    // is unsecure like not having a sandbox.
+    // We should strive to remove the allow-same-origin by
+    // passing/using the auth token via other means
+    // this.iframe.sandbox.add("allow-scripts"); // Required to run the RID page
+    // this.iframe.sandbox.add("allow-same-origin"); // Required to read the token from local storage
+    this.iframe.style.width = "100%";
+    this.iframe.style.height = "min(700px, 100vh)";
+    this.iframe.style.borderWidth = "0";
+    this.modal.appendChild(this.iframe);
+
+    document.body.appendChild(this.modal);
   }
 
   /**
@@ -485,5 +525,18 @@ export class API {
   async contactsList() {
     const payload = {};
     return this.asyncEmit(this.version + ":contacts:list", payload) as Promise<{ data: Contact[] }>;
+  }
+
+  //
+  // Modal
+  //
+
+  /**
+   * Open a modal
+   */
+  openModal(path: string) {
+    this.iframe.src = this.dataApiUri + path;
+    this.modal.showModal();
+    return;
   }
 }

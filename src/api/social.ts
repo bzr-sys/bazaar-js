@@ -11,6 +11,15 @@ export class SocialAPI {
   }
 
   /**
+   * Open the social modal
+   */
+  openModal() {
+    // this.modal.showModal();
+    this.api.openModal("/m/social");
+    return;
+  }
+
+  /**
    * Get the user info for a given ID.
    * @param {string} userID The ID of the user, defaults to logged in user's ID.
    */

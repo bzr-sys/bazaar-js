@@ -15,10 +15,21 @@ import { API } from "./raw";
 export class PermissionsAPI {
   private api: API;
   private linkUri: string;
+  private appId: string;
 
-  constructor(api: API, uri: string) {
+  constructor(api: API, uri: string, appId: string) {
     this.api = api;
     this.linkUri = (uri || rethinkIdUri) + linkPath;
+    this.appId = appId;
+  }
+
+  /**
+   * Open the permission modal
+   */
+  openModal(permission: Permission) {
+    // this.modal.showModal();
+    this.api.openModal(`/m/permission?appId=${this.appId}&permission=${JSON.stringify(permission)}`);
+    return;
   }
 
   /**

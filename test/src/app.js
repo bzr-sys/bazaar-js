@@ -23,6 +23,14 @@ window.login = function () {
   rid.login();
 };
 
+window.modalSocial = function () {
+  rid.social.openModal();
+};
+
+window.modalPermission = function () {
+  rid.permissions.openModal({ collectionName: "test", types: ["read"] });
+};
+
 window.run = async function () {
   await runTest();
 };

@@ -106,7 +106,7 @@ export class RethinkID {
     });
 
     this.collections = new CollectionsAPI(this.api);
-    this.permissions = new PermissionsAPI(this.api, options.rethinkIdUri);
+    this.permissions = new PermissionsAPI(this.api, options.rethinkIdUri, options.appId);
     this.social = new SocialAPI(this.api);
   }
 
