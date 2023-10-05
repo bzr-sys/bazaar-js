@@ -3,6 +3,11 @@
  */
 export type CommonOptions = {
   appId: string;
+  /**
+   * Public URI for the API & OAuth authorization server.
+   * Will set AuthOptions.oAuthUri & ApiOptions.dataApiUri
+   */
+  rethinkIdUri?: string;
 };
 
 export type AuthOptions = {
@@ -10,18 +15,6 @@ export type AuthOptions = {
    * The URI the auth server redirects to with an auth code, after successful approving a login request.
    */
   loginRedirectUri: string;
-
-  /**
-   * Optionally set an alternative to the default URI.
-   */
-  oAuthUri?: string;
-};
-
-export type ApiOptions = {
-  /**
-   * Optionally set an alternative to the default URI.
-   */
-  dataApiUri?: string;
 };
 
 /**

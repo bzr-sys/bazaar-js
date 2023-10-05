@@ -1,6 +1,7 @@
 import { API, CollectionAPI, CollectionsAPI, PermissionsAPI, SocialAPI } from "./api";
 import { Auth } from "./auth";
-import { ApiOptions, AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./types";
+import { rethinkIdUri } from "./constants";
+import { AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -14,14 +15,7 @@ export { User, Contact, Permission, PermissionType, FilterObject, OrderBy, Messa
  * RethinkID constructor options
  */
 export type Options = CommonOptions &
-  AuthOptions &
-  ApiOptions & {
-    /**
-     * Public URI for the API & OAuth authorization server.
-     * Will set AuthOptions.oAuthUri & ApiOptions.dataApiUri
-     */
-    rethinkIdUri?: string;
-
+  AuthOptions & {
     /**
      * A callback function an app can specify to run when a user has successfully logged in.
      *
@@ -71,9 +65,8 @@ export class RethinkID {
   social: SocialAPI;
 
   constructor(options: Options) {
-    if (options.rethinkIdUri) {
-      options.dataApiUri = options.rethinkIdUri;
-      options.oAuthUri = options.rethinkIdUri;
+    if (!options.rethinkIdUri) {
+      options.rethinkIdUri = rethinkIdUri;
     }
 
     // Initialize API and make a connection to the Data API if logged in

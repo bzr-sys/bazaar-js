@@ -51,30 +51,6 @@ function sha256(input: string): Promise<ArrayBuffer> {
 }
 
 /**
- * Base64-url encodes an input string
- * @param arrayBuffer the result of a random string hashed by sha256()
- */
-function base64UrlEncode(arrayBuffer: ArrayBuffer): string {
-  // Convert the ArrayBuffer to string using Uint8 array to convert to what btoa accepts.
-  // btoa accepts chars only within ascii 0-255 and base64 encodes them.
-  // Then convert the base64 encoded to base64url encoded
-  // (replace + with -, replace / with _, trim trailing =)
-  return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-/**
- * Return the base64-url encoded sha256 hash for the PKCE challenge
- * @param codeVerifier A random string
- */
-export async function pkceChallengeFromVerifier(codeVerifier: string): Promise<string> {
-  const hashed = await sha256(codeVerifier);
-  return base64UrlEncode(hashed);
-}
-
-/**
  * Open and center pop-up on specific window to account for multiple monitors
  * @param url url to open
  * @param windowName name to identify pop-up window

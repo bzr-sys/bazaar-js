@@ -2,7 +2,6 @@ import io from "socket.io-client";
 
 import {
   CommonOptions,
-  ApiOptions,
   Permission,
   NewPermission,
   SubscribeListener,
@@ -31,10 +30,8 @@ export class API {
   /**
    * URI for the Data API, RethinkID's realtime data storage service.
    * Currently implemented with Socket.IO + RethinkDB
-   *
-   * In local development requires a port value and is different than {@link oAuthUri }
    */
-  private dataApiUri = rethinkIdUri;
+  private rethinkIdUri = rethinkIdUri;
 
   /**
    * Local storage key names, namespaced in the constructor
@@ -63,12 +60,12 @@ export class API {
   private iframe: HTMLIFrameElement;
 
   constructor(
-    options: CommonOptions & ApiOptions,
+    options: CommonOptions,
     onConnect: () => Promise<void>,
     onConnectError: (message: string) => Promise<void>,
   ) {
-    if (options.dataApiUri) {
-      this.dataApiUri = options.dataApiUri;
+    if (options.rethinkIdUri) {
+      this.rethinkIdUri = options.rethinkIdUri;
     }
 
     this.onConnect = onConnect;
@@ -128,7 +125,7 @@ export class API {
       return;
     }
 
-    this.dataApi = io(this.dataApiUri, {
+    this.dataApi = io(this.rethinkIdUri, {
       auth: { token },
     });
 
@@ -535,7 +532,7 @@ export class API {
    * Open a modal
    */
   openModal(path: string) {
-    this.iframe.src = this.dataApiUri + path;
+    this.iframe.src = this.rethinkIdUri + path;
     this.modal.showModal();
     return;
   }

@@ -1,28 +1,13 @@
 import { OAuth2Client, generateCodeVerifier } from "@badgateway/oauth2-client";
 
 import { CommonOptions, AuthOptions, LoginType } from "../types";
-import { generateRandomString, pkceChallengeFromVerifier, popupWindow } from "../utils";
+import { generateRandomString, popupWindow } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
 
 /**
  * The class that deals with login and authentication
  */
 export class Auth {
-  /**
-   * Public URI for the OAuth authorization server.
-   */
-  oAuthUri = rethinkIdUri;
-
-  /**
-   * URI to start an OAuth login request
-   */
-  authUri: string;
-
-  /**
-   * URI to complete an OAuth login request, exchanging an auth code for an access token and ID token
-   */
-  tokenUri: string;
-
   /**
    * Local storage key names, namespaced in the constructor
    */
@@ -65,10 +50,6 @@ export class Auth {
   onLogin: () => void;
 
   constructor(options: CommonOptions & AuthOptions, onLogin: () => void) {
-    if (options.oAuthUri) {
-      this.oAuthUri = options.oAuthUri;
-    }
-
     this.onLogin = onLogin;
 
     /**
@@ -80,7 +61,7 @@ export class Auth {
     this.pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
 
     this.oAuthClient = new OAuth2Client({
-      server: this.oAuthUri,
+      server: options.rethinkIdUri,
       clientId: options.appId,
       tokenEndpoint: "/api/v1/oauth2/token",
       authorizationEndpoint: "/oauth2",
