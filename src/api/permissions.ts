@@ -2,7 +2,7 @@ import { linkPath, rethinkIdUri } from "../constants";
 import {
   GrantedPermission,
   Message,
-  Permission,
+  NewPermission,
   PermissionTemplate,
   PermissionType,
   SubscribeListener,
@@ -24,7 +24,7 @@ export class PermissionsAPI {
   /**
    * Create permission for a collection.
    */
-  async create(permission: Permission) {
+  async create(permission: NewPermission) {
     return this.api.permissionsCreate(permission);
   }
 
@@ -40,8 +40,8 @@ export class PermissionsAPI {
       type?: PermissionType;
     } = {},
   ) {
-    const rec = await this.api.permissionsList(options);
-    return rec.data;
+    const res = await this.api.permissionsList(options);
+    return res.data;
   }
 
   /**
@@ -59,17 +59,14 @@ export class PermissionsAPI {
     /**
      * Create a link
      */
-    // create: this.createLink,
-
     create: async (permission: PermissionTemplate, limit: number = 0) => {
-      console.log("linksCreate", this);
-      console.log(this.api);
-      const link = await this.api.linksCreate(permission, limit);
-      return this.linkUri + link.data.id;
+      const { data: link } = await this.api.linksCreate(permission, limit);
+      link.url = this.linkUri + link.id;
+      return link;
     },
 
     /**
-     * List links.
+     * List links
      */
     list: async (
       options: {
@@ -77,12 +74,12 @@ export class PermissionsAPI {
         type?: PermissionType;
       } = {},
     ) => {
-      const rec = await this.api.linksList(options);
-      let links = rec.data;
+      const res = await this.api.linksList(options);
+      let links = res.data;
       for (let i in links) {
         links[i].url = this.linkUri + links[i].id;
       }
-      return rec.data;
+      return res.data;
     },
 
     /**
@@ -107,8 +104,8 @@ export class PermissionsAPI {
         type?: PermissionType;
       } = {},
     ) => {
-      const rec = await this.api.grantedPermissionsList(options);
-      return rec.data;
+      const res = await this.api.grantedPermissionsList(options);
+      return res.data;
     },
 
     /**

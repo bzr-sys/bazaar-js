@@ -24,19 +24,28 @@ export type ApiOptions = {
   dataApiUri?: string;
 };
 
-export type PermissionTemplate = {
-  collectionName: string;
-  types: PermissionType[];
-  filter?: FilterObject;
-};
-
+/**
+ * Represents a complete permission object which includes both the `id` field and `userId` for user association.
+ */
 export type Permission = {
-  id?: string;
+  id: string;
   collectionName: string;
   userId: string;
   types: PermissionType[];
   filter?: FilterObject;
 };
+
+/**
+ * Represents a permission object that is yet to be persisted.
+ * It has the same structure as {@link Permission} but without the `id` field.
+ */
+export type NewPermission = Omit<Permission, "id">;
+
+/**
+ * Represents the foundational structure of a permission template.
+ * It's derived from the {@link NewPermission} and does not include user association.
+ */
+export type PermissionTemplate = Omit<NewPermission, "userId">;
 
 export enum PermissionType {
   READ = "read",

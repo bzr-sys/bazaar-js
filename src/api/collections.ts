@@ -29,7 +29,7 @@ export class CollectionsAPI {
    * @returns Where `data` is an array of collection names
    */
   async list() {
-    const rec = await this.api.collectionsList();
-    return rec.data;
+    const res = await this.api.collectionsList();
+    return res.data;
   }
 }
