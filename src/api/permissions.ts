@@ -26,7 +26,7 @@ export class PermissionsAPI {
   /**
    * Open the permission modal
    */
-  openModal(permission: Permission) {
+  openModal(permission: PermissionTemplate) {
     // this.modal.showModal();
     this.api.openModal(`/m/permission?appId=${this.appId}&permission=${JSON.stringify(permission)}`);
     return;
