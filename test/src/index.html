@@ -10,7 +10,8 @@
         grid-template-columns: 1fr 1fr;
         grid-template-areas:
           "l g"
-          "r s";
+          "r s"
+          "m c";
       }
       .hidden {
         display: none;
@@ -31,6 +32,12 @@
       #share {
         grid-area: s;
       }
+      #modal {
+        grid-area: m;
+      }
+      #contacts {
+        grid-area: c;
+      }
     </style>
   </head>
 
@@ -39,10 +46,6 @@
       <div id="login" class="box">
         <button onclick="login()" id="login-btn">Login</button>
         <p id="user">No user info yet</p>
-      </div>
-      <div id="modal" class="box">
-        <button onclick="modalSocial()" id="modal-btn">Open Social Modal</button>
-        <button onclick="modalPermission()" id="modal-btn">Open Permission Modal</button>
       </div>
       <div id="shared" class="box">
         <p>Shared items:</p>
@@ -58,6 +61,14 @@
         <input id="share-input" type="text" placeholder="user ID" />
         <!-- <p id="run-p" class="hidden">Running test:</p> -->
         <ul id="share-output"></ul>
+      </div>
+      <div id="modal" class="box">
+        <button onclick="modalSocial()" id="modal-btn">Open Social Modal</button>
+        <button onclick="modalPermission()" id="modal-btn">Open Permission Modal</button>
+      </div>
+      <div id="contacts" class="box">
+        <button onclick="getContacts()" id="contacts-btn">Get Contacts</button>
+        <ul id="contacts-output"></ul>
       </div>
     </div>
   </body>
