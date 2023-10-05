@@ -39,6 +39,10 @@ window.share = async function () {
   await runShare();
 };
 
+window.getContacts = async function () {
+  await fetchContacts();
+};
+
 let user = {
   id: "",
   email: "",
@@ -226,5 +230,15 @@ async function runShare() {
     console.log(e.type);
     console.log(e);
     output("share-output", e);
+  }
+}
+
+async function fetchContacts() {
+  const contacts = await rid.social.listContacts();
+  if (contacts.length == 0) {
+    output("contacts-output", "no contacts");
+  }
+  for (let c of contacts) {
+    output("contacts-output", `${c.contactId} ${c.connected} ${c.requested}`);
   }
 }
