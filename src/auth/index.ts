@@ -122,6 +122,19 @@ export class Auth {
         return resolve();
       }
 
+      /**
+       * Stop a log in request early when it cannot succeed to avoid a potentially frustrating DX.
+       * The same check happens later in the log in process in {@link receiveLoginWindowMessage} for security.
+       */
+      if (window.origin !== this.baseUrl) {
+        reject(
+          new Error(
+            `Login failed: Request origin (${window.origin}) doesn't match configured loginRedirectUri origin (${this.baseUrl})`,
+          ),
+        );
+        return;
+      }
+
       const windowName = "rethinkid-login-window";
 
       // Add the listener for receiving a message from the pop-up
