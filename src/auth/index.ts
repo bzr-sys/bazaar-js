@@ -110,59 +110,73 @@ export class Auth {
    * Opens a pop-up window to perform OAuth login.
    * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
-  async login(options?: { type?: LoginType }): Promise<void> {
-    const loginType = options?.type || "popup_fallback";
+  login(options?: { type?: LoginType }): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      const loginType = options?.type || "popup_fallback";
 
-    const url = await this.loginUri();
+      const url = await this.loginUri();
 
-    // App explicitly requested redirect login, so redirect
-    if (loginType === "redirect") {
-      window.location.href = url;
-      return;
-    }
-
-    const windowName = "rethinkid-login-window";
-
-    // remove any existing event listeners
-    window.removeEventListener("message", this.receiveLoginWindowMessage);
-
-    if (this.loginWindowReference === null || this.loginWindowReference.closed) {
-      /**
-       * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
-       * */
-      this.loginWindowReference = popupWindow(url, windowName, window);
-    } else if (this.loginWindowPreviousUrl !== url) {
-      /**
-       * if the resource to load is different, then we load it in the already opened secondary
-       * window and then we bring such window back on top/in front of its parent window.
-       */
-      this.loginWindowReference = popupWindow(url, windowName, window);
-      this.loginWindowReference.focus();
-    } else {
-      /**
-       * else the window reference must exist and the window is not closed; therefore,
-       * we can bring it back on top of any other window with the focus() method.
-       * There would be no need to re-create the window or to reload the referenced resource.
-       */
-      this.loginWindowReference.focus();
-    }
-
-    // Pop-up possibly blocked
-    if (!this.loginWindowReference) {
-      if (loginType === "popup") {
-        // app explicitly does not want to fallback to redirect
-        throw new Error("Pop-up failed to open");
-      } else {
-        // fallback to redirect login
+      // App explicitly requested redirect login, so redirect
+      if (loginType === "redirect") {
         window.location.href = url;
-        return;
+        return resolve();
       }
-    }
 
-    // add the listener for receiving a message from the pop-up
-    window.addEventListener("message", (event) => this.receiveLoginWindowMessage(event), false);
-    // assign the previous URL
-    this.loginWindowPreviousUrl = url;
+      const windowName = "rethinkid-login-window";
+
+      // Add the listener for receiving a message from the pop-up
+      const messageEventListener = (event: MessageEvent) => {
+        try {
+          this.receiveLoginWindowMessage(event);
+          window.removeEventListener("message", messageEventListener);
+          resolve();
+        } catch (error) {
+          window.removeEventListener("message", messageEventListener);
+          reject(error);
+        }
+      };
+
+      // Remove any existing event listeners
+      window.removeEventListener("message", messageEventListener);
+
+      if (this.loginWindowReference === null || this.loginWindowReference.closed) {
+        /**
+         * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
+         */
+        this.loginWindowReference = popupWindow(url, windowName, window);
+      } else if (this.loginWindowPreviousUrl !== url) {
+        /**
+         * if the resource to load is different, then we load it in the already opened secondary
+         * window and then we bring such window back on top/in front of its parent window.
+         */
+        this.loginWindowReference = popupWindow(url, windowName, window);
+        this.loginWindowReference.focus();
+      } else {
+        /**
+         * else the window reference must exist and the window is not closed; therefore,
+         * we can bring it back on top of any other window with the focus() method.
+         * There would be no need to re-create the window or to reload the referenced resource.
+         */
+        this.loginWindowReference.focus();
+      }
+
+      // Pop-up possibly blocked
+      if (!this.loginWindowReference) {
+        if (loginType === "popup") {
+          // App explicitly does not want to fallback to redirect
+          reject(new Error("Pop-up failed to open"));
+        } else {
+          // Fallback to redirect login
+          window.location.href = url;
+          return resolve();
+        }
+      }
+
+      window.addEventListener("message", messageEventListener, false);
+
+      // Assign the previous URL
+      this.loginWindowPreviousUrl = url;
+    });
   }
 
   /**
@@ -176,7 +190,7 @@ export class Auth {
     // Do we trust the sender of this message? (might be
     // different from what we originally opened, for example).
     if (event.origin !== this.baseUrl) {
-      return;
+      throw new Error(`Login failed: Request origin doesn't match configured loginRedirectUri origin`);
     }
 
     // if we trust the sender and the source is our pop-up
