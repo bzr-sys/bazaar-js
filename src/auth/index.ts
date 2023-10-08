@@ -179,7 +179,6 @@ export class Auth {
           // App explicitly does not want to fallback to redirect
           reject(new Error("Pop-up failed to open"));
         } else {
-          console.log("fallback to redirect");
           // Fallback to redirect login
           window.location.href = url;
           return resolve();
