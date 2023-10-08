@@ -116,12 +116,6 @@ export class Auth {
 
       const url = await this.loginUri();
 
-      // App explicitly requested redirect login, so redirect
-      if (loginType === "redirect") {
-        window.location.href = url;
-        return resolve();
-      }
-
       /**
        * Stop a log in request early when it cannot succeed to avoid a potentially frustrating DX.
        * The same check happens later in the log in process in {@link receiveLoginWindowMessage} for security.
@@ -133,6 +127,12 @@ export class Auth {
           ),
         );
         return;
+      }
+
+      // App explicitly requested redirect login, so redirect
+      if (loginType === "redirect") {
+        window.location.href = url;
+        return resolve();
       }
 
       const windowName = "rethinkid-login-window";
