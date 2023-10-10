@@ -218,7 +218,7 @@ export class Auth {
 
       // If we trust the sender and the source is our pop-up
       if (event.source === this.popupWindow) {
-        this.completeLogin(event.data);
+        await this.completeLogin(event.data);
       }
 
       window.removeEventListener("message", this.boundPopupMessageListener);
