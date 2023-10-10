@@ -149,7 +149,7 @@ export class RethinkID {
 
   /**
    * A utility function to check if the user is logged in.
-   * i.e. if an access token and ID token are in local storage.
+   * i.e. if an access token is in local storage.
    */
   isLoggedIn(): boolean {
     return this.auth.isLoggedIn();
@@ -157,7 +157,7 @@ export class RethinkID {
 
   /**
    * A utility function to log a user out.
-   * Deletes the access token and ID token from local storage and reloads the page.
+   * Deletes the access token from local storage and reloads the page.
    */
   logOut(): void {
     return this.auth.logOut();
