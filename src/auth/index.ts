@@ -2,7 +2,7 @@ import { OAuth2Client, generateCodeVerifier } from "@badgateway/oauth2-client";
 
 import { CommonOptions, AuthOptions, LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
-import { rethinkIdUri, namespacePrefix } from "../constants";
+import { namespacePrefix } from "../constants";
 
 /**
  * The class that deals with login and authentication
@@ -43,6 +43,21 @@ export class Auth {
   loginWindowPreviousUrl = null;
 
   /**
+   * A reference to the pop-up message event listener so it can be reliably cleaned up
+   */
+  messageEventListener = null;
+
+  /**
+   * Set from {@link login} context so errors from {@link receiveLoginWindowMessage} can propagate.
+   */
+  private resolve: () => void;
+
+  /**
+   * Set from {@link login} context so errors from {@link receiveLoginWindowMessage} can propagate.
+   */
+  private reject: (error: Error) => void;
+
+  /**
    * A callback function an app can specify to run when a user has successfully logged in.
    *
    * e.g. Set state, redirect, etc.
@@ -51,6 +66,9 @@ export class Auth {
 
   constructor(options: CommonOptions & AuthOptions, onLogin: () => void) {
     this.onLogin = onLogin;
+
+    // Memoize to enable reliable clean up
+    this.messageEventListener = this.handleMessageEvent.bind(this);
 
     /**
      * Namespace local storage key names
@@ -111,7 +129,15 @@ export class Auth {
    * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
   login(options?: { type?: LoginType }): Promise<void> {
+    // Remove any existing event listeners
+    window.removeEventListener("message", this.messageEventListener);
+    window.addEventListener("message", this.messageEventListener);
+
     return new Promise(async (resolve, reject) => {
+      // Set from context to received pop-up errors can propagate
+      this.resolve = resolve;
+      this.reject = reject;
+
       const loginType = options?.type || "popup_fallback";
 
       const url = await this.loginUri();
@@ -136,21 +162,6 @@ export class Auth {
       }
 
       const windowName = "rethinkid-login-window";
-
-      // Add the listener for receiving a message from the pop-up
-      const messageEventListener = (event: MessageEvent) => {
-        try {
-          this.receiveLoginWindowMessage(event);
-          window.removeEventListener("message", messageEventListener);
-          resolve();
-        } catch (error) {
-          window.removeEventListener("message", messageEventListener);
-          reject(error);
-        }
-      };
-
-      // Remove any existing event listeners
-      window.removeEventListener("message", messageEventListener);
 
       if (this.loginWindowReference === null || this.loginWindowReference.closed) {
         /**
@@ -185,11 +196,23 @@ export class Auth {
         }
       }
 
-      window.addEventListener("message", messageEventListener, false);
-
       // Assign the previous URL
       this.loginWindowPreviousUrl = url;
     });
+  }
+
+  /**
+   * Handler for messages received from the pop-up
+   */
+  handleMessageEvent(event: MessageEvent) {
+    try {
+      this.receiveLoginWindowMessage(event);
+      window.removeEventListener("message", this.handleMessageEvent);
+      if (this.resolve) this.resolve();
+    } catch (error) {
+      window.removeEventListener("message", this.handleMessageEvent);
+      if (this.reject) this.reject(error);
+    }
   }
 
   /**
