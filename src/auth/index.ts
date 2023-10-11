@@ -36,6 +36,8 @@ export class Auth {
    */
   private popupWindow: Window;
 
+  private popupWindowName = "rethinkid-login-window";
+
   /**
    * A reference to the previous URL of the login pop-up window.
    * Used to avoid creating duplicate windows and for focusing an existing window.
@@ -167,16 +169,14 @@ export class Auth {
       this.popupResolve = resolve;
       this.popupReject = reject;
 
-      const windowName = "rethinkid-login-window";
-
       if (!this.popupWindow || this.popupWindow.closed) {
         // If the pointer to the window object in memory does not exist or if such
         // pointer exists but the window was closed
-        this.popupWindow = popupWindow(loginUri, windowName, window);
+        this.popupWindow = popupWindow(loginUri, this.popupWindowName, window);
       } else if (this.popupPreviousUrl !== loginUri) {
         // If the resource to load is different, then we load it in the already opened secondary
         // window and then we bring such window back on top/in front of its parent window.
-        this.popupWindow = popupWindow(loginUri, windowName, window);
+        this.popupWindow = popupWindow(loginUri, this.popupWindowName, window);
         this.popupWindow.focus();
       } else {
         // Else the window reference must exist and the window is not closed; therefore,
@@ -207,6 +207,14 @@ export class Auth {
    * Set to {@link boundPopupMessageListener} in the constructor
    */
   private async popupMessageListener(event: MessageEvent) {
+    // Possibly not a Window
+    // Note: checking `event.source instanceof Window` is unreliable for some reason.
+    if (!("name" in event.source)) return;
+
+    // Only handle events from the pop-up
+    // e.g. The React Developer Tools Chrome extension constantly sends message events. Do not try handle those.
+    if ("name" in event.source && event.source.name !== this.popupWindowName) return;
+
     try {
       // Make sure to check origin and source to mitigate XSS attacks
 
