@@ -105,7 +105,7 @@ export class Auth {
    */
   async loginUri(): Promise<string> {
     // if logging in, do not overwrite existing PKCE local storage values.
-    if (this.hasLoginQueryParams()) {
+    if (Auth.hasLoginQueryParams()) {
       return "";
     }
 
@@ -246,7 +246,7 @@ export class Auth {
    */
   private async checkLoginQueryParams(): Promise<"popup" | "redirect"> {
     // Only attempt to complete login if actually logging in.
-    if (!this.hasLoginQueryParams()) return;
+    if (!Auth.hasLoginQueryParams()) return;
 
     /**
      * If completing redirect login
@@ -344,7 +344,7 @@ export class Auth {
    * Also used in {@link loginUri} to make sure PKCE local storage values are not overwritten,
    * which would otherwise accidentally invalidate a login request.
    */
-  private hasLoginQueryParams(): boolean {
+  static hasLoginQueryParams(): boolean {
     const params = new URLSearchParams(location.search);
 
     // These query params will be present when redirected
