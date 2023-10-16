@@ -2,7 +2,7 @@ import { OAuth2Client, generateCodeVerifier } from "@badgateway/oauth2-client";
 
 import { CommonOptions, AuthOptions, LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
-import { rethinkIdUri, namespacePrefix } from "../constants";
+import { namespacePrefix } from "../constants";
 
 /**
  * The class that deals with login and authentication
@@ -11,36 +11,53 @@ export class Auth {
   /**
    * Local storage key names, namespaced in the constructor
    */
-  tokenKeyName: string;
-  pkceStateKeyName: string;
-  pkceCodeVerifierKeyName: string;
+  private tokenKeyName: string;
+  private pkceStateKeyName: string;
+  private pkceCodeVerifierKeyName: string;
 
-  oAuthClient: OAuth2Client;
+  private oAuthClient: OAuth2Client;
 
   /**
    * An app's base URL
    * Used to check against the origin of a postMessage event sent from the login pop-up window.
    * e.g. https://example-app.com
    */
-  baseUrl: string;
+  private baseUrl: string;
 
   /**
    * The OAuth2 redirect URI. Required to get token.
    */
-  loginRedirectUri: string;
+  private loginRedirectUri: string;
 
   // End constructor vars
 
   /**
    * A reference to the window object of the login pop-up window.
    */
-  loginWindowReference = null;
+  private popupWindow: Window;
+
+  private popupWindowName = "rethinkid-login-window";
 
   /**
    * A reference to the previous URL of the login pop-up window.
    * Used to avoid creating duplicate windows and for focusing an existing window.
    */
-  loginWindowPreviousUrl = null;
+  private popupPreviousUrl: string;
+
+  /**
+   * A reference to a {@link popupMessageListener} so it can be reliably cleaned up
+   */
+  private boundPopupMessageListener: (event: MessageEvent) => void;
+
+  /**
+   * Set from {@link login} context so errors from {@link popupMessageListener} can propagate.
+   */
+  private popupResolve: () => void;
+
+  /**
+   * Set from {@link login} context so errors from {@link popupMessageListener} can propagate.
+   */
+  private popupReject: (error: Error) => void;
 
   /**
    * A callback function an app can specify to run when a user has successfully logged in.
@@ -51,6 +68,9 @@ export class Auth {
 
   constructor(options: CommonOptions & AuthOptions, onLogin: () => void) {
     this.onLogin = onLogin;
+
+    // Cache the bound event listener for consistent reference and reliable removal later
+    this.boundPopupMessageListener = this.popupMessageListener.bind(this);
 
     /**
      * Namespace local storage key names
@@ -110,105 +130,110 @@ export class Auth {
    * Opens a pop-up window to perform OAuth login.
    * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
    */
-  login(options?: { type?: LoginType }): Promise<void> {
+  async login(options?: { type?: LoginType }): Promise<void> {
+    // Remove any existing event listeners
+    window.removeEventListener("message", this.boundPopupMessageListener);
+
+    /**
+     * Stop a log in request early when it cannot succeed to avoid a potentially frustrating DX.
+     * The same check happens later in the log in process in {@link popupMessageListener} for security.
+     */
+    if (window.origin !== this.baseUrl) {
+      throw new Error(
+        `Login failed: Request origin (${window.origin}) doesn't match configured loginRedirectUri origin (${this.baseUrl})`,
+      );
+    }
+
+    const loginType = options?.type || "popup_fallback";
+
+    const loginUri = await this.loginUri();
+
+    // Do redirect login
+    if (loginType === "redirect") {
+      window.location.href = loginUri;
+      return;
+    }
+
+    // Do pop-up login
+
+    /**
+     * Add event listener in the opening window for messages sent from the pop-up
+     */
+    window.addEventListener("message", this.boundPopupMessageListener);
+
+    /**
+     * Return promise to allow errors to propagate up to this {@link login} method.
+     * Otherwise, cannot catch errors that occur when a pop-up message is received.
+     */
     return new Promise(async (resolve, reject) => {
-      const loginType = options?.type || "popup_fallback";
+      this.popupResolve = resolve;
+      this.popupReject = reject;
 
-      const url = await this.loginUri();
-
-      /**
-       * Stop a log in request early when it cannot succeed to avoid a potentially frustrating DX.
-       * The same check happens later in the log in process in {@link receiveLoginWindowMessage} for security.
-       */
-      if (window.origin !== this.baseUrl) {
-        reject(
-          new Error(
-            `Login failed: Request origin (${window.origin}) doesn't match configured loginRedirectUri origin (${this.baseUrl})`,
-          ),
-        );
-        return;
-      }
-
-      // App explicitly requested redirect login, so redirect
-      if (loginType === "redirect") {
-        window.location.href = url;
-        return resolve();
-      }
-
-      const windowName = "rethinkid-login-window";
-
-      // Add the listener for receiving a message from the pop-up
-      const messageEventListener = (event: MessageEvent) => {
-        try {
-          this.receiveLoginWindowMessage(event);
-          window.removeEventListener("message", messageEventListener);
-          resolve();
-        } catch (error) {
-          window.removeEventListener("message", messageEventListener);
-          reject(error);
-        }
-      };
-
-      // Remove any existing event listeners
-      window.removeEventListener("message", messageEventListener);
-
-      if (this.loginWindowReference === null || this.loginWindowReference.closed) {
-        /**
-         * if the pointer to the window object in memory does not exist or if such pointer exists but the window was closed
-         */
-        this.loginWindowReference = popupWindow(url, windowName, window);
-      } else if (this.loginWindowPreviousUrl !== url) {
-        /**
-         * if the resource to load is different, then we load it in the already opened secondary
-         * window and then we bring such window back on top/in front of its parent window.
-         */
-        this.loginWindowReference = popupWindow(url, windowName, window);
-        this.loginWindowReference.focus();
+      if (!this.popupWindow || this.popupWindow.closed) {
+        // If the pointer to the window object in memory does not exist or if such
+        // pointer exists but the window was closed
+        this.popupWindow = popupWindow(loginUri, this.popupWindowName, window);
+      } else if (this.popupPreviousUrl !== loginUri) {
+        // If the resource to load is different, then we load it in the already opened secondary
+        // window and then we bring such window back on top/in front of its parent window.
+        this.popupWindow = popupWindow(loginUri, this.popupWindowName, window);
+        this.popupWindow.focus();
       } else {
-        /**
-         * else the window reference must exist and the window is not closed; therefore,
-         * we can bring it back on top of any other window with the focus() method.
-         * There would be no need to re-create the window or to reload the referenced resource.
-         */
-        this.loginWindowReference.focus();
+        // Else the window reference must exist and the window is not closed; therefore,
+        // we can bring it back on top of any other window with the focus() method.
+        // There would be no need to re-create the window or to reload the referenced resource.
+        this.popupWindow.focus();
       }
 
       // Pop-up possibly blocked
-      if (!this.loginWindowReference) {
+      if (!this.popupWindow) {
         if (loginType === "popup") {
           // App explicitly does not want to fallback to redirect
           reject(new Error("Pop-up failed to open"));
         } else {
-          // Fallback to redirect login
-          window.location.href = url;
+          // Do fallback to redirect login
+          window.location.href = loginUri;
           return resolve();
         }
       }
 
-      window.addEventListener("message", messageEventListener, false);
-
-      // Assign the previous URL
-      this.loginWindowPreviousUrl = url;
+      this.popupPreviousUrl = loginUri;
     });
   }
 
   /**
    * A "message" event listener for the login pop-up window.
    * Handles messages sent from the login pop-up window to its opener window.
-   * @param event A postMessage event object
+   * Set to {@link boundPopupMessageListener} in the constructor
    */
-  private receiveLoginWindowMessage(event): void {
-    // Make sure to check origin and source to mitigate XSS attacks
+  private async popupMessageListener(event: MessageEvent) {
+    // Possibly not a Window
+    // Note: checking `event.source instanceof Window` is unreliable for some reason.
+    if (!("name" in event.source)) return;
 
-    // Do we trust the sender of this message? (might be
-    // different from what we originally opened, for example).
-    if (event.origin !== this.baseUrl) {
-      throw new Error(`Login failed: Request origin doesn't match configured loginRedirectUri origin`);
-    }
+    // Only handle events from the pop-up
+    // e.g. The React Developer Tools Chrome extension constantly sends message events. Do not try handle those.
+    if ("name" in event.source && event.source.name !== this.popupWindowName) return;
 
-    // if we trust the sender and the source is our pop-up
-    if (event.source === this.loginWindowReference) {
-      this.completeLogin(event.data);
+    try {
+      // Make sure to check origin and source to mitigate XSS attacks
+
+      // Do we trust the sender of this message? (might be
+      // different from what we originally opened, for example).
+      if (event.origin !== this.baseUrl) {
+        throw new Error(`Login failed: Request origin doesn't match configured loginRedirectUri origin`);
+      }
+
+      // If we trust the sender and the source is our pop-up
+      if (event.source === this.popupWindow) {
+        await this.completeLogin(event.data);
+      }
+
+      window.removeEventListener("message", this.boundPopupMessageListener);
+      if (this.popupResolve) this.popupResolve();
+    } catch (error) {
+      window.removeEventListener("message", this.boundPopupMessageListener);
+      if (this.popupReject) this.popupReject(error);
     }
   }
 
@@ -219,7 +244,7 @@ export class Auth {
    *
    * @returns string to indicate login type
    */
-  private async checkLoginQueryParams(): Promise<string> {
+  private async checkLoginQueryParams(): Promise<"popup" | "redirect"> {
     // Only attempt to complete login if actually logging in.
     if (!Auth.hasLoginQueryParams()) return;
 
@@ -234,9 +259,13 @@ export class Auth {
     /**
      * If completing pop-up login
      */
-    // Send message to parent/opener window with login query params
-    // Specify `baseUrl` targetOrigin for security
-    window.opener.postMessage(location.search, this.baseUrl); // handled by receiveLoginWindowMessage
+
+    /**
+     * Send message to parent/opener window with login query params.
+     * Specify `baseUrl` targetOrigin for security.
+     * Handled by {@link popupMessageListener}
+     */
+    window.opener.postMessage(location.search, this.baseUrl);
 
     // Close the pop-up, and return focus to the parent window where the `postMessage` we just sent above is received.
     window.close();
@@ -250,12 +279,12 @@ export class Auth {
   /**
    * Complete a login request
    *
-   * Takes an authorization code and exchanges it for an access token and ID token.
+   * Takes an authorization code and exchanges it for an access token.
    *
    * Expects `code` and `state` query params to be present in the URL. Or else an `error` query
    * param if something went wrong.
    *
-   * Stores the access token and ID token in local storage.
+   * Stores the access token in local storage.
    *
    * Performs after login actions.
    */
@@ -299,7 +328,7 @@ export class Auth {
 
   /**
    * A utility function to check if the user is logged in.
-   * i.e. if an access token and ID token are in local storage.
+   * i.e. if an access token is in local storage.
    */
   isLoggedIn(): boolean {
     const token = localStorage.getItem(this.tokenKeyName);
@@ -319,13 +348,12 @@ export class Auth {
     const params = new URLSearchParams(location.search);
 
     // These query params will be present when redirected
-    // back from the RethinkID auth server
+    // back from the OAuth server
     return !!(params.get("code") && params.get("state"));
   }
 
   /**
    * A utility function to log a user out.
-   * Deletes the access token and ID token from local storage and reloads the page.
    */
   logOut(): void {
     if (localStorage.getItem(this.tokenKeyName)) {
