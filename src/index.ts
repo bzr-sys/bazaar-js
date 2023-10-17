@@ -17,11 +17,18 @@ export { User, Contact, Permission, PermissionType, FilterObject, OrderBy, Messa
 export type Options = CommonOptions &
   AuthOptions & {
     /**
-     * A callback function an app can specify to run when a user has successfully logged in.
+     * Provide a callback to handle a successful login.
      *
      * e.g. Set state, redirect, etc.
      */
     onLogin?: (rid: RethinkID) => Promise<void>;
+
+    /**
+     * Provide a callback to handle a failed login. E.g. invalid authorization code.
+     *
+     * e.g. Set state, redirect, etc.
+     */
+    onLoginError?: (rid: RethinkID, message: string) => Promise<void>;
 
     /**
      * Provide a callback to handle API connections. Will be called after login and any subsequent re-connection.
@@ -89,14 +96,24 @@ export class RethinkID {
     );
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
-    this.auth = new Auth(options, async () => {
-      this.api.connect();
-      if (options.onLogin) {
-        await options.onLogin(this);
-        return;
-      }
-      console.log("onLogin default");
-    });
+    this.auth = new Auth(
+      options,
+      async () => {
+        this.api.connect();
+        if (options.onLogin) {
+          await options.onLogin(this);
+          return;
+        }
+        console.log("onLogin default");
+      },
+      async (message: string) => {
+        if (options.onLoginError) {
+          await options.onLoginError(this, message);
+          return;
+        }
+        console.log("onLoginError default:", message);
+      },
+    );
 
     this.collections = new CollectionsAPI(this.api);
     this.permissions = new PermissionsAPI(this.api, options.rethinkIdUri, options.appId);
@@ -126,6 +143,17 @@ export class RethinkID {
   //
   // Login methods
   //
+
+  /**
+   * Set a callback function an app can run a login error occurs.
+   *
+   * e.g. Authorization code is invalid
+   */
+  onLoginError(f: (rid: RethinkID, message: string) => Promise<void>) {
+    this.auth.onLoginError = async (message) => {
+      await f(this, message);
+    };
+  }
 
   /**
    * Set a callback function an app can run when a user has successfully logged in.
