@@ -1,4 +1,4 @@
-import { OAuth2Client, generateCodeVerifier } from "@badgateway/oauth2-client";
+import { OAuth2Client, OAuth2Token, generateCodeVerifier } from "@badgateway/oauth2-client";
 
 import { CommonOptions, AuthOptions, LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
@@ -66,8 +66,17 @@ export class Auth {
    */
   onLogin: () => void;
 
-  constructor(options: CommonOptions & AuthOptions, onLogin: () => void) {
+  /**
+   * Set a callback function an app can run a login error occurs.
+   *
+   * e.g. Authorization code is invalid
+   */
+  onLoginError: (message: string) => void;
+
+  constructor(options: CommonOptions & AuthOptions, onLogin: () => void, onLoginError: (message: string) => void) {
     this.onLogin = onLogin;
+
+    this.onLoginError = onLoginError;
 
     // Cache the bound event listener for consistent reference and reliable removal later
     this.boundPopupMessageListener = this.popupMessageListener.bind(this);
@@ -139,9 +148,10 @@ export class Auth {
      * The same check happens later in the log in process in {@link popupMessageListener} for security.
      */
     if (window.origin !== this.baseUrl) {
-      throw new Error(
+      this.onLoginError(
         `Login failed: Request origin (${window.origin}) doesn't match configured loginRedirectUri origin (${this.baseUrl})`,
       );
+      return;
     }
 
     const loginType = options?.type || "popup_fallback";
@@ -221,7 +231,7 @@ export class Auth {
       // Do we trust the sender of this message? (might be
       // different from what we originally opened, for example).
       if (event.origin !== this.baseUrl) {
-        throw new Error(`Login failed: Request origin doesn't match configured loginRedirectUri origin`);
+        this.onLoginError(`Login failed: Request origin doesn't match configured loginRedirectUri origin`);
       }
 
       // If we trust the sender and the source is our pop-up
@@ -294,15 +304,21 @@ export class Auth {
 
     const uri = `${this.loginRedirectUri}${loginQueryParams}`;
 
-    const oAuth2Token = await this.oAuthClient.authorizationCode.getTokenFromCodeRedirect(uri, {
-      /**
-       * The redirect URI is not actually used for any redirects, but MUST be the
-       * same as what you passed earlier to "authorizationCode"
-       */
-      redirectUri: this.loginRedirectUri,
-      state,
-      codeVerifier,
-    });
+    let oAuth2Token: OAuth2Token;
+
+    try {
+      oAuth2Token = await this.oAuthClient.authorizationCode.getTokenFromCodeRedirect(uri, {
+        /**
+         * The redirect URI is not actually used for any redirects, but MUST be the
+         * same as what you passed earlier to "authorizationCode"
+         */
+        redirectUri: this.loginRedirectUri,
+        state,
+        codeVerifier,
+      });
+    } catch (error) {
+      this.onLoginError(error.message);
+    }
 
     const token = oAuth2Token.accessToken;
 
@@ -310,7 +326,7 @@ export class Auth {
     // if the get token response body does not contain the properties it expects
     // e.g. the response body contains `accessToken` instead of `access_token`.
     if (!token) {
-      throw new Error("No token");
+      this.onLoginError("No token");
     }
 
     // Store token in local storage
