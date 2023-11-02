@@ -75,7 +75,12 @@ export type Link = {
  */
 export type LoginType = "popup_fallback" | "popup" | "redirect";
 
-export type SubscribeListener = (changes: { new_val: object; old_val: object }) => void;
+export type Doc = {
+  id: any;
+  [key: string]: any;
+};
+
+export type SubscribeListener = (changes: { new_val: Doc | null; old_val: Doc | null }) => void;
 
 export type Message = { message: string };
 

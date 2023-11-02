@@ -1,5 +1,5 @@
 import { API } from ".";
-import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy } from "../types";
+import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy, Doc } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
 export class CollectionAPI {
@@ -22,7 +22,7 @@ export class CollectionAPI {
     return this.withCollection(async () => {
       const res = await this.api.collectionGetOne(this.collectionName, docId, this.collectionOptions);
       return res.data;
-    }) as Promise<object | null>;
+    }) as Promise<Doc | null>;
   }
 
   /**
@@ -46,7 +46,7 @@ export class CollectionAPI {
         filter,
       });
       return res.data;
-    }) as Promise<any[]>;
+    }) as Promise<Doc[]>;
   }
 
   /**
@@ -117,6 +117,36 @@ export class CollectionAPI {
     return this.withCollection(() =>
       this.api.collectionDeleteAll(this.collectionName, { filter, ...this.collectionOptions }),
     ) as Promise<Message>;
+  }
+
+  async mirrorOne(docId: string, localDoc: Doc | null) {
+    localDoc = await this.getOne(docId);
+    return this.subscribeOne(docId, (changes) => {
+      localDoc = changes.new_val;
+    });
+  }
+
+  async mirrorAll(filter: FilterObject, localCollection: Doc[]) {
+    localCollection = await this.getAll(filter);
+    return this.subscribeAll(filter, (changes) => {
+      if (!changes.old_val) {
+        // New doc
+        localCollection.push(changes.new_val);
+        return;
+      }
+      if (!changes.new_val) {
+        // Deleted doc
+        const idx = localCollection.findIndex((doc) => doc.id === changes.old_val.id);
+        if (idx > -1) {
+          localCollection.splice(idx, 1);
+        }
+        return;
+      }
+      // Changed doc
+      const idx = localCollection.findIndex((doc) => doc.id === changes.new_val.id);
+      localCollection[idx] = changes.new_val;
+      return;
+    });
   }
 
   //

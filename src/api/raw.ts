@@ -14,6 +14,7 @@ import {
   GrantedPermission,
   PermissionType,
   PermissionTemplate,
+  Doc,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
@@ -205,7 +206,7 @@ export class API {
   ) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
-    return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: object | null }>;
+    return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: Doc | null }>;
   }
 
   /**
@@ -231,7 +232,7 @@ export class API {
   ) {
     const payload = { collectionName };
     Object.assign(payload, options);
-    return this.asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: any[] }>;
+    return this.asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: Doc[] }>;
   }
 
   /**
