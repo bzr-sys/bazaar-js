@@ -80,7 +80,7 @@ export type Doc = {
   [key: string]: any;
 };
 
-export type SubscribeListener = (changes: { new_val: Doc | null; old_val: Doc | null }) => void;
+export type SubscribeListener = (changes: { newDoc: Doc | null; oldDoc: Doc | null }) => void;
 
 export type Message = { message: string };
 
