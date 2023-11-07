@@ -243,11 +243,11 @@ export class API {
    * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async collectionSubscribeOne(
+  async collectionSubscribeOne<T extends Doc>(
     collectionName: string,
     docId: string,
     options: { userId?: string } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
@@ -272,10 +272,10 @@ export class API {
    * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async collectionSubscribeAll(
+  async collectionSubscribeAll<T extends Doc>(
     collectionName: string,
     options: { filter?: FilterObject; userId?: string } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName };
     Object.assign(payload, options);
@@ -476,7 +476,7 @@ export class API {
       ownerId?: string;
       type?: PermissionType;
     } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<Permission>,
   ) {
     const response = (await this.asyncEmit(this.version + ":granted_permissions:subscribe", options)) as {
       data: string;

@@ -3,6 +3,7 @@ import {
   GrantedPermission,
   Message,
   NewPermission,
+  Permission,
   PermissionTemplate,
   PermissionType,
   SubscribeListener,
@@ -135,7 +136,7 @@ export class PermissionsAPI {
         ownerId?: string;
         type?: PermissionType;
       } = {},
-      listener: SubscribeListener,
+      listener: SubscribeListener<Permission>,
     ) => {
       return this.api.grantedPermissionsSubscribe(options, listener);
     },

@@ -73,7 +73,7 @@ export class CollectionAPI {
   /**
    * @returns An unsubscribe function
    */
-  async subscribeOne(docId: string, listener: SubscribeListener) {
+  async subscribeOne<T extends Doc>(docId: string, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
       this.api.collectionSubscribeOne(this.collectionName, docId, this.collectionOptions, listener),
     ) as Promise<() => Promise<Message>>;
@@ -82,7 +82,7 @@ export class CollectionAPI {
   /**
    * @returns An unsubscribe function
    */
-  async subscribeAll(filter: FilterObject, listener: SubscribeListener) {
+  async subscribeAll<T extends Doc>(filter: FilterObject, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
       this.api.collectionSubscribeAll(this.collectionName, { filter, ...this.collectionOptions }, listener),
     ) as Promise<() => Promise<Message>>;

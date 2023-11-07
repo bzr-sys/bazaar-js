@@ -75,12 +75,12 @@ export type Link = {
  */
 export type LoginType = "popup_fallback" | "popup" | "redirect";
 
-export type Doc = {
+export interface Doc {
   id: any;
   [key: string]: any;
-};
+}
 
-export type SubscribeListener = (changes: { new_val: Doc | null; old_val: Doc | null }) => void;
+export type SubscribeListener<T extends Doc> = (changes: { new_val: T | null; old_val: T | null }) => void;
 
 export type Message = { message: string };
 
