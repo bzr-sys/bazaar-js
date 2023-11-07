@@ -119,36 +119,6 @@ export class CollectionAPI {
     ) as Promise<Message>;
   }
 
-  async mirrorOne(docId: string, localDoc: Doc | null) {
-    localDoc = await this.getOne(docId);
-    return this.subscribeOne(docId, (changes) => {
-      localDoc = changes.new_val;
-    });
-  }
-
-  async mirrorAll(filter: FilterObject, localCollection: Doc[]) {
-    localCollection = await this.getAll(filter);
-    return this.subscribeAll(filter, (changes) => {
-      if (!changes.old_val) {
-        // New doc
-        localCollection.push(changes.new_val);
-        return;
-      }
-      if (!changes.new_val) {
-        // Deleted doc
-        const idx = localCollection.findIndex((doc) => doc.id === changes.old_val.id);
-        if (idx > -1) {
-          localCollection.splice(idx, 1);
-        }
-        return;
-      }
-      // Changed doc
-      const idx = localCollection.findIndex((doc) => doc.id === changes.new_val.id);
-      localCollection[idx] = changes.new_val;
-      return;
-    });
-  }
-
   //
   async withCollection(collectionQuery: () => Promise<any>) {
     try {
