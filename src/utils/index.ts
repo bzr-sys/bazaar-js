@@ -35,22 +35,6 @@ export function generateRandomString(): string {
 }
 
 /**
- * Calculates the SHA256 hash of the input text.
- * @param input A random string
- */
-function sha256(input: string): Promise<ArrayBuffer> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-
-  if (!window.crypto.subtle) {
-    throw new Error(
-      "The RethinkID JS SDK works with https or localhost. Possibly you're trying to use it with http. Reason: window.crypto.subtle requires https in most browsers.",
-    );
-  }
-  return window.crypto.subtle.digest("SHA-256", data);
-}
-
-/**
  * Open and center pop-up on specific window to account for multiple monitors
  * @param url url to open
  * @param windowName name to identify pop-up window

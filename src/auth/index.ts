@@ -318,6 +318,7 @@ export class Auth {
       });
     } catch (error) {
       this.onLoginError(error.message);
+      return;
     }
 
     const token = oAuth2Token.accessToken;
