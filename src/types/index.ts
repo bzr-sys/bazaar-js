@@ -53,7 +53,7 @@ export type GrantedPermission = {
   appId: string;
   ownerId: string;
   permissionId: string;
-  permission: Permission | undefined;
+  permission: Permission;
 };
 
 export type Link = {
@@ -62,7 +62,7 @@ export type Link = {
   appId: string;
   permission: PermissionTemplate;
   limit: number;
-  users: string[] | undefined;
+  users: string[];
   url: string | undefined;
 };
 
@@ -80,7 +80,7 @@ export type Doc = {
   [key: string]: any;
 };
 
-export type SubscribeListener = (changes: { new_val: Doc | null; old_val: Doc | null }) => void;
+export type SubscribeListener = (changes: { newDoc: Doc | null; oldDoc: Doc | null }) => void;
 
 export type Message = { message: string };
 

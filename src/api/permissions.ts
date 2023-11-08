@@ -143,28 +143,42 @@ export class PermissionsAPI {
 
   private onGrantedUnsubscribe: () => Promise<Message>;
 
-  async onGranted(f: (grantedPermission: GrantedPermission) => void) {
+  async onGranted(
+    options: {
+      collectionName?: string;
+      ownerId?: string;
+      type?: PermissionType;
+      includeInitial: Boolean;
+    } = { includeInitial: false },
+    f: (grantedPermission: GrantedPermission) => void,
+  ) {
     if (this.onGrantedUnsubscribe) {
       await this.onGrantedUnsubscribe();
     }
+
+    let includeInitial = options.includeInitial;
+    delete options.includeInitial;
+
     try {
       // Subscribe
-      console.log("Subscribe onShared");
+      console.log("Subscribe onGranted");
       this.onGrantedUnsubscribe = await this.api.grantedPermissionsSubscribe(
-        {},
-        (changes: { new_val: object; old_val: object }) => {
+        options,
+        (changes: { newDoc: GrantedPermission | null; oldDoc: GrantedPermission | null }) => {
           console.log("***onGranted triggered");
-          if (changes.new_val) {
-            f(changes.new_val as GrantedPermission);
+          if (changes.newDoc) {
+            f(changes.newDoc);
           }
         },
       );
-      // List
-      console.log("List onGranted");
-      let reqs = await this.api.grantedPermissionsList();
-      reqs.data.forEach((req: GrantedPermission) => {
-        f(req);
-      });
+      if (includeInitial) {
+        // List
+        console.log("List onGranted");
+        let permissions = await this.api.grantedPermissionsList();
+        permissions.data.forEach((p: GrantedPermission) => {
+          f(p);
+        });
+      }
     } catch (error) {
       // TODO what should we do
       console.log("onGranted error:", error);
