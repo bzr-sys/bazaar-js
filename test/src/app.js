@@ -239,6 +239,6 @@ async function fetchContacts() {
     output("contacts-output", "no contacts");
   }
   for (let c of contacts) {
-    output("contacts-output", `${c.contactId} ${c.connected} ${c.requested}`);
+    output("contacts-output", `${c.contactUserId} ${c.connected} ${c.requested}`);
   }
 }
