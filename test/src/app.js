@@ -67,7 +67,7 @@ rid.onLogin(async () => {
   //   output("shared-output", msg)
   // }
 
-  await rid.permissions.onGranted((gp) => {
+  await rid.permissions.onGranted({ includeInitial: true }, (gp) => {
     const msg =
       "App: " +
       gp.appId +
