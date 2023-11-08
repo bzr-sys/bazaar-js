@@ -155,10 +155,22 @@ export type User = {
 
 export type Contact = {
   id: string;
+  /**
+   * ID of the owner of the contact
+   */
   userId: string;
-  contactId: string;
-  connected: boolean; // flag to signal if contact is connected (you are trusted by this contact)
-  requested: boolean; // flag to signal if a connection request has been sent already
+  /**
+   * ID of the contact
+   */
+  contactUserId: string;
+  /**
+   * Flag to signal if contact is connected (you are trusted by this contact)
+   */
+  connected: boolean;
+  /**
+   * Flag to signal if a connection request has been sent already
+   */
+  requested: boolean;
 };
 
 export type CollectionOptions = {
