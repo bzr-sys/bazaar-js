@@ -86,6 +86,7 @@ export class API {
     this.modal.style.width = "min(700px, 100vh)";
     this.modal.style.borderWidth = "0";
     this.modal.style.padding = "0";
+    this.modal.style.margin = "auto";
 
     const header = document.createElement("div");
     header.style.width = "100%";

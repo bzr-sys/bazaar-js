@@ -148,9 +148,9 @@ export type OrderBy = {
 
 export type User = {
   id: string;
-  name: string | undefined;
+  name: string;
   email: string | undefined;
-  status: "self" | "stranger" | "contact" | "connected";
+  status: "self" | "stranger" | "contact" | "connected" | undefined;
 };
 
 export type Contact = {
@@ -171,6 +171,10 @@ export type Contact = {
    * Flag to signal if a connection request has been sent already
    */
   requested: boolean;
+  /**
+   * The resolved user object, if it exists
+   */
+  user: User | undefined;
 };
 
 export type CollectionOptions = {
