@@ -36,5 +36,8 @@
     "@badgateway/oauth2-client": "^2.2.4",
     "jwt-decode": "^3.1.2",
     "socket.io-client": "^4.4.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
   }
 }
