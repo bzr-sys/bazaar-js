@@ -150,19 +150,10 @@ export type User = {
   id: string;
   name: string;
   email: string | undefined;
-  status: "self" | "stranger" | "contact" | "connected" | undefined;
 };
 
 export type Contact = {
   id: string;
-  /**
-   * ID of the owner of the contact
-   */
-  userId: string;
-  /**
-   * ID of the contact
-   */
-  contactUserId: string;
   /**
    * Flag to signal if contact is connected (you are trusted by this contact)
    */
@@ -172,9 +163,9 @@ export type Contact = {
    */
   requested: boolean;
   /**
-   * The resolved user object, if it exists
+   * The resolved user object
    */
-  user: User | undefined;
+  user: User;
 };
 
 export type CollectionOptions = {
