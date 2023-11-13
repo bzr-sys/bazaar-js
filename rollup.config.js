@@ -2,7 +2,7 @@ import nodePolyfills from "rollup-plugin-polyfill-node";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import babel from "@rollup/plugin-babel";
-import typescript from "@rollup/plugin-typescript";
+import typescript from "rollup-plugin-typescript2";
 import pkg from "./package.json";
 
 /**
@@ -21,7 +21,7 @@ const config = [
     ],
     external: ["@badgateway/oauth2-client", "jwt-decode", "socket.io-client"],
     plugins: [
-      typescript({ tsconfig: "./tsconfig.json" }),
+      typescript(),
       babel({
         exclude: ["node_modules/**"],
         babelHelpers: "bundled",
@@ -43,7 +43,7 @@ const config = [
       nodePolyfills(),
       resolve({ browser: true }),
       commonjs(),
-      typescript({ tsconfig: "./tsconfig.json" }),
+      typescript(),
       babel({
         exclude: ["node_modules/**"],
         babelHelpers: "bundled",
