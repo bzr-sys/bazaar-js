@@ -9,7 +9,17 @@ import { AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./type
 export { ErrorTypes, RethinkIDError } from "./utils";
 export { PermissionsAPI, CollectionAPI, CollectionsAPI, SocialAPI } from "./api";
 
-export { User, Contact, Permission, PermissionType, FilterObject, OrderBy, Message } from "./types";
+export {
+  User,
+  Contact,
+  Permission,
+  NewPermission,
+  PermissionTemplate,
+  PermissionType,
+  FilterObject,
+  OrderBy,
+  Message,
+} from "./types";
 
 /**
  * RethinkID constructor options
