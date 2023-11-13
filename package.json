@@ -3,7 +3,7 @@
   "version": "0.14.2",
   "description": "The RethinkID SDK. Conveniently use RethinkID with your app in the browser.",
   "main": "dist/rethinkid-js-sdk.esm.js",
-  "typings": "dist/types/index.d.ts",
+  "typings": "dist/index.d.ts",
   "github": "",
   "scripts": {
     "test": "exit 0",
