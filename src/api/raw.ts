@@ -83,7 +83,7 @@ export class API {
 
     // Initialize modal
     this.modal = document.createElement("dialog");
-    this.modal.style.width = "min(700px, 100vh)";
+    this.modal.style.width = "min(700px, 100vw)";
     this.modal.style.borderWidth = "0";
     this.modal.style.padding = "0";
     this.modal.style.margin = "auto";
@@ -99,7 +99,7 @@ export class API {
     button.style.borderWidth = "0";
     button.style.backgroundColor = "white";
     button.innerHTML = "X";
-    button.onclick = () => this.modal.close();
+    button.onclick = () => this.closeModal();
     header.appendChild(button);
 
     this.iframe = document.createElement("iframe");
@@ -530,12 +530,30 @@ export class API {
   // Modal
   //
 
+  private onModalMessage: (event: { data: string }) => void;
+
+  private closeModal() {
+    if (this.onModalMessage) {
+      window.removeEventListener("message", this.onModalMessage);
+      this.onModalMessage = undefined;
+    }
+    this.modal.close();
+  }
+
   /**
    * Open a modal
    */
-  openModal(path: string) {
+  openModal(path: string, onMessage: ((msg: string) => void) | null = null) {
     this.iframe.src = this.rethinkIdUri + path;
     this.modal.showModal();
+    if (onMessage) {
+      const m = this.modal;
+      this.onModalMessage = function (event) {
+        onMessage(event.data);
+        m.close();
+      };
+      window.addEventListener("message", this.onModalMessage, { once: true });
+    }
     return;
   }
 }
