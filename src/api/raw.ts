@@ -526,6 +526,25 @@ export class API {
     return this.asyncEmit(this.version + ":contacts:list", payload) as Promise<{ data: Contact[] }>;
   }
 
+  /**
+   * Subscribe to granted permissions changes
+   * @param {SubscribeListener} listener Function that handles the granted permissions updates
+   * @returns An unsubscribe function
+   */
+  async contactsSubscribe(listener: SubscribeListener) {
+    const response = (await this.asyncEmit(this.version + ":contacts:subscribe", {})) as {
+      data: string;
+    }; // where data is the subscription handle
+    const subscriptionHandle = response.data;
+
+    this.dataApi.on(subscriptionHandle, listener);
+
+    return async () => {
+      this.dataApi.off(subscriptionHandle, listener);
+      return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<Message>;
+    };
+  }
+
   //
   // Modal
   //

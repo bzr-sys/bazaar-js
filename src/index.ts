@@ -19,6 +19,7 @@ export {
   FilterObject,
   OrderBy,
   Message,
+  Link,
 } from "./types";
 
 /**

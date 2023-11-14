@@ -1,3 +1,4 @@
+import { SubscribeListener } from "../types";
 import { API } from "./raw";
 
 /**
@@ -35,5 +36,13 @@ export class SocialAPI {
   async listContacts() {
     const res = await this.api.contactsList();
     return res.data;
+  }
+
+  /**
+   * Subscribe to contacts
+   * @returns an unsubscribe function
+   */
+  async subscribeContacts(listener: SubscribeListener) {
+    return this.api.contactsSubscribe(listener);
   }
 }
