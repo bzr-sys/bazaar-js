@@ -49,10 +49,14 @@ export enum PermissionType {
 
 export type GrantedPermission = {
   id: string;
-  userId: string;
+  /**
+   * ID of app the permission comes from
+   */
   appId: string;
+  /**
+   * ID of the resource owner (the sharer)
+   */
   ownerId: string;
-  permissionId: string;
   permission: Permission;
 };
 
