@@ -444,6 +444,31 @@ export class API {
   }
 
   /**
+   * Subscribe to link changes
+   * @param {SubscribeListener} listener Function that handles the links updates
+   * @returns An unsubscribe function
+   */
+  async linksSubscribe(
+    options: {
+      collectionName?: string;
+      type?: PermissionType;
+    } = {},
+    listener: SubscribeListener,
+  ) {
+    const response = (await this.asyncEmit(this.version + ":links:subscribe", options)) as {
+      data: string;
+    }; // where data is the subscription handle
+    const subscriptionHandle = response.data;
+
+    this.dataApi.on(subscriptionHandle, listener);
+
+    return async () => {
+      this.dataApi.off(subscriptionHandle, listener);
+      return this.asyncEmit(this.version + ":links:unsubscribe", subscriptionHandle) as Promise<Message>;
+    };
+  }
+
+  /**
    * Delete permission links.
    */
   async linksDelete(linkId: string) {

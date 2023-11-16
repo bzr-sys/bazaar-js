@@ -86,6 +86,16 @@ export class PermissionsAPI {
       return res.data;
     },
 
+    subscribe: async (
+      options: {
+        collectionName?: string;
+        type?: PermissionType;
+      } = {},
+      listener: SubscribeListener,
+    ) => {
+      return this.api.linksSubscribe(options, listener);
+    },
+
     /**
      * Delete permissions for a table
      */
