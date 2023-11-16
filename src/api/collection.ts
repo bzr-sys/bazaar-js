@@ -1,4 +1,4 @@
-import { API } from ".";
+import { API } from "./raw";
 import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy, Doc } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
