@@ -549,7 +549,7 @@ export class API {
   // Modal
   //
 
-  private onModalMessage: (event: { data: string }) => void;
+  private onModalMessage: (event: MessageEvent) => void;
 
   private closeModal() {
     if (this.onModalMessage) {
@@ -567,7 +567,9 @@ export class API {
     this.modal.showModal();
     if (onMessage) {
       const m = this.modal;
-      this.onModalMessage = function (event) {
+      this.onModalMessage = (event) => {
+        if (this.iframe && event.source !== this.iframe.contentWindow) return;
+
         onMessage(event.data);
         m.close();
       };
