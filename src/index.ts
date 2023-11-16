@@ -1,4 +1,8 @@
-import { API, CollectionAPI, CollectionsAPI, PermissionsAPI, SocialAPI } from "./api";
+import { API } from "./api/raw";
+import { CollectionAPI } from "./api/collection";
+import { CollectionsAPI } from "./api/collections";
+import { PermissionsAPI } from "./api/permissions";
+import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { rethinkIdUri } from "./constants";
 import { AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./types";
@@ -7,7 +11,10 @@ import { AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./type
  * Types of errors that can return from the API
  */
 export { ErrorTypes, RethinkIDError } from "./utils";
-export { PermissionsAPI, CollectionAPI, CollectionsAPI, SocialAPI } from "./api";
+export { CollectionAPI } from "./api/collection";
+export { CollectionsAPI } from "./api/collections";
+export { PermissionsAPI } from "./api/permissions";
+export { SocialAPI } from "./api/social";
 
 export {
   User,

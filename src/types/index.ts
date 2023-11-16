@@ -157,10 +157,6 @@ export type Contact = {
    */
   connected: boolean;
   /**
-   * Flag to signal if a connection request has been sent already
-   */
-  requested: boolean;
-  /**
    * The resolved user object
    */
   user: User;
