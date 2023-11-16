@@ -1,12 +1,5 @@
 import { linkPath, rethinkIdUri } from "../constants";
-import {
-  GrantedPermission,
-  Message,
-  NewPermission,
-  PermissionTemplate,
-  PermissionType,
-  SubscribeListener,
-} from "../types";
+import { NewPermission, PermissionTemplate, PermissionType, SubscribeListener } from "../types";
 import { API } from "./raw";
 
 /**
@@ -140,57 +133,4 @@ export class PermissionsAPI {
       return this.api.grantedPermissionsSubscribe(options, listener);
     },
   };
-
-  private onGrantedUnsubscribe: () => Promise<Message>;
-
-  async onGranted(
-    options: {
-      collectionName?: string;
-      ownerId?: string;
-      type?: PermissionType;
-      includeInitial: Boolean;
-    } = { includeInitial: false },
-    f: (grantedPermission: GrantedPermission) => void,
-  ) {
-    if (this.onGrantedUnsubscribe) {
-      await this.onGrantedUnsubscribe();
-    }
-
-    let includeInitial = options.includeInitial;
-    delete options.includeInitial;
-
-    try {
-      // Subscribe
-      console.log("Subscribe onGranted");
-      this.onGrantedUnsubscribe = await this.api.grantedPermissionsSubscribe(
-        options,
-        (changes: { newDoc: GrantedPermission | null; oldDoc: GrantedPermission | null }) => {
-          console.log("***onGranted triggered");
-          if (changes.newDoc) {
-            f(changes.newDoc);
-          }
-        },
-      );
-      if (includeInitial) {
-        // List
-        console.log("List onGranted");
-        let permissions = await this.api.grantedPermissionsList();
-        permissions.data.forEach((p: GrantedPermission) => {
-          f(p);
-        });
-      }
-    } catch (error) {
-      // TODO what should we do
-      console.log("onGranted error:", error);
-    }
-  }
-
-  async stopOnGranted() {
-    if (!this.onGrantedUnsubscribe) {
-      return;
-    }
-    await this.onGrantedUnsubscribe();
-    this.onGrantedUnsubscribe = undefined;
-    return;
-  }
 }
