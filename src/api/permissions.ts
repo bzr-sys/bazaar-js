@@ -122,8 +122,8 @@ export class PermissionsAPI {
     /**
      *
      */
-    delete: async (permissionId: string) => {
-      return this.api.grantedPermissionsDelete(permissionId);
+    delete: async (grantedPermissionId: string) => {
+      return this.api.grantedPermissionsDelete(grantedPermissionId);
     },
 
     /**

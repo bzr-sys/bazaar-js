@@ -49,17 +49,15 @@ export enum PermissionType {
 
 export type GrantedPermission = {
   id: string;
-  userId: string;
-  appId: string;
+  /**
+   * ID of the resource owner (the sharer)
+   */
   ownerId: string;
-  permissionId: string;
   permission: Permission;
 };
 
 export type Link = {
   id: string;
-  userId: string;
-  appId: string;
   permission: PermissionTemplate;
   limit: number;
   users: string[];

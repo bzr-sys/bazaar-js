@@ -16,6 +16,7 @@ export {
   NewPermission,
   PermissionTemplate,
   PermissionType,
+  GrantedPermission,
   FilterObject,
   OrderBy,
   Message,

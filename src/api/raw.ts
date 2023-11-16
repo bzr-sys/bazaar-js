@@ -494,10 +494,10 @@ export class API {
 
   /**
    * Delete a granted permission
-   * @param {string} permissionId The ID of the granted permission
+   * @param {string} grantedPermissionId The ID of the granted permission
    */
-  async grantedPermissionsDelete(permissionId: string) {
-    const payload = { permissionId };
+  async grantedPermissionsDelete(grantedPermissionId: string) {
+    const payload = { grantedPermissionId };
     return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<Message>;
   }
 
