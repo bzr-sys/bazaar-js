@@ -574,7 +574,7 @@ export class API {
   // Modal
   //
 
-  private onModalMessage: (event: { data: string }) => void;
+  private onModalMessage: (event: MessageEvent) => void;
 
   private closeModal() {
     if (this.onModalMessage) {
@@ -591,12 +591,13 @@ export class API {
     this.iframe.src = this.rethinkIdUri + path;
     this.modal.showModal();
     if (onMessage) {
-      const m = this.modal;
-      this.onModalMessage = function (event) {
+      this.onModalMessage = (event) => {
+        // Only handle messages from our iframe
+        if (this.iframe && event.source !== this.iframe.contentWindow) return;
         onMessage(event.data);
-        m.close();
+        this.closeModal();
       };
-      window.addEventListener("message", this.onModalMessage, { once: true });
+      window.addEventListener("message", this.onModalMessage);
     }
     return;
   }
