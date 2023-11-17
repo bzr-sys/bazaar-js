@@ -68,7 +68,7 @@ export class RethinkID {
    * Auth handles authentication and login
    */
 
-  auth: Auth;
+  private auth: Auth;
 
   /**
    * A wrapper of the low level Data API
