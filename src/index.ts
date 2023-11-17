@@ -26,8 +26,10 @@ export {
   GrantedPermission,
   FilterObject,
   OrderBy,
+  OrderByType,
   Message,
   Link,
+  LoginType
 } from "./types";
 
 /**
@@ -188,7 +190,7 @@ export class RethinkID {
 
   /**
    * Opens a pop-up window to perform OAuth login.
-   * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
+   * Will fallback to redirect login if pop-up fails to open, if `options.type` is not `popup` (meaning an app has explicitly opted out of falling back to redirect login)
    */
   async login(options?: { type?: LoginType }): Promise<void> {
     return this.auth.login(options);
