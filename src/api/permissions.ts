@@ -93,7 +93,13 @@ export class PermissionsAPI {
       } = {},
       listener: SubscribeListener,
     ) => {
-      return this.api.linksSubscribe(options, listener);
+      const newListener: SubscribeListener = (changes) => {
+        if (changes.newDoc) {
+          changes.newDoc.url = this.linkUri + changes.newDoc.id;
+        }
+        listener(changes);
+      };
+      return this.api.linksSubscribe(options, newListener);
     },
 
     /**
