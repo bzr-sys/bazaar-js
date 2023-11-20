@@ -4,8 +4,8 @@ import { ErrorTypes, RethinkIDError } from "../utils";
 
 export class CollectionAPI {
   private api: API;
-  collectionName: string;
-  collectionOptions: CollectionOptions;
+  private collectionName: string;
+  private collectionOptions: CollectionOptions;
 
   constructor(api: API, collectionName: string, collectionOptions: CollectionOptions = {}) {
     this.api = api;
@@ -120,7 +120,7 @@ export class CollectionAPI {
   }
 
   //
-  async withCollection(collectionQuery: () => Promise<any>) {
+  private async withCollection(collectionQuery: () => Promise<any>) {
     try {
       return await collectionQuery();
     } catch (error) {

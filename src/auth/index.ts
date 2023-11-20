@@ -137,7 +137,7 @@ export class Auth {
 
   /**
    * Opens a pop-up window to perform OAuth login.
-   * Will fallback to redirect login if pop-up fails to open, provided options type is not `popup` (meaning an app has explicitly opted out of fallback redirect login)
+   * Will fallback to redirect login if pop-up fails to open, if `options.type` is not `popup` (meaning an app has explicitly opted out of falling back to redirect login)
    */
   async login(options?: { type?: LoginType }): Promise<void> {
     // Remove any existing event listeners
@@ -154,12 +154,12 @@ export class Auth {
       return;
     }
 
-    const loginType = options?.type || "popup_fallback";
+    const loginType = options?.type || LoginType.POPUP_FALLBACK;
 
     const loginUri = await this.loginUri();
 
     // Do redirect login
-    if (loginType === "redirect") {
+    if (loginType === LoginType.REDIRECT) {
       window.location.href = loginUri;
       return;
     }
@@ -197,7 +197,7 @@ export class Auth {
 
       // Pop-up possibly blocked
       if (!this.popupWindow) {
-        if (loginType === "popup") {
+        if (loginType === LoginType.POPUP) {
           // App explicitly does not want to fallback to redirect
           reject(new Error("Pop-up failed to open"));
         } else {
@@ -254,7 +254,7 @@ export class Auth {
    *
    * @returns string to indicate login type
    */
-  private async checkLoginQueryParams(): Promise<"popup" | "redirect"> {
+  private async checkLoginQueryParams(): Promise<LoginType.POPUP | LoginType.REDIRECT> {
     // Only attempt to complete login if actually logging in.
     if (!Auth.hasLoginQueryParams()) return;
 
@@ -263,7 +263,7 @@ export class Auth {
      */
     if (!window.opener) {
       await this.completeLogin(location.search);
-      return "redirect";
+      return LoginType.REDIRECT;
     }
 
     /**
@@ -283,7 +283,7 @@ export class Auth {
     // Send message in case window fails to close,
     // e.g. On Brave iOS the tab does not seem to close,
     // so at least an app has some way of gracefully handling this case.
-    return "popup";
+    return LoginType.POPUP;
   }
 
   /**

@@ -65,13 +65,23 @@ export type Link = {
 };
 
 /**
- * The possible login types. Default is "popup_fallback"
- *
- * "popup_fallback" - Do pop-up login, if the pop-up fails to open, fallback to redirect
- * "popup" - Do pop-up login only. Do not fallback to redirect
- * "redirect" - Do redirect login. Do not open a pop-up
+ * The possible login types.
  */
-export type LoginType = "popup_fallback" | "popup" | "redirect";
+export enum LoginType {
+  /**
+   * Default login type.
+   * Do pop-up login, if the pop-up fails to open, fallback to redirect.
+   */
+  POPUP_FALLBACK = "popup_fallback",
+  /**
+   * Do pop-up login only. Do not fallback to redirect.
+   */
+  POPUP = "popup",
+  /**
+   * Do redirect login. Do not open a pop-up.
+   */
+  REDIRECT = "redirect",
+}
 
 export type Doc = {
   id: any;
@@ -141,8 +151,13 @@ export type FilterObject = {
  * Example: { height: "desc", age: "asc" }
  */
 export type OrderBy = {
-  [field: string]: "asc" | "desc";
+  [field: string]: OrderByType;
 };
+
+export enum OrderByType {
+  ASC = "asc",
+  DESC = "desc",
+}
 
 export type User = {
   id: string;
