@@ -102,7 +102,7 @@ export class Auth {
      */
     this.baseUrl = new URL(options.loginRedirectUri).origin;
 
-    this.loginRedirectUri = options.loginRedirectUri;
+    this.loginRedirectUri = options.loginRedirectUri.replace(/\/*$/, "");
 
     this.checkLoginQueryParams();
   }
