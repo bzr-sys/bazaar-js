@@ -31,6 +31,7 @@ export {
   Link,
   LoginType,
   Doc,
+  AnyDoc,
   SubscribeListener,
 } from "./types";
 

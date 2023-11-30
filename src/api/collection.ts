@@ -1,8 +1,8 @@
 import { API } from "./raw";
-import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy, Doc } from "../types";
+import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
-export class CollectionAPI<T extends Doc> {
+export class CollectionAPI<T extends Doc = AnyDoc> {
   private api: API;
   private collectionName: string;
   private collectionOptions: CollectionOptions;

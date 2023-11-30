@@ -89,6 +89,10 @@ export type Doc = {
   id: string;
 };
 
+export type AnyDoc = Doc & {
+  [key: string | number | symbol]: any;
+}
+
 export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
 export type Message = { message: string };
