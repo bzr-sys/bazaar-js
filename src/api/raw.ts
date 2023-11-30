@@ -15,6 +15,7 @@ import {
   PermissionType,
   PermissionTemplate,
   Doc,
+  BasicLink,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
@@ -198,7 +199,7 @@ export class API {
    * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async collectionGetOne(
+  async collectionGetOne<T extends Doc>(
     collectionName: string,
     docId: string,
     options: {
@@ -207,7 +208,7 @@ export class API {
   ) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
-    return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: Doc | null }>;
+    return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: T | null }>;
   }
 
   /**
@@ -221,7 +222,7 @@ export class API {
    * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async collectionGetAll(
+  async collectionGetAll<T extends Doc>(
     collectionName: string,
     options: {
       startOffset?: number;
@@ -233,7 +234,7 @@ export class API {
   ) {
     const payload = { collectionName };
     Object.assign(payload, options);
-    return this.asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: Doc[] }>;
+    return this.asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: T[] }>;
   }
 
   /**
@@ -244,11 +245,11 @@ export class API {
    * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async collectionSubscribeOne(
+  async collectionSubscribeOne<T extends Doc>(
     collectionName: string,
     docId: string,
     options: { userId?: string } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
@@ -273,10 +274,10 @@ export class API {
    * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
    * @returns An unsubscribe function
    */
-  async collectionSubscribeAll(
+  async collectionSubscribeAll<T extends Doc>(
     collectionName: string,
     options: { filter?: FilterObject; userId?: string } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName };
     Object.assign(payload, options);
@@ -426,7 +427,7 @@ export class API {
    */
   async linksCreate(permission: PermissionTemplate, limit: number = 0) {
     console.log("this", this);
-    return this.asyncEmit(this.version + ":links:create", { permission, limit }) as Promise<{ data: Link }>;
+    return this.asyncEmit(this.version + ":links:create", { permission, limit }) as Promise<{ data: BasicLink }>;
   }
 
   /**
@@ -440,7 +441,7 @@ export class API {
       type?: PermissionType;
     } = {},
   ) {
-    return this.asyncEmit(this.version + ":links:list", options) as Promise<{ data: Link[] }>;
+    return this.asyncEmit(this.version + ":links:list", options) as Promise<{ data: BasicLink[] }>;
   }
 
   /**
@@ -453,7 +454,7 @@ export class API {
       collectionName?: string;
       type?: PermissionType;
     } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<BasicLink>,
   ) {
     const response = (await this.asyncEmit(this.version + ":links:subscribe", options)) as {
       data: string;
@@ -502,7 +503,7 @@ export class API {
       ownerId?: string;
       type?: PermissionType;
     } = {},
-    listener: SubscribeListener,
+    listener: SubscribeListener<GrantedPermission>,
   ) {
     const response = (await this.asyncEmit(this.version + ":granted_permissions:subscribe", options)) as {
       data: string;
@@ -556,7 +557,7 @@ export class API {
    * @param {SubscribeListener} listener Function that handles the granted permissions updates
    * @returns An unsubscribe function
    */
-  async contactsSubscribe(listener: SubscribeListener) {
+  async contactsSubscribe(listener: SubscribeListener<Contact>) {
     const response = (await this.asyncEmit(this.version + ":contacts:subscribe", {})) as {
       data: string;
     }; // where data is the subscription handle

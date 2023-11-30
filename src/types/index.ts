@@ -61,8 +61,10 @@ export type Link = {
   permission: PermissionTemplate;
   limit: number;
   users: string[];
-  url: string | undefined;
+  url: string;
 };
+
+export type BasicLink = Omit<Link, "url">
 
 /**
  * The possible login types.
@@ -84,11 +86,14 @@ export enum LoginType {
 }
 
 export type Doc = {
-  id: any;
-  [key: string]: any;
+  id: string;
 };
 
-export type SubscribeListener = (changes: { newDoc: Doc | null; oldDoc: Doc | null }) => void;
+export type AnyDoc = Doc & {
+  [key: string | number | symbol]: any;
+}
+
+export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
 export type Message = { message: string };
 
