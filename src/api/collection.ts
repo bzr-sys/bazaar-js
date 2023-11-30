@@ -2,7 +2,7 @@ import { API } from "./raw";
 import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy, Doc } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
-export class CollectionAPI {
+export class CollectionAPI<T extends Doc> {
   private api: API;
   private collectionName: string;
   private collectionOptions: CollectionOptions;
@@ -20,9 +20,9 @@ export class CollectionAPI {
    */
   async getOne(docId: string) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionGetOne(this.collectionName, docId, this.collectionOptions);
+      const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.collectionOptions);
       return res.data;
-    }) as Promise<Doc | null>;
+    }) as Promise<T | null>;
   }
 
   /**
@@ -40,13 +40,13 @@ export class CollectionAPI {
     } = {},
   ) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionGetAll(this.collectionName, {
+      const res = await this.api.collectionGetAll<T>(this.collectionName, {
         ...this.collectionOptions,
         ...options,
         filter,
       });
       return res.data;
-    }) as Promise<Doc[]>;
+    }) as Promise<T[]>;
   }
 
   /**
@@ -73,18 +73,18 @@ export class CollectionAPI {
   /**
    * @returns An unsubscribe function
    */
-  async subscribeOne(docId: string, listener: SubscribeListener) {
+  async subscribeOne(docId: string, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
-      this.api.collectionSubscribeOne(this.collectionName, docId, this.collectionOptions, listener),
+      this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionOptions, listener),
     ) as Promise<() => Promise<Message>>;
   }
 
   /**
    * @returns An unsubscribe function
    */
-  async subscribeAll(filter: FilterObject, listener: SubscribeListener) {
+  async subscribeAll(filter: FilterObject, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
-      this.api.collectionSubscribeAll(this.collectionName, { filter, ...this.collectionOptions }, listener),
+      this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionOptions }, listener),
     ) as Promise<() => Promise<Message>>;
   }
 

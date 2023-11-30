@@ -5,7 +5,7 @@ import { PermissionsAPI } from "./api/permissions";
 import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { rethinkIdUri } from "./constants";
-import { AuthOptions, CollectionOptions, CommonOptions, LoginType } from "./types";
+import { AuthOptions, CollectionOptions, CommonOptions, Doc, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -29,7 +29,9 @@ export {
   OrderByType,
   Message,
   Link,
-  LoginType
+  LoginType,
+  Doc,
+  SubscribeListener,
 } from "./types";
 
 /**
@@ -217,7 +219,7 @@ export class RethinkID {
    * @param {string} collectionName The name of the collection to create the interface for.
    * @param {TableOptions} [collectionOptions] An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user. The onCreate hook sets up a collection when it is created (e.g., to set up permissions)
    */
-  collection(collectionName: string, collectionOptions?: CollectionOptions): CollectionAPI {
-    return new CollectionAPI(this.api, collectionName, collectionOptions);
+  collection<T extends Doc>(collectionName: string, collectionOptions?: CollectionOptions): CollectionAPI<T> {
+    return new CollectionAPI<T>(this.api, collectionName, collectionOptions);
   }
 }
