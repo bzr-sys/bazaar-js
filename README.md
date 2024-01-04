@@ -1,43 +1,13 @@
 # The RethinkID JavaScript SDK
 
-An SDK for working with RethinkID.
-
-## Publish to NPM
-
-Increment version in `package.json`.
-
-```bash
-npm run build
-```
-
-```bash
-npm publish
-```
-
-## Using locally
-
-Build the `dist` folder.
-
-```bash
-npm run build
-
-# or
-
-npm run watch
-```
-
-Install your locally built package.
-
-```bash
-npm install <../path/to/rethinkid-js-sdk>
-```
+A JavaScript SDK client for building SPAs (Single Page Apps) with RethinkID.
 
 ## Using via NPM
 
 Install with NPM:
 
 ```bash
-npm install @rethinkid/rethinkid-js-sdk
+npm i @rethinkid/rethinkid-js-sdk
 ```
 
 Import the package:
@@ -50,11 +20,11 @@ const rid = new RethinkID({
 });
 ```
 
-## CDN files
+## Load from a CDN
 
-jsDelivr `@rethinkid/rethinkid-js-sdk` CDN files:
-
-`https://cdn.jsdelivr.net/npm/@rethinkid/rethinkid-js-sdk/`
+```html
+<script src="https://unpkg.com/@rethinkid/rethinkid-js-sdk"></script>
+```
 
 ## Next.js Caveats
 
