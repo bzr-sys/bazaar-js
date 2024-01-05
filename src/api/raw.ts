@@ -1,7 +1,7 @@
 import io from "socket.io-client";
 
 import {
-  CommonOptions,
+  APIOptions,
   Permission,
   NewPermission,
   SubscribeListener,
@@ -10,7 +10,6 @@ import {
   Contact,
   User,
   OrderBy,
-  Link,
   GrantedPermission,
   PermissionType,
   PermissionTemplate,
@@ -62,7 +61,7 @@ export class API {
   private iframe: HTMLIFrameElement;
 
   constructor(
-    options: CommonOptions,
+    options: APIOptions,
     onConnect: () => Promise<void>,
     onConnectError: (message: string) => Promise<void>,
   ) {

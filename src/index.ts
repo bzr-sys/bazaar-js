@@ -5,7 +5,7 @@ import { PermissionsAPI } from "./api/permissions";
 import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { rethinkIdUri } from "./constants";
-import { AuthOptions, CollectionOptions, CommonOptions, Doc, LoginType } from "./types";
+import { RethinkIDOptions, CollectionOptions, Doc, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -33,37 +33,8 @@ export {
   Doc,
   AnyDoc,
   SubscribeListener,
+  RethinkIDOptions
 } from "./types";
-
-/**
- * RethinkID constructor options
- */
-export type Options = CommonOptions &
-  AuthOptions & {
-    /**
-     * Provide a callback to handle a successful login.
-     *
-     * e.g. Set state, redirect, etc.
-     */
-    onLogin?: (rid: RethinkID) => Promise<void>;
-
-    /**
-     * Provide a callback to handle a failed login. E.g. invalid authorization code.
-     *
-     * e.g. Set state, redirect, etc.
-     */
-    onLoginError?: (rid: RethinkID, message: string) => Promise<void>;
-
-    /**
-     * Provide a callback to handle API connections. Will be called after login and any subsequent re-connection.
-     */
-    onApiConnect?: (rid: RethinkID) => Promise<void>;
-
-    /**
-     * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
-     */
-    onApiConnectError?: (rid: RethinkID, message: string) => Promise<void>;
-  };
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
@@ -95,7 +66,7 @@ export class RethinkID {
    */
   social: SocialAPI;
 
-  constructor(options: Options) {
+  constructor(options: RethinkIDOptions) {
     if (!options.rethinkIdUri) {
       options.rethinkIdUri = rethinkIdUri;
     }
