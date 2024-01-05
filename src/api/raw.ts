@@ -10,7 +10,6 @@ import {
   Contact,
   User,
   OrderBy,
-  Link,
   GrantedPermission,
   PermissionType,
   PermissionTemplate,
