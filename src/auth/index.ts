@@ -250,7 +250,7 @@ export class Auth {
   /**
    * Continues the login flow after redirected back from the OAuth server, handling pop-up or redirect login types.
    *
-   * Must be called at the {@link Options.loginRedirectUri} URI.
+   * Must be called at the {@link loginRedirectUri} URI.
    *
    * @returns string to indicate login type
    */
