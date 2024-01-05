@@ -38,6 +38,7 @@ const config = [
         name: "RethinkID",
         file: "dist/rethinkid-js-sdk.iife.js",
         format: "iife",
+        footer: 'RethinkID = RethinkID.RethinkID;',
       },
     ],
     plugins: [
