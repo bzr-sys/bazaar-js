@@ -1,21 +1,48 @@
+import { RethinkID } from "..";
+
 /**
- * RethinkID constructor options
+ * Options for initializing a RethinkID instance
  */
-export type CommonOptions = {
+export type RethinkIDOptions = {
   appId: string;
   /**
-   * Public URI for the API & OAuth authorization server.
-   * Will set AuthOptions.oAuthUri & ApiOptions.dataApiUri
+   * Public URI for the API & OAuth server.
    */
   rethinkIdUri?: string;
-};
-
-export type AuthOptions = {
+  
   /**
-   * The URI the auth server redirects to with an auth code, after successful approving a login request.
+   * The URI the auth server redirects to with an auth code after login request approval.
    */
   loginRedirectUri: string;
-};
+
+  /**
+   * Provide a callback to handle a successful login.
+   *
+   * e.g. Set state, redirect, etc.
+   */
+  onLogin?: (rid: RethinkID) => Promise<void>;
+
+  /**
+   * Provide a callback to handle a failed login. E.g. invalid authorization code.
+   *
+   * e.g. Set state, redirect, etc.
+   */
+  onLoginError?: (rid: RethinkID, message: string) => Promise<void>;
+
+  /**
+   * Provide a callback to handle API connections. Will be called after login and any subsequent re-connection.
+   */
+  onApiConnect?: (rid: RethinkID) => Promise<void>;
+
+  /**
+   * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
+   */
+  onApiConnectError?: (rid: RethinkID, message: string) => Promise<void>;
+}
+
+export type AuthOptions = Omit<RethinkIDOptions, "onLogin" | "onLoginError" | "onApiConnect" | "onApiConnectError">;
+
+export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
 /**
  * Represents a complete permission object which includes both the `id` field and `userId` for user association.

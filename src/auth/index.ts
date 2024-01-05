@@ -1,6 +1,6 @@
 import { OAuth2Client, OAuth2Token, generateCodeVerifier } from "@badgateway/oauth2-client";
 
-import { CommonOptions, AuthOptions, LoginType } from "../types";
+import { AuthOptions, LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
 import { namespacePrefix } from "../constants";
 
@@ -73,7 +73,7 @@ export class Auth {
    */
   onLoginError: (message: string) => void;
 
-  constructor(options: CommonOptions & AuthOptions, onLogin: () => void, onLoginError: (message: string) => void) {
+  constructor(options: AuthOptions, onLogin: () => void, onLoginError: (message: string) => void) {
     this.onLogin = onLogin;
 
     this.onLoginError = onLoginError;
