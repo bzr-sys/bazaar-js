@@ -88,20 +88,20 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     ) as Promise<() => Promise<RethinkIdMessage>>;
   }
 
-  async insertOne(doc: object) {
+  async insertOne(doc: Omit<T, "id"> | T) {
     return this.withCollection(async () => {
       const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionOptions);
       return res.data;
     }) as Promise<string>;
   }
 
-  async updateOne(docId: string, doc: object) {
+  async updateOne(docId: string, doc: Partial<T>) {
     return this.withCollection(() =>
       this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionOptions),
     ) as Promise<RethinkIdMessage>;
   }
 
-  async replaceOne(docId: string, doc: object) {
+  async replaceOne(docId: string, doc: Omit<T, "id"> | T) {
     return this.withCollection(() =>
       this.api.collectionReplaceOne(this.collectionName, docId, doc, this.collectionOptions),
     ) as Promise<RethinkIdMessage>;
