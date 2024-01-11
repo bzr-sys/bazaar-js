@@ -123,7 +123,7 @@ export type AnyDoc = Doc & {
 
 export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
-export type Message = { message: string };
+export type RethinkIdMessage = { message: string };
 
 /**
  * A FilterComparison is an object, that applies a set of comparison operators.

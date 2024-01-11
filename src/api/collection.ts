@@ -1,5 +1,5 @@
 import { API } from "./raw";
-import { SubscribeListener, Message, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
+import { SubscribeListener, RethinkIdMessage, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
 export class CollectionAPI<T extends Doc = AnyDoc> {
@@ -76,7 +76,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   async subscribeOne(docId: string, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
       this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionOptions, listener),
-    ) as Promise<() => Promise<Message>>;
+    ) as Promise<() => Promise<RethinkIdMessage>>;
   }
 
   /**
@@ -85,38 +85,38 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   async subscribeAll(filter: FilterObject, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
       this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionOptions }, listener),
-    ) as Promise<() => Promise<Message>>;
+    ) as Promise<() => Promise<RethinkIdMessage>>;
   }
 
-  async insertOne(doc: object) {
+  async insertOne(doc: Omit<T, "id"> | T) {
     return this.withCollection(async () => {
       const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionOptions);
       return res.data;
     }) as Promise<string>;
   }
 
-  async updateOne(docId: string, doc: object) {
+  async updateOne(docId: string, doc: Partial<T>) {
     return this.withCollection(() =>
       this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionOptions),
-    ) as Promise<Message>;
+    ) as Promise<RethinkIdMessage>;
   }
 
-  async replaceOne(docId: string, doc: object) {
+  async replaceOne(docId: string, doc: Omit<T, "id"> | T) {
     return this.withCollection(() =>
       this.api.collectionReplaceOne(this.collectionName, docId, doc, this.collectionOptions),
-    ) as Promise<Message>;
+    ) as Promise<RethinkIdMessage>;
   }
 
   async deleteOne(docId: string) {
     return this.withCollection(() =>
       this.api.collectionDeleteOne(this.collectionName, docId, this.collectionOptions),
-    ) as Promise<Message>;
+    ) as Promise<RethinkIdMessage>;
   }
 
   async deleteAll(filter: FilterObject = {}) {
     return this.withCollection(() =>
       this.api.collectionDeleteAll(this.collectionName, { filter, ...this.collectionOptions }),
-    ) as Promise<Message>;
+    ) as Promise<RethinkIdMessage>;
   }
 
   //

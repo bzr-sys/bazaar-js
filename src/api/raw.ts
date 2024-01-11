@@ -5,7 +5,7 @@ import {
   Permission,
   NewPermission,
   SubscribeListener,
-  Message,
+  RethinkIdMessage,
   FilterObject,
   Contact,
   User,
@@ -260,7 +260,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
+      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as RethinkIdMessage;
       return resp.message;
     };
   }
@@ -288,7 +288,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as Message;
+      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as RethinkIdMessage;
       return resp.message;
     };
   }
@@ -318,7 +318,7 @@ export class API {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:updateOne", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:updateOne", payload) as Promise<RethinkIdMessage>;
   }
 
   /**
@@ -332,7 +332,7 @@ export class API {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<RethinkIdMessage>;
   }
 
   /**
@@ -345,7 +345,7 @@ export class API {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<RethinkIdMessage>;
   }
 
   /**
@@ -357,7 +357,7 @@ export class API {
     const payload = { collectionName };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<RethinkIdMessage>;
   }
 
   //
@@ -368,14 +368,14 @@ export class API {
    * Create a collection.
    */
   async collectionsCreate(collectionName: string) {
-    return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<RethinkIdMessage>;
   }
 
   /**
    * Drop a collection.
    */
   async collectionsDrop(collectionName: string) {
-    return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<RethinkIdMessage>;
   }
 
   /**
@@ -418,7 +418,7 @@ export class API {
    * @param permissionId The permission ID to delete.
    */
   async permissionsDelete(permissionId: string) {
-    return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<RethinkIdMessage>;
   }
 
   /**
@@ -464,7 +464,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this.asyncEmit(this.version + ":links:unsubscribe", subscriptionHandle) as Promise<Message>;
+      return this.asyncEmit(this.version + ":links:unsubscribe", subscriptionHandle) as Promise<RethinkIdMessage>;
     };
   }
 
@@ -472,7 +472,7 @@ export class API {
    * Delete permission links.
    */
   async linksDelete(linkId: string) {
-    return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<Message>;
+    return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<RethinkIdMessage>;
   }
 
   /**
@@ -513,7 +513,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this.asyncEmit(this.version + ":granted_permissions:unsubscribe", subscriptionHandle) as Promise<Message>;
+      return this.asyncEmit(this.version + ":granted_permissions:unsubscribe", subscriptionHandle) as Promise<RethinkIdMessage>;
     };
   }
 
@@ -523,7 +523,7 @@ export class API {
    */
   async grantedPermissionsDelete(grantedPermissionId: string) {
     const payload = { grantedPermissionId };
-    return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<Message>;
+    return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<RethinkIdMessage>;
   }
 
   //
@@ -566,7 +566,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<Message>;
+      return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<RethinkIdMessage>;
     };
   }
 

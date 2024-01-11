@@ -27,7 +27,7 @@ export {
   FilterObject,
   OrderBy,
   OrderByType,
-  Message,
+  RethinkIdMessage,
   Link,
   LoginType,
   Doc,
