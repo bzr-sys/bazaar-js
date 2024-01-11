@@ -5,15 +5,16 @@ import { RethinkID } from "..";
  */
 export type RethinkIDOptions = {
   appId: string;
-  /**
-   * Public URI for the API & OAuth server.
-   */
-  rethinkIdUri?: string;
   
   /**
    * The URI the auth server redirects to with an auth code after login request approval.
    */
   loginRedirectUri: string;
+
+  /**
+   * Public URI for the API & OAuth server.
+   */
+  rethinkIdUri?: string;
 
   /**
    * Provide a callback to handle a successful login.
