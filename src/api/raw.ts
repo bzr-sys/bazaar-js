@@ -595,15 +595,15 @@ export class API {
   openModal(path: string, onMessage: ((msg: string) => void) | null = null) {
     this.iframe.src = this.rethinkIdUri + path;
     this.modal.showModal();
-    if (onMessage) {
-      this.onModalMessage = (event) => {
-        // Only handle messages from our iframe
-        if (this.iframe && event.source !== this.iframe.contentWindow) return;
+    this.onModalMessage = (event) => {
+      // Only handle messages from our iframe
+      if (this.iframe && event.source !== this.iframe.contentWindow) return;
+      if (onMessage && typeof onMessage === "function") {
         onMessage(event.data);
-        this.closeModal();
-      };
-      window.addEventListener("message", this.onModalMessage);
-    }
+      }
+      this.closeModal();
+    };
+    window.addEventListener("message", this.onModalMessage);
     return;
   }
 }
