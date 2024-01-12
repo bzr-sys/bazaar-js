@@ -1,5 +1,13 @@
 import { linkPath, rethinkIdUri } from "../constants";
-import { BasicLink, GrantedPermission, Link, NewPermission, PermissionTemplate, PermissionType, SubscribeListener } from "../types";
+import {
+  BasicLink,
+  GrantedPermission,
+  Link,
+  NewPermission,
+  PermissionTemplate,
+  PermissionType,
+  SubscribeListener,
+} from "../types";
 import { API } from "./raw";
 
 /**
@@ -65,7 +73,7 @@ export class PermissionsAPI {
      */
     create: async (permission: PermissionTemplate, limit: number = 0) => {
       const { data: basicLink } = await this.api.linksCreate(permission, limit);
-      return {url: this.linkUri + basicLink.id, ... basicLink};
+      return { url: this.linkUri + basicLink.id, ...basicLink };
     },
 
     /**
@@ -80,7 +88,7 @@ export class PermissionsAPI {
       const { data: basicLinks } = await this.api.linksList(options);
       let links: Link[] = [];
       for (let l of basicLinks) {
-        links.push({url: this.linkUri + l.id, ...l})
+        links.push({ url: this.linkUri + l.id, ...l });
       }
       return links;
     },
@@ -93,12 +101,12 @@ export class PermissionsAPI {
       listener: SubscribeListener<Link>,
     ) => {
       const newListener: SubscribeListener<BasicLink> = (newChanges) => {
-        let changes = {oldDoc: null, newDoc:null}
+        let changes = { oldDoc: null, newDoc: null };
         if (newChanges.newDoc) {
-          changes.newDoc = {url: this.linkUri + newChanges.newDoc.id, ... newChanges.newDoc};
+          changes.newDoc = { url: this.linkUri + newChanges.newDoc.id, ...newChanges.newDoc };
         }
         if (newChanges.oldDoc) {
-          changes.oldDoc = {url: this.linkUri + newChanges.oldDoc.id, ... newChanges.oldDoc};
+          changes.oldDoc = { url: this.linkUri + newChanges.oldDoc.id, ...newChanges.oldDoc };
         }
         listener(changes);
       };

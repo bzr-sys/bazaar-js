@@ -60,11 +60,7 @@ export class API {
   private modal: HTMLDialogElement;
   private iframe: HTMLIFrameElement;
 
-  constructor(
-    options: APIOptions,
-    onConnect: () => Promise<void>,
-    onConnectError: (message: string) => Promise<void>,
-  ) {
+  constructor(options: APIOptions, onConnect: () => Promise<void>, onConnectError: (message: string) => Promise<void>) {
     if (options.rethinkIdUri) {
       this.rethinkIdUri = options.rethinkIdUri;
     }
@@ -260,7 +256,10 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as RethinkIdMessage;
+      const resp = (await this.asyncEmit(
+        this.version + ":collection:unsubscribe",
+        subscriptionHandle,
+      )) as RethinkIdMessage;
       return resp.message;
     };
   }
@@ -288,7 +287,10 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      const resp = (await this.asyncEmit(this.version + ":collection:unsubscribe", subscriptionHandle)) as RethinkIdMessage;
+      const resp = (await this.asyncEmit(
+        this.version + ":collection:unsubscribe",
+        subscriptionHandle,
+      )) as RethinkIdMessage;
       return resp.message;
     };
   }
@@ -513,7 +515,10 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this.asyncEmit(this.version + ":granted_permissions:unsubscribe", subscriptionHandle) as Promise<RethinkIdMessage>;
+      return this.asyncEmit(
+        this.version + ":granted_permissions:unsubscribe",
+        subscriptionHandle,
+      ) as Promise<RethinkIdMessage>;
     };
   }
 

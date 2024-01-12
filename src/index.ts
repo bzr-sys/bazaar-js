@@ -33,7 +33,7 @@ export {
   Doc,
   AnyDoc,
   SubscribeListener,
-  RethinkIDOptions
+  RethinkIDOptions,
 } from "./types";
 
 /**
