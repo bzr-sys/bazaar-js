@@ -15,8 +15,11 @@ export class SocialAPI {
    * Open the social modal
    */
   openModal(withId: ((userId: string) => void) | null = null) {
-    // this.modal.showModal();
-    this.api.openModal("/m/social", withId);
+    if (withId && typeof withId === "function") {
+      this.api.openModal("/m/social?hasOnMessage", withId);
+      return;
+    }
+    this.api.openModal("/m/social");
     return;
   }
 

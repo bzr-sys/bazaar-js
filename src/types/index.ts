@@ -5,7 +5,7 @@ import { RethinkID } from "..";
  */
 export type RethinkIDOptions = {
   appId: string;
-  
+
   /**
    * The URI the auth server redirects to with an auth code after login request approval.
    */
@@ -39,7 +39,7 @@ export type RethinkIDOptions = {
    * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
    */
   onApiConnectError?: (rid: RethinkID, message: string) => Promise<void>;
-}
+};
 
 export type AuthOptions = Omit<RethinkIDOptions, "onLogin" | "onLoginError" | "onApiConnect" | "onApiConnectError">;
 
@@ -92,7 +92,7 @@ export type Link = {
   url: string;
 };
 
-export type BasicLink = Omit<Link, "url">
+export type BasicLink = Omit<Link, "url">;
 
 /**
  * The possible login types.
@@ -119,7 +119,7 @@ export type Doc = {
 
 export type AnyDoc = Doc & {
   [key: string | number | symbol]: any;
-}
+};
 
 export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
