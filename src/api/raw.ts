@@ -15,12 +15,16 @@ import {
   PermissionTemplate,
   Doc,
   BasicLink,
+  CollectionCommonOptions,
+  CollectionGetAllOptions,
+  CollectionCommonAllOptions,
 } from "../types";
 import { RethinkIDError } from "../utils";
 import { rethinkIdUri, namespacePrefix } from "../constants";
 
 /**
  * The class that encapsulates the low level data API
+ * @internal
  */
 export class API {
   /**
@@ -165,9 +169,10 @@ export class API {
   };
 
   /**
-   * Promisifies a dataApi.io emit event
-   * @param event A dataApi.io event name, like `collections:create`
-   * @param payload
+   * Promisifies a Data API emit event
+   *
+   * @param event - A Data API event name, like `collections:create`
+   * @param payload -
    */
   private asyncEmit = async (event: string, payload: any) => {
     await this.waitForConnection();
@@ -188,45 +193,26 @@ export class API {
 
   /**
    * Get a collection doc
-   * @param {string} collectionName The name of the collection to read
-   * @param {string} docId - The docId
-   * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
+   *
+   * @param collectionName - The name of the collection to read
+   * @param docId - The doc ID
+   * @param options - An optional object for specifying query options.
    * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async collectionGetOne<T extends Doc>(
-    collectionName: string,
-    docId: string,
-    options: {
-      userId?: string;
-    } = {},
-  ) {
+  async collectionGetOne<T extends Doc>(collectionName: string, docId: string, options: CollectionCommonOptions = {}) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
     return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: T | null }>;
   }
 
   /**
-   * Get all collection docs for a given filter
-   * @param {string} collectionName The name of the collection to read
-   * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {number} [options.startOffset] - An optional start offset. Default 0 (including)
-   * @param {number} [options.endOffset] - An optional end offset. Default null (excluding)
-   * @param {OrderBy} [options.orderBy] - An optional OrderBy object
-   * @param {FilterObject} [options.filter] - An optional Filter object
-   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
-   * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   * Get all collection documents for a given filter.
+   *
+   * @param collectionName - The name of the collection to read.
+   * @param options - An optional object for specifying query options.
+   * @returns Returns a specific document if a `docId` is specified; otherwise, returns all documents. If a `userId` is specified, it operates on a collection owned by that user ID. Otherwise, it operates on a collection owned by the authenticated user.
    */
-  async collectionGetAll<T extends Doc>(
-    collectionName: string,
-    options: {
-      startOffset?: number;
-      endOffset?: number;
-      orderBy?: OrderBy;
-      filter?: FilterObject;
-      userId?: string;
-    } = {},
-  ) {
+  async collectionGetAll<T extends Doc>(collectionName: string, options: CollectionGetAllOptions = {}) {
     const payload = { collectionName };
     Object.assign(payload, options);
     return this.asyncEmit(this.version + ":collection:getAll", payload) as Promise<{ data: T[] }>;
@@ -234,16 +220,17 @@ export class API {
 
   /**
    * Subscribe to doc changes.
-   * @param {string} collectionName The name of the collection to subscribe to
-   * @param {string} docId - The docId
-   * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
+   *
+   * @param collectionName - The name of the collection to subscribe to
+   * @param docId - The document ID
+   * @param options - An optional object for specifying query options.
+   * @param listener - The callback function that receives document change events.
    * @returns An unsubscribe function
    */
   async collectionSubscribeOne<T extends Doc>(
     collectionName: string,
     docId: string,
-    options: { userId?: string } = {},
+    options: CollectionCommonOptions = {},
     listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName, docId };
@@ -266,15 +253,15 @@ export class API {
 
   /**
    * Subscribe to collection changes. Private by default, or public with read permission.
-   * @param {string} collectionName The name of the collection to subscribe to
-   * @param {Object} [options={}] An optional object for specifying query options.
-   * @param {FilterObject} [options.filter] - An optional Filter object
-   * @param {string} [options.userId] - An optional user ID of the owner of the collection to read. Defaults to own ID.
+   *
+   * @param collectionName - The name of the collection to subscribe to.
+   * @param options - An optional object for specifying query options.
+   * @param listener - The callback function that receives document change events.
    * @returns An unsubscribe function
    */
   async collectionSubscribeAll<T extends Doc>(
     collectionName: string,
-    options: { filter?: FilterObject; userId?: string } = {},
+    options: CollectionCommonAllOptions = {},
     listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName };
@@ -297,12 +284,13 @@ export class API {
 
   /**
    * Insert a collection doc.
-   * @param collectionName The name of the collection to operate on.
-   * @param doc The doc to insert.
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   *
+   * @param collectionName - The name of the collection to operate on.
+   * @param doc - The doc to insert.
+   * @param options - An optional object for specifying query options.
    * @returns Where `data` is the array of new doc IDs (only generated IDs)
    */
-  async collectionInsertOne(collectionName: string, doc: object, options: { userId?: string } = {}) {
+  async collectionInsertOne(collectionName: string, doc: object, options: CollectionCommonOptions = {}) {
     const payload = { collectionName, doc };
     Object.assign(payload, options);
 
@@ -311,12 +299,13 @@ export class API {
 
   /**
    * Update all collection docs, or a single doc if doc ID exists.
-   * @param collectionName The name of the collection to operate on.
+   *
+   * @param collectionName - The name of the collection to operate on.
    * @param docId - ID of document to update
-   * @param doc Document changes
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   * @param doc - Document changes
+   * @param options - An optional object for specifying query options.
    */
-  async collectionUpdateOne(collectionName: string, docId: string, doc: object, options: { userId?: string } = {}) {
+  async collectionUpdateOne(collectionName: string, docId: string, doc: object, options: CollectionCommonOptions = {}) {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
@@ -325,12 +314,18 @@ export class API {
 
   /**
    * Replace a collection doc. Private by default, or public with insert, update, delete permissions.
-   * @param collectionName The name of the collection to operate on.
-   * @param docId - ID of document to replace
-   * @param doc The new doc
-   * @param options An optional object for specifying a user ID. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   *
+   * @param collectionName - The name of the collection to operate on.
+   * @param docId - ID of document to replace.
+   * @param doc - The new doc.
+   * @param options - An optional object for specifying query options.
    */
-  async collectionReplaceOne(collectionName: string, docId: string, doc: object, options: { userId?: string } = {}) {
+  async collectionReplaceOne(
+    collectionName: string,
+    docId: string,
+    doc: object,
+    options: CollectionCommonOptions = {},
+  ) {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
@@ -339,11 +334,12 @@ export class API {
 
   /**
    * Deletes a doc
-   * @param collectionName The name of the collection to operate on.
+   *
+   * @param collectionName - The name of the collection to operate on.
    * @param docId - ID of document to delete
-   * @param options An optional object for specifying a doc ID and/or user ID. Specify a doc ID to delete a specific doc, otherwise all docs are deleted. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   * @param options - An optional object for specifying query options.
    */
-  async collectionDeleteOne(collectionName: string, docId: string, options: { userId?: string } = {}) {
+  async collectionDeleteOne(collectionName: string, docId: string, options: CollectionCommonOptions = {}) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
 
@@ -352,10 +348,11 @@ export class API {
 
   /**
    * Deletes all collection docs matching an optional filter.
-   * @param collectionName The name of the collection to operate on.
-   * @param options An optional object for specifying a doc ID and/or user ID. Specify a doc ID to delete a specific doc, otherwise all docs are deleted. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
+   *
+   * @param collectionName - The name of the collection to operate on.
+   * @param options - An optional object for specifying query options.
    */
-  async collectionDeleteAll(collectionName: string, options: { filter?: FilterObject; userId?: string } = {}) {
+  async collectionDeleteAll(collectionName: string, options: CollectionCommonAllOptions = {}) {
     const payload = { collectionName };
     Object.assign(payload, options);
 
@@ -394,7 +391,8 @@ export class API {
 
   /**
    * List permissions.
-   * @param options If no optional params are set, all permissions for the user are returned.
+   *
+   * @param options - If no options are set, all permissions are returned.
    * @returns All permissions matching options.
    */
   async permissionsList(
@@ -417,7 +415,8 @@ export class API {
 
   /**
    * Delete a permission.
-   * @param permissionId The permission ID to delete.
+   *
+   * @param permissionId - The ID of the permission to delete.
    */
   async permissionsDelete(permissionId: string) {
     return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<RethinkIdMessage>;
@@ -433,8 +432,9 @@ export class API {
 
   /**
    * List permission links.
-   * @param options If no optional params are set, all links for the user/app are returned.
-   * @returns All links are returned if no options are passed.
+   *
+   * @param options - If no options are set, all links are returned.
+   * @returns Where `data` is an array of links
    */
   async linksList(
     options: {
@@ -447,7 +447,9 @@ export class API {
 
   /**
    * Subscribe to link changes
-   * @param {SubscribeListener} listener Function that handles the links updates
+   *
+   * @param options -
+   * @param listener - The callback function that receives link change events.
    * @returns An unsubscribe function
    */
   async linksSubscribe(
@@ -479,6 +481,7 @@ export class API {
 
   /**
    * List granted permissions
+   *
    * @returns a list of granted permissions
    */
   async grantedPermissionsList(
@@ -495,7 +498,8 @@ export class API {
 
   /**
    * Subscribe to granted permissions changes
-   * @param {SubscribeListener} listener Function that handles the granted permissions updates
+   *
+   * @param listener - The callback function that receives granted permissions change events.
    * @returns An unsubscribe function
    */
   async grantedPermissionsSubscribe(
@@ -524,7 +528,8 @@ export class API {
 
   /**
    * Delete a granted permission
-   * @param {string} grantedPermissionId The ID of the granted permission
+   *
+   * @param grantedPermissionId - The ID of the granted permission to delete
    */
   async grantedPermissionsDelete(grantedPermissionId: string) {
     const payload = { grantedPermissionId };
@@ -537,7 +542,8 @@ export class API {
 
   /**
    * Add a user ID to your contacts
-   * @param {string} userID The ID of the user
+   *
+   * @param userID - The ID of the user
    */
   async usersGet(userId?: string) {
     let payload = {};
@@ -557,8 +563,9 @@ export class API {
   }
 
   /**
-   * Subscribe to granted permissions changes
-   * @param {SubscribeListener} listener Function that handles the granted permissions updates
+   * Subscribe to contacts changes
+   *
+   * @param listener - The callback function that receives contact change events.
    * @returns An unsubscribe function
    */
   async contactsSubscribe(listener: SubscribeListener<Contact>) {

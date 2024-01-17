@@ -1,5 +1,6 @@
 /**
  * Enum of all the error types
+ * @internal
  */
 export const ErrorTypes = {
   Unspecified: 1,
@@ -9,6 +10,9 @@ export const ErrorTypes = {
   DatabaseDoesNotExist: 5,
 };
 
+/**
+ * @internal
+ */
 export class RethinkIDError extends Error {
   type: number;
 

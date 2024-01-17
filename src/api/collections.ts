@@ -2,6 +2,7 @@ import { API } from "./raw";
 
 /**
  * The class that encapsulates the collections API
+ * @internal
  */
 export class CollectionsAPI {
   private api: API;

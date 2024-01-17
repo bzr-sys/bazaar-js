@@ -1,7 +1,9 @@
 import { RethinkID } from "..";
+import type { API } from "../api/raw";
 
 /**
  * Options for initializing a RethinkID instance
+ * @alpha
  */
 export type RethinkIDOptions = {
   appId: string;
@@ -47,6 +49,7 @@ export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
 /**
  * Represents a complete permission object which includes both the `id` field and `userId` for user association.
+ * @alpha
  */
 export type Permission = {
   id: string;
@@ -59,15 +62,20 @@ export type Permission = {
 /**
  * Represents a permission object that is yet to be persisted.
  * It has the same structure as {@link Permission} but without the `id` field.
+ * @alpha
  */
 export type NewPermission = Omit<Permission, "id">;
 
 /**
  * Represents the foundational structure of a permission template.
  * It's derived from the {@link NewPermission} and does not include user association.
+ * @alpha
  */
 export type PermissionTemplate = Omit<NewPermission, "userId">;
 
+/**
+ * @alpha
+ */
 export enum PermissionType {
   READ = "read",
   INSERT = "insert",
@@ -75,6 +83,9 @@ export enum PermissionType {
   DELETE = "delete",
 }
 
+/**
+ * @alpha
+ */
 export type GrantedPermission = {
   id: string;
   /**
@@ -84,6 +95,9 @@ export type GrantedPermission = {
   permission: Permission;
 };
 
+/**
+ * @alpha
+ */
 export type Link = {
   id: string;
   permission: PermissionTemplate;
@@ -96,6 +110,7 @@ export type BasicLink = Omit<Link, "url">;
 
 /**
  * The possible login types.
+ * @alpha
  */
 export enum LoginType {
   /**
@@ -113,22 +128,35 @@ export enum LoginType {
   REDIRECT = "redirect",
 }
 
+/**
+ * @alpha
+ */
 export type Doc = {
   id: string;
 };
 
+/**
+ * @alpha
+ */
 export type AnyDoc = Doc & {
   [key: string | number | symbol]: any;
 };
 
+/**
+ * @alpha
+ */
 export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
+/**
+ * @alpha
+ */
 export type RethinkIdMessage = { message: string };
 
 /**
  * A FilterComparison is an object, that applies a set of comparison operators.
  * Multiple properties are combined with AND. Most comparison operators are self-explanatory
  * logical operators except for contains, which checks if an element is part of an array.
+ * @alpha
  */
 export type FilterComparison = {
   $eq?: string | number;
@@ -148,6 +176,7 @@ export type FilterComparison = {
  * - $or to FilterObject[]. This combines the result of each FilterObject in the array with OR
  * - $not to FilterObject. This applies NOT to the result of the FilterObject
  *
+ * @example
  * All fields in a FilterObject are combined with an AND.
  * The FilterObject
  * ```
@@ -169,7 +198,9 @@ export type FilterComparison = {
  *   age: { $lt: 12 },
  * }
  * ```
- * would result in "((height > 80 AND height < 140) OR (weight > 10 AND weight < 25)) AND (age < 12)"
+ * would result in "((height \> 80 AND height \< 140) OR (weight \> 10 AND weight \< 25)) AND (age \< 12)"
+ *
+ * @alpha
  */
 export type FilterObject = {
   $and?: FilterObject[];
@@ -181,23 +212,37 @@ export type FilterObject = {
 
 /**
  * An OrderBy object specifies orderings of results.
- * Example: { height: "desc", age: "asc" }
+ * @example
+ * ```
+ * { height: "desc", age: "asc" }
+ * ```
+ *
+ * @alpha
  */
 export type OrderBy = {
   [field: string]: OrderByType;
 };
 
+/**
+ * @alpha
+ */
 export enum OrderByType {
   ASC = "asc",
   DESC = "desc",
 }
 
+/**
+ * @alpha
+ */
 export type User = {
   id: string;
   name: string;
   email: string | undefined;
 };
 
+/**
+ * @alpha
+ */
 export type Contact = {
   id: string;
   /**
@@ -212,5 +257,36 @@ export type Contact = {
 
 export type CollectionOptions = {
   onCreate?: () => Promise<void>;
+  userId?: string;
+};
+
+/**
+ * Options for several methods in {@link API}
+ */
+export type CollectionCommonOptions = {
+  /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
+  userId?: string;
+};
+
+/**
+ * Options for {@link API.collectionGetAll}
+ */
+export type CollectionGetAllOptions = {
+  /** An optional start offset. Default is 0 (inclusive). */
+  startOffset?: number;
+  /** An optional end offset. Default is `null` (exclusive). */
+  endOffset?: number;
+  orderBy?: OrderBy;
+  filter?: FilterObject;
+  /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
+  userId?: string;
+};
+
+/**
+ * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
+ */
+export type CollectionCommonAllOptions = {
+  filter?: FilterObject;
+  /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
   userId?: string;
 };

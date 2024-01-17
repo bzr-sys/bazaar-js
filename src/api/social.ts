@@ -3,6 +3,7 @@ import { API } from "./raw";
 
 /**
  * The class that encapsulates the social API
+ * @internal
  */
 export class SocialAPI {
   private api: API;
@@ -25,7 +26,7 @@ export class SocialAPI {
 
   /**
    * Get the user info for a given ID.
-   * @param {string} userID The ID of the user, defaults to logged in user's ID.
+   * @param userID - The ID of the user, defaults to logged in user's ID.
    */
   async getUser(userId?: string) {
     const res = await this.api.usersGet(userId);

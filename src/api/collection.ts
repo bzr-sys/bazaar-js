@@ -2,6 +2,9 @@ import { API } from "./raw";
 import { SubscribeListener, RethinkIdMessage, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
+/**
+ * @internal
+ */
 export class CollectionAPI<T extends Doc = AnyDoc> {
   private api: API;
   private collectionName: string;
@@ -13,11 +16,6 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     this.collectionOptions = collectionOptions;
   }
 
-  /**
-   *
-   * @param docId
-   * @returns
-   */
   async getOne(docId: string) {
     return this.withCollection(async () => {
       const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.collectionOptions);
@@ -25,12 +23,6 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     }) as Promise<T | null>;
   }
 
-  /**
-   *
-   * @param filter
-   * @param options
-   * @returns
-   */
   async getAll(
     filter: FilterObject = {},
     options: {
@@ -49,14 +41,6 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     }) as Promise<T[]>;
   }
 
-  /**
-   *
-   * @param pageNumber
-   * @param pageSize
-   * @param filter
-   * @param options
-   * @returns
-   */
   async getPage(
     pageNumber: number,
     pageSize: number,

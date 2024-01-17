@@ -12,6 +12,7 @@ import { API } from "./raw";
 
 /**
  * The class that encapsulates the permissions API
+ * @internal
  */
 export class PermissionsAPI {
   private api: API;
@@ -42,7 +43,7 @@ export class PermissionsAPI {
 
   /**
    * List permissions.
-   * @param options If no optional params are set, all permissions for the user are returned.
+   * @param options - If no optional params are set, all permissions for the user are returned.
    * @returns All permissions are returned if no options are passed.
    */
   async list(
