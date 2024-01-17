@@ -13,7 +13,7 @@ export class SocialAPI {
   }
 
   /**
-   * Open the social modal
+   * Opens the social modal
    */
   openModal(withId: ((userId: string) => void) | null = null) {
     if (withId && typeof withId === "function") {
@@ -25,7 +25,7 @@ export class SocialAPI {
   }
 
   /**
-   * Get the user info for a given ID.
+   * Gets the user info for a given ID.
    * @param userID - The ID of the user, defaults to logged in user's ID.
    */
   async getUser(userId?: string) {
@@ -38,7 +38,7 @@ export class SocialAPI {
    */
   public contacts = {
     /**
-     * List contacts
+     * Lists contacts
      * @returns a list of contacts
      */
     list: async () => {
@@ -47,7 +47,7 @@ export class SocialAPI {
     },
 
     /**
-     * Subscribe to contacts
+     * Subscribes to contacts
      * @returns an unsubscribe function
      */
     subscribe: async (listener: SubscribeListener<Contact>) => {

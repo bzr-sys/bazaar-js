@@ -150,7 +150,7 @@ export class API {
   }
 
   /**
-   * Make sure a connection to the Data API has been made.
+   * Makes sure a connection to the Data API has been made.
    */
   private waitForConnection: () => Promise<true> = () => {
     return new Promise((resolve, reject) => {
@@ -192,7 +192,7 @@ export class API {
   //
 
   /**
-   * Get a collection doc
+   * Gets a collection doc
    *
    * @param collectionName - The name of the collection to read
    * @param docId - The doc ID
@@ -206,7 +206,7 @@ export class API {
   }
 
   /**
-   * Get all collection documents for a given filter.
+   * Gets all collection documents for a given filter.
    *
    * @param collectionName - The name of the collection to read.
    * @param options - An optional object for specifying query options.
@@ -219,7 +219,7 @@ export class API {
   }
 
   /**
-   * Subscribe to doc changes.
+   * Subscribes to doc changes.
    *
    * @param collectionName - The name of the collection to subscribe to
    * @param docId - The document ID
@@ -252,7 +252,7 @@ export class API {
   }
 
   /**
-   * Subscribe to collection changes. Private by default, or public with read permission.
+   * Subscribes to collection changes. Private by default, or public with read permission.
    *
    * @param collectionName - The name of the collection to subscribe to.
    * @param options - An optional object for specifying query options.
@@ -283,7 +283,7 @@ export class API {
   }
 
   /**
-   * Insert a collection doc.
+   * Inserts a collection doc.
    *
    * @param collectionName - The name of the collection to operate on.
    * @param doc - The doc to insert.
@@ -298,7 +298,7 @@ export class API {
   }
 
   /**
-   * Update all collection docs, or a single doc if doc ID exists.
+   * Updates all collection docs, or a single doc if doc ID exists.
    *
    * @param collectionName - The name of the collection to operate on.
    * @param docId - ID of document to update
@@ -313,7 +313,7 @@ export class API {
   }
 
   /**
-   * Replace a collection doc. Private by default, or public with insert, update, delete permissions.
+   * Replaces a collection doc. Private by default, or public with insert, update, delete permissions.
    *
    * @param collectionName - The name of the collection to operate on.
    * @param docId - ID of document to replace.
@@ -364,21 +364,21 @@ export class API {
   //
 
   /**
-   * Create a collection.
+   * Creates a collection.
    */
   async collectionsCreate(collectionName: string) {
     return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<RethinkIdMessage>;
   }
 
   /**
-   * Drop a collection.
+   * Drops a collection.
    */
   async collectionsDrop(collectionName: string) {
     return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<RethinkIdMessage>;
   }
 
   /**
-   * List all collection names.
+   * Lists all collection names.
    * @returns Where `data` is an array of collection names
    */
   async collectionsList() {
@@ -390,7 +390,7 @@ export class API {
   //
 
   /**
-   * List permissions.
+   * Lists permissions.
    *
    * @param options - If no options are set, all permissions are returned.
    * @returns All permissions matching options.
@@ -406,7 +406,7 @@ export class API {
   }
 
   /**
-   * Create a permission.
+   * Creates a permission.
    */
   async permissionsCreate(permission: NewPermission) {
     console.log("this", this);
@@ -414,7 +414,7 @@ export class API {
   }
 
   /**
-   * Delete a permission.
+   * Deletes a permission.
    *
    * @param permissionId - The ID of the permission to delete.
    */
@@ -423,7 +423,7 @@ export class API {
   }
 
   /**
-   * Create a permission link.
+   * Creates a permission link.
    */
   async linksCreate(permission: PermissionTemplate, limit: number = 0) {
     console.log("this", this);
@@ -431,7 +431,7 @@ export class API {
   }
 
   /**
-   * List permission links.
+   * Lists permission links.
    *
    * @param options - If no options are set, all links are returned.
    * @returns Where `data` is an array of links
@@ -446,7 +446,7 @@ export class API {
   }
 
   /**
-   * Subscribe to link changes
+   * Subscribes to link changes
    *
    * @param options -
    * @param listener - The callback function that receives link change events.
@@ -473,14 +473,14 @@ export class API {
   }
 
   /**
-   * Delete permission links.
+   * Deletes permission links.
    */
   async linksDelete(linkId: string) {
     return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<RethinkIdMessage>;
   }
 
   /**
-   * List granted permissions
+   * Lists granted permissions
    *
    * @returns a list of granted permissions
    */
@@ -497,7 +497,7 @@ export class API {
   }
 
   /**
-   * Subscribe to granted permissions changes
+   * Subscribes to granted permissions changes
    *
    * @param listener - The callback function that receives granted permissions change events.
    * @returns An unsubscribe function
@@ -527,7 +527,7 @@ export class API {
   }
 
   /**
-   * Delete a granted permission
+   * Deletes a granted permission
    *
    * @param grantedPermissionId - The ID of the granted permission to delete
    */
@@ -541,7 +541,7 @@ export class API {
   //
 
   /**
-   * Add a user ID to your contacts
+   * Adds a user ID to your contacts
    *
    * @param userID - The ID of the user
    */
@@ -554,7 +554,7 @@ export class API {
   }
 
   /**
-   * List contacts
+   * Lists contacts
    * @returns a list of contacts
    */
   async contactsList() {
@@ -563,7 +563,7 @@ export class API {
   }
 
   /**
-   * Subscribe to contacts changes
+   * Subscribes to contacts changes
    *
    * @param listener - The callback function that receives contact change events.
    * @returns An unsubscribe function
@@ -597,7 +597,7 @@ export class API {
   }
 
   /**
-   * Open a modal
+   * Opens a modal
    */
   openModal(path: string, onMessage: ((msg: string) => void) | null = null) {
     this.iframe.src = this.rethinkIdUri + path;

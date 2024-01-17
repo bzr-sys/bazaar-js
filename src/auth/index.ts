@@ -67,7 +67,7 @@ export class Auth {
   onLogin: () => void;
 
   /**
-   * Set a callback function an app can run a login error occurs.
+   * A callback function an app can run a login error occurs.
    *
    * e.g. Authorization code is invalid
    */
@@ -108,7 +108,7 @@ export class Auth {
   }
 
   /**
-   * Generate a URI to log in a user to RethinkID and authorize an app.
+   * Generates a URI to log in a user to RethinkID and authorize an app.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    */
@@ -287,7 +287,7 @@ export class Auth {
   }
 
   /**
-   * Complete a login request
+   * Completes a login request
    *
    * Takes an authorization code and exchanges it for an access token.
    *
@@ -344,7 +344,7 @@ export class Auth {
   }
 
   /**
-   * A utility function to check if the user is logged in.
+   * Check if the user is logged in.
    * i.e. if an access token is in local storage.
    */
   isLoggedIn(): boolean {
@@ -356,7 +356,7 @@ export class Auth {
   }
 
   /**
-   * A utility function to check if a redirect to complete a login request has been performed.
+   * Checks if a redirect to complete a login request has been performed.
    *
    * Also used in {@link loginUri} to make sure PKCE local storage values are not overwritten,
    * which would otherwise accidentally invalidate a login request.
@@ -370,7 +370,7 @@ export class Auth {
   }
 
   /**
-   * A utility function to log a user out.
+   * Logs out a user.
    */
   logOut(): void {
     if (localStorage.getItem(this.tokenKeyName)) {

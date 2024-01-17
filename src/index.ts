@@ -118,7 +118,7 @@ export class RethinkID {
   }
 
   /**
-   * Set a callback function an app can run when it connects or re-connects to the API.
+   * Sets a callback function an app can run when it connects or re-connects to the API.
    */
   onApiConnect(f: (rid: RethinkID) => Promise<void>) {
     this.api.onConnect = async () => {
@@ -127,7 +127,7 @@ export class RethinkID {
   }
 
   /**
-   * Set a callback function an app can run when an API disconnection occurs.
+   * Sets a callback function an app can run when an API disconnection occurs.
    *
    * e.g. Invalid access token
    */
@@ -142,7 +142,7 @@ export class RethinkID {
   //
 
   /**
-   * Set a callback function an app can run a login error occurs.
+   * Sets a callback function an app can run a login error occurs.
    *
    * e.g. Authorization code is invalid
    */
@@ -153,7 +153,7 @@ export class RethinkID {
   }
 
   /**
-   * Set a callback function an app can run when a user has successfully logged in.
+   * Sets a callback function an app can run when a user has successfully logged in.
    *
    * e.g. Set state, redirect, etc.
    */
@@ -173,7 +173,7 @@ export class RethinkID {
   }
 
   /**
-   * A utility function to check if the user is logged in.
+   * Checks if the user is logged in.
    * i.e. if an access token is in local storage.
    */
   isLoggedIn(): boolean {
@@ -181,7 +181,7 @@ export class RethinkID {
   }
 
   /**
-   * A utility function to log a user out.
+   * Logs out a user.
    * Deletes the access token from local storage and reloads the page.
    */
   logOut(): void {
@@ -189,7 +189,7 @@ export class RethinkID {
   }
 
   /**
-   * Get a collection interface (API access to the specified collection)
+   * Gets a collection interface (API access to the specified collection)
    * @param collectionName - The name of the collection to create the interface for.
    * @param collectionOptions - An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user. The onCreate hook sets up a collection when it is created (e.g., to set up permissions)
    */

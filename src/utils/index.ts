@@ -39,7 +39,7 @@ export function generateRandomString(): string {
 }
 
 /**
- * Open and center pop-up on specific window to account for multiple monitors
+ * Opens and centers pop-up on specific window to account for multiple monitors
  * @param url url to open
  * @param windowName name to identify pop-up window
  * @param win the parent/opener window
