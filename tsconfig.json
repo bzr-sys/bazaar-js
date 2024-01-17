@@ -8,8 +8,5 @@
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test"],
-  "rules": {
-    "@typescript-eslint/no-explicit-any": "off"
-  }
+  "exclude": ["node_modules", "dist", "test"]
 }
