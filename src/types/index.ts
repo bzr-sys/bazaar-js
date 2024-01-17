@@ -3,7 +3,7 @@ import type { API } from "../api/raw";
 
 /**
  * Options for initializing a RethinkID instance
- * @alpha
+ * @beta
  */
 export type RethinkIDOptions = {
   appId: string;
@@ -49,7 +49,7 @@ export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
 /**
  * Represents a complete permission object which includes both the `id` field and `userId` for user association.
- * @alpha
+ * @beta
  */
 export type Permission = {
   id: string;
@@ -62,19 +62,19 @@ export type Permission = {
 /**
  * Represents a permission object that is yet to be persisted.
  * It has the same structure as {@link Permission} but without the `id` field.
- * @alpha
+ * @beta
  */
 export type NewPermission = Omit<Permission, "id">;
 
 /**
  * Represents the foundational structure of a permission template.
  * It's derived from the {@link NewPermission} and does not include user association.
- * @alpha
+ * @beta
  */
 export type PermissionTemplate = Omit<NewPermission, "userId">;
 
 /**
- * @alpha
+ * @beta
  */
 export enum PermissionType {
   READ = "read",
@@ -84,7 +84,7 @@ export enum PermissionType {
 }
 
 /**
- * @alpha
+ * @beta
  */
 export type GrantedPermission = {
   id: string;
@@ -96,7 +96,7 @@ export type GrantedPermission = {
 };
 
 /**
- * @alpha
+ * @beta
  */
 export type Link = {
   id: string;
@@ -110,7 +110,7 @@ export type BasicLink = Omit<Link, "url">;
 
 /**
  * The possible login types.
- * @alpha
+ * @beta
  */
 export enum LoginType {
   /**
@@ -129,26 +129,26 @@ export enum LoginType {
 }
 
 /**
- * @alpha
+ * @beta
  */
 export type Doc = {
   id: string;
 };
 
 /**
- * @alpha
+ * @beta
  */
 export type AnyDoc = Doc & {
   [key: string | number | symbol]: any;
 };
 
 /**
- * @alpha
+ * @beta
  */
 export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
 /**
- * @alpha
+ * @beta
  */
 export type RethinkIdMessage = { message: string };
 
@@ -156,7 +156,7 @@ export type RethinkIdMessage = { message: string };
  * A FilterComparison is an object, that applies a set of comparison operators.
  * Multiple properties are combined with AND. Most comparison operators are self-explanatory
  * logical operators except for contains, which checks if an element is part of an array.
- * @alpha
+ * @beta
  */
 export type FilterComparison = {
   $eq?: string | number;
@@ -200,7 +200,7 @@ export type FilterComparison = {
  * ```
  * would result in "((height \> 80 AND height \< 140) OR (weight \> 10 AND weight \< 25)) AND (age \< 12)"
  *
- * @alpha
+ * @beta
  */
 export type FilterObject = {
   $and?: FilterObject[];
@@ -217,14 +217,14 @@ export type FilterObject = {
  * { height: "desc", age: "asc" }
  * ```
  *
- * @alpha
+ * @beta
  */
 export type OrderBy = {
   [field: string]: OrderByType;
 };
 
 /**
- * @alpha
+ * @beta
  */
 export enum OrderByType {
   ASC = "asc",
@@ -232,7 +232,7 @@ export enum OrderByType {
 }
 
 /**
- * @alpha
+ * @beta
  */
 export type User = {
   id: string;
@@ -241,7 +241,7 @@ export type User = {
 };
 
 /**
- * @alpha
+ * @beta
  */
 export type Contact = {
   id: string;

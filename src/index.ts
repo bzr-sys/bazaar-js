@@ -41,7 +41,7 @@ export type {
 
 /**
  * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
- * @alpha
+ * @beta
  */
 export class RethinkID {
   /**
