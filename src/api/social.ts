@@ -1,5 +1,5 @@
-import { Contact, SubscribeListener } from "../types";
-import { API } from "./raw";
+import type { Contact, SubscribeListener } from "../types";
+import type { API } from "./raw";
 
 /**
  * The class that encapsulates the social API

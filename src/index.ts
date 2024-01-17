@@ -5,7 +5,7 @@ import { PermissionsAPI } from "./api/permissions";
 import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { rethinkIdUri } from "./constants";
-import { RethinkIDOptions, CollectionOptions, Doc, LoginType } from "./types";
+import type { RethinkIDOptions, CollectionOptions, Doc, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
@@ -16,21 +16,23 @@ export { CollectionsAPI } from "./api/collections";
 export { PermissionsAPI } from "./api/permissions";
 export { SocialAPI } from "./api/social";
 
-export {
+/**
+ * Enums
+ */
+export { OrderByType, PermissionType, LoginType } from "./types";
+
+export type {
   User,
   Contact,
   Permission,
   NewPermission,
   PermissionTemplate,
-  PermissionType,
   GrantedPermission,
   FilterObject,
   FilterComparison,
   OrderBy,
-  OrderByType,
   RethinkIdMessage,
   Link,
-  LoginType,
   Doc,
   AnyDoc,
   SubscribeListener,

@@ -1,5 +1,5 @@
 import { linkPath, rethinkIdUri } from "../constants";
-import {
+import type {
   BasicLink,
   GrantedPermission,
   Link,

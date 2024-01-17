@@ -1,5 +1,13 @@
 import { API } from "./raw";
-import { SubscribeListener, RethinkIdMessage, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
+import type {
+  SubscribeListener,
+  RethinkIdMessage,
+  CollectionOptions,
+  FilterObject,
+  OrderBy,
+  Doc,
+  AnyDoc,
+} from "../types";
 import { ErrorTypes, RethinkIDError } from "../utils";
 
 /**

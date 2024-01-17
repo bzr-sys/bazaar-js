@@ -1,4 +1,4 @@
-import { API } from "./raw";
+import type { API } from "./raw";
 
 /**
  * The class that encapsulates the collections API

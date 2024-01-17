@@ -1,6 +1,7 @@
 import { OAuth2Client, OAuth2Token, generateCodeVerifier } from "@badgateway/oauth2-client";
 
-import { AuthOptions, LoginType } from "../types";
+import type { AuthOptions } from "../types";
+import { LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
 import { namespacePrefix } from "../constants";
 

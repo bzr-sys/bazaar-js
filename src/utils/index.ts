@@ -1,5 +1,5 @@
 /**
- * Enum of all the error types
+ * Constant of all the error types
  * @internal
  */
 export const ErrorTypes = {

@@ -1,15 +1,13 @@
 import io from "socket.io-client";
 
-import {
+import type {
   APIOptions,
   Permission,
   NewPermission,
   SubscribeListener,
   RethinkIdMessage,
-  FilterObject,
   Contact,
   User,
-  OrderBy,
   GrantedPermission,
   PermissionType,
   PermissionTemplate,
