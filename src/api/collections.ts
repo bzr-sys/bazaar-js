@@ -1,7 +1,8 @@
-import { API } from "./raw";
+import type { API } from "./raw";
 
 /**
  * The class that encapsulates the collections API
+ * @internal
  */
 export class CollectionsAPI {
   private api: API;
@@ -11,21 +12,21 @@ export class CollectionsAPI {
   }
 
   /**
-   * Create a collection.
+   * Creates a collection.
    */
   async create(collectionName: string) {
     return this.api.collectionsCreate(collectionName);
   }
 
   /**
-   * Drop a collection.
+   * Drops a collection.
    */
   async drop(collectionName: string) {
     return this.api.collectionsDrop(collectionName);
   }
 
   /**
-   * List all collection names.
+   * Lists all collection names.
    * @returns Where `data` is an array of collection names
    */
   async list() {

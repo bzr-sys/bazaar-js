@@ -1,5 +1,5 @@
 import { linkPath, rethinkIdUri } from "../constants";
-import {
+import type {
   BasicLink,
   GrantedPermission,
   Link,
@@ -12,6 +12,7 @@ import { API } from "./raw";
 
 /**
  * The class that encapsulates the permissions API
+ * @internal
  */
 export class PermissionsAPI {
   private api: API;
@@ -25,7 +26,7 @@ export class PermissionsAPI {
   }
 
   /**
-   * Open the permission modal
+   * Opens the permission modal
    */
   openModal(permission: PermissionTemplate) {
     // this.modal.showModal();
@@ -34,15 +35,15 @@ export class PermissionsAPI {
   }
 
   /**
-   * Create permission for a collection.
+   * Creates permission for a collection.
    */
   async create(permission: NewPermission) {
     return this.api.permissionsCreate(permission);
   }
 
   /**
-   * List permissions.
-   * @param options If no optional params are set, all permissions for the user are returned.
+   * Lists permissions.
+   * @param options - If no optional params are set, all permissions for the user are returned.
    * @returns All permissions are returned if no options are passed.
    */
   async list(
@@ -57,7 +58,7 @@ export class PermissionsAPI {
   }
 
   /**
-   * Delete permission with a given ID
+   * Deletes permission with a given ID
    * @param permissionId - ID of the permission to delete
    */
   async delete(permissionId: string) {
@@ -69,7 +70,7 @@ export class PermissionsAPI {
    */
   public links = {
     /**
-     * Create a link
+     * Creates a link
      */
     create: async (permission: PermissionTemplate, limit: number = 0) => {
       const { data: basicLink } = await this.api.linksCreate(permission, limit);
@@ -77,7 +78,7 @@ export class PermissionsAPI {
     },
 
     /**
-     * List links
+     * Lists links
      */
     list: async (
       options: {
@@ -114,7 +115,7 @@ export class PermissionsAPI {
     },
 
     /**
-     * Delete permissions for a table
+     * Deletes permissions for a table
      */
     delete: async (linkId: string) => {
       return this.api.linksDelete(linkId);
@@ -125,9 +126,6 @@ export class PermissionsAPI {
    * Granted Permissions
    */
   public granted = {
-    /**
-     *
-     */
     list: async (
       options: {
         collectionName?: string;
@@ -138,17 +136,9 @@ export class PermissionsAPI {
       const res = await this.api.grantedPermissionsList(options);
       return res.data;
     },
-
-    /**
-     *
-     */
     delete: async (grantedPermissionId: string) => {
       return this.api.grantedPermissionsDelete(grantedPermissionId);
     },
-
-    /**
-     *
-     */
     subscribe: async (
       options: {
         collectionName?: string;

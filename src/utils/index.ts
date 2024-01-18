@@ -1,5 +1,6 @@
 /**
- * Enum of all the error types
+ * Constant of all the error types
+ * @internal
  */
 export const ErrorTypes = {
   Unspecified: 1,
@@ -9,6 +10,9 @@ export const ErrorTypes = {
   DatabaseDoesNotExist: 5,
 };
 
+/**
+ * @internal
+ */
 export class RethinkIDError extends Error {
   type: number;
 
@@ -35,7 +39,7 @@ export function generateRandomString(): string {
 }
 
 /**
- * Open and center pop-up on specific window to account for multiple monitors
+ * Opens and centers pop-up on specific window to account for multiple monitors
  * @param url url to open
  * @param windowName name to identify pop-up window
  * @param win the parent/opener window

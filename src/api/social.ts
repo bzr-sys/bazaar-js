@@ -1,8 +1,9 @@
-import { Contact, SubscribeListener } from "../types";
-import { API } from "./raw";
+import type { Contact, SubscribeListener } from "../types";
+import type { API } from "./raw";
 
 /**
  * The class that encapsulates the social API
+ * @internal
  */
 export class SocialAPI {
   private api: API;
@@ -12,7 +13,7 @@ export class SocialAPI {
   }
 
   /**
-   * Open the social modal
+   * Opens the social modal
    */
   openModal(withId: ((userId: string) => void) | null = null) {
     if (withId && typeof withId === "function") {
@@ -24,8 +25,8 @@ export class SocialAPI {
   }
 
   /**
-   * Get the user info for a given ID.
-   * @param {string} userID The ID of the user, defaults to logged in user's ID.
+   * Gets the user info for a given ID.
+   * @param userID - The ID of the user, defaults to logged in user's ID.
    */
   async getUser(userId?: string) {
     const res = await this.api.usersGet(userId);
@@ -37,7 +38,7 @@ export class SocialAPI {
    */
   public contacts = {
     /**
-     * List contacts
+     * Lists contacts
      * @returns a list of contacts
      */
     list: async () => {
@@ -46,7 +47,7 @@ export class SocialAPI {
     },
 
     /**
-     * Subscribe to contacts
+     * Subscribes to contacts
      * @returns an unsubscribe function
      */
     subscribe: async (listener: SubscribeListener<Contact>) => {
