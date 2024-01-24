@@ -159,12 +159,19 @@ export type RethinkIdMessage = { message: string };
  * @beta
  */
 export type FilterComparison = {
+  /** Equal */
   $eq?: string | number;
+  /** Not equal */
   $ne?: string | number;
+  /** Greater than */
   $gt?: string | number;
+  /** Greater than or equal */
   $ge?: string | number;
+  /** Less than */
   $lt?: string | number;
+  /** Less than or equal */
   $le?: string | number;
+  /** Selects docs where an array field contains the specified value. */
   $contains?: string | number;
 };
 
@@ -176,8 +183,9 @@ export type FilterComparison = {
  * - $or to FilterObject[]. This combines the result of each FilterObject in the array with OR
  * - $not to FilterObject. This applies NOT to the result of the FilterObject
  *
- * @example
  * All fields in a FilterObject are combined with an AND.
+ *
+ * @example
  * The FilterObject
  * ```
  * {

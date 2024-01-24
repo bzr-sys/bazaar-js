@@ -80,6 +80,9 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     ) as Promise<() => Promise<RethinkIdMessage>>;
   }
 
+  /**
+   * @returns The doc ID
+   */
   async insertOne(doc: Omit<T, "id"> | T) {
     return this.withCollection(async () => {
       const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionOptions);
