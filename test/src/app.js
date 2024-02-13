@@ -1,4 +1,4 @@
-import { PermissionType, RethinkID } from "../../src";
+import { PermissionType, BazaarApp } from "../../src";
 
 function output(id, msg) {
   console.log("adding to " + id + ": " + msg);
@@ -11,24 +11,24 @@ function output(id, msg) {
 const config = {
   appId: "test",
   loginRedirectUri: window.location.origin,
-  onApiConnectError: function (rid, msg) {
+  onApiConnectError: function (bzr, msg) {
     console.log("API connection error: " + msg);
-    rid.logOut();
+    bzr.logOut();
   },
 };
 
-const rid = new RethinkID(config);
+const bzr = new BazaarApp(config);
 
 window.login = function () {
-  rid.login();
+  bzr.login();
 };
 
 window.modalSocial = function () {
-  rid.social.openModal();
+  bzr.social.openModal();
 };
 
 window.modalPermission = function () {
-  rid.permissions.openModal({ collectionName: "test", types: ["read"] });
+  bzr.permissions.openModal({ collectionName: "test", types: ["read"] });
 };
 
 window.run = async function () {
@@ -49,8 +49,8 @@ let user = {
   name: "",
 };
 
-rid.onLogin(async () => {
-  user = await rid.social.getUser();
+bzr.onLogin(async () => {
+  user = await bzr.social.getUser();
   // document.getElementById("login").classList.toggle("hidden");
   // document.getElementById("run").classList.toggle("hidden");
   document.getElementById("login-btn").disabled = true;
@@ -61,13 +61,13 @@ rid.onLogin(async () => {
   console.log(user);
 
   // set up shared items
-  // const shared = await rid.sharing.listShared()
+  // const shared = await bzr.sharing.listShared()
   // for (let gp of shared){
   //   const msg = "App: "+gp.appId+" - Owner: "+gp.ownerId+" - Table: "+gp.permission.collectionName+" - Type: "+gp.permission.types[0];
   //   output("shared-output", msg)
   // }
 
-  await rid.permissions.onGranted({ includeInitial: true }, (gp) => {
+  await bzr.permissions.onGranted({ includeInitial: true }, (gp) => {
     const msg =
       "App: " +
       gp.appId +
@@ -89,10 +89,10 @@ async function runTest() {
   // Table API
   //
 
-  const c1 = rid.collection("c1", {
+  const c1 = bzr.collection("c1", {
     onCreate: async () => {
-      console.log("RID:", rid);
-      await rid.permissions.create({
+      console.log("bzr:", bzr);
+      await bzr.permissions.create({
         collectionName: "c1",
         userId: "*",
         types: ["insert"],
@@ -116,7 +116,7 @@ async function runTest() {
       output("run-output", "Error reading empty collection: " + resp);
     }
 
-    // resp = await rid.api.collectionRead("t1", { userId: "non-existent" });
+    // resp = await bzr.api.collectionRead("t1", { userId: "non-existent" });
     // output(resp.data);
 
     // t1.insert({ value: d1.length, secondary: 1 });
@@ -179,10 +179,10 @@ async function runTest() {
     console.log(resp);
     output("run-output", resp.message);
 
-    console.log("RID:", rid);
+    console.log("bzr:", bzr);
 
     // // Drop collection
-    // resp = await rid.api.collectionsDrop("t1");
+    // resp = await bzr.api.collectionsDrop("t1");
     // output(resp.message);
 
     document.getElementById("share-btn").disabled = false;
@@ -203,25 +203,25 @@ async function runShare() {
   }
   document.getElementById("share-btn").disabled = true;
 
-  const s1 = rid.collection("s1");
-  const s2 = rid.collection("s2");
+  const s1 = bzr.collection("s1");
+  const s2 = bzr.collection("s2");
 
   try {
     await s1.getAll();
     await s2.getAll();
 
-    let link = await rid.permissions.links.create({ collectionName: "s1", types: [PermissionType.READ] }, 1);
+    let link = await bzr.permissions.links.create({ collectionName: "s1", types: [PermissionType.READ] }, 1);
     output("share-output", "Create sharing link: " + link);
 
-    let msg = await rid.permissions.create({ collectionName: "s2", types: [PermissionType.READ], userId: userId });
+    let msg = await bzr.permissions.create({ collectionName: "s2", types: [PermissionType.READ], userId: userId });
     output("share-output", "Share s2 with user: " + msg.message);
 
-    let share = await rid.permissions.list();
+    let share = await bzr.permissions.list();
     for (let s of share) {
       output("share-output", "- Share: " + s.collectionName + " " + s.userId);
     }
 
-    let links = await rid.permissions.links.list();
+    let links = await bzr.permissions.links.list();
     for (let l of links) {
       output("share-output", "- Link: " + l.appId + " " + l.limit);
     }
@@ -234,7 +234,7 @@ async function runShare() {
 }
 
 async function fetchContacts() {
-  const contacts = await rid.social.listContacts();
+  const contacts = await bzr.social.listContacts();
   if (contacts.length == 0) {
     output("contacts-output", "no contacts");
   }

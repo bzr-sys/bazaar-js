@@ -4,13 +4,13 @@ import { CollectionsAPI } from "./api/collections";
 import { PermissionsAPI } from "./api/permissions";
 import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
-import { rethinkIdUri } from "./constants";
-import type { RethinkIDOptions, CollectionOptions, Doc, LoginType } from "./types";
+import { bazaarUri } from "./constants";
+import type { BazaarOptions, CollectionOptions, Doc, LoginType } from "./types";
 
 /**
  * Types of errors that can return from the API
  */
-export { ErrorTypes, RethinkIDError } from "./utils";
+export { ErrorTypes, BazaarError } from "./utils";
 export { CollectionAPI } from "./api/collection";
 export { CollectionsAPI } from "./api/collections";
 export { PermissionsAPI } from "./api/permissions";
@@ -31,19 +31,19 @@ export type {
   FilterObject,
   FilterComparison,
   OrderBy,
-  RethinkIdMessage,
+  BazaarMessage,
   Link,
   Doc,
   AnyDoc,
   SubscribeListener,
-  RethinkIDOptions,
+  BazaarOptions,
 } from "./types";
 
 /**
- * The primary class of the RethinkID JS SDK to help you more easily build web apps with RethinkID.
+ * The primary class of the Bazaar JS SDK to help you more easily build web apps with Bazaar.
  * @beta
  */
-export class RethinkID {
+export class BazaarApp {
   /**
    * Auth handles authentication and login
    */
@@ -70,9 +70,9 @@ export class RethinkID {
    */
   social: SocialAPI;
 
-  constructor(options: RethinkIDOptions) {
-    if (!options.rethinkIdUri) {
-      options.rethinkIdUri = rethinkIdUri;
+  constructor(options: BazaarOptions) {
+    if (!options.bazaarUri) {
+      options.bazaarUri = bazaarUri;
     }
 
     // Initialize API and make a connection to the Data API if logged in
@@ -115,14 +115,14 @@ export class RethinkID {
     );
 
     this.collections = new CollectionsAPI(this.api);
-    this.permissions = new PermissionsAPI(this.api, options.rethinkIdUri, options.appId);
+    this.permissions = new PermissionsAPI(this.api, options.bazaarUri, options.appId);
     this.social = new SocialAPI(this.api);
   }
 
   /**
    * Sets a callback function an app can run when it connects or re-connects to the API.
    */
-  onApiConnect(f: (rid: RethinkID) => Promise<void>) {
+  onApiConnect(f: (bzr: BazaarApp) => Promise<void>) {
     this.api.onConnect = async () => {
       await f(this);
     };
@@ -133,7 +133,7 @@ export class RethinkID {
    *
    * e.g. Invalid access token
    */
-  onApiConnectError(f: (rid: RethinkID, message: string) => Promise<void>) {
+  onApiConnectError(f: (bzr: BazaarApp, message: string) => Promise<void>) {
     this.api.onConnectError = async (message) => {
       await f(this, message);
     };
@@ -148,7 +148,7 @@ export class RethinkID {
    *
    * e.g. Authorization code is invalid
    */
-  onLoginError(f: (rid: RethinkID, message: string) => Promise<void>) {
+  onLoginError(f: (bzr: BazaarApp, message: string) => Promise<void>) {
     this.auth.onLoginError = async (message) => {
       await f(this, message);
     };
@@ -159,7 +159,7 @@ export class RethinkID {
    *
    * e.g. Set state, redirect, etc.
    */
-  onLogin(f: (rid: RethinkID) => Promise<void>) {
+  onLogin(f: (bzr: BazaarApp) => Promise<void>) {
     this.auth.onLogin = async () => {
       this.api.connect();
       await f(this);

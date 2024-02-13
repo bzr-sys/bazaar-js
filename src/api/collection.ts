@@ -1,14 +1,6 @@
 import { API } from "./raw";
-import type {
-  SubscribeListener,
-  RethinkIdMessage,
-  CollectionOptions,
-  FilterObject,
-  OrderBy,
-  Doc,
-  AnyDoc,
-} from "../types";
-import { ErrorTypes, RethinkIDError } from "../utils";
+import type { SubscribeListener, BazaarMessage, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
+import { ErrorTypes, BazaarError } from "../utils";
 
 /**
  * @internal
@@ -68,7 +60,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   async subscribeOne(docId: string, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
       this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionOptions, listener),
-    ) as Promise<() => Promise<RethinkIdMessage>>;
+    ) as Promise<() => Promise<BazaarMessage>>;
   }
 
   /**
@@ -77,7 +69,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   async subscribeAll(filter: FilterObject, listener: SubscribeListener<T>) {
     return this.withCollection(() =>
       this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionOptions }, listener),
-    ) as Promise<() => Promise<RethinkIdMessage>>;
+    ) as Promise<() => Promise<BazaarMessage>>;
   }
 
   /**
@@ -93,25 +85,25 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   async updateOne(docId: string, doc: Partial<T>) {
     return this.withCollection(() =>
       this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionOptions),
-    ) as Promise<RethinkIdMessage>;
+    ) as Promise<BazaarMessage>;
   }
 
   async replaceOne(docId: string, doc: Omit<T, "id"> | T) {
     return this.withCollection(() =>
       this.api.collectionReplaceOne(this.collectionName, docId, doc, this.collectionOptions),
-    ) as Promise<RethinkIdMessage>;
+    ) as Promise<BazaarMessage>;
   }
 
   async deleteOne(docId: string) {
     return this.withCollection(() =>
       this.api.collectionDeleteOne(this.collectionName, docId, this.collectionOptions),
-    ) as Promise<RethinkIdMessage>;
+    ) as Promise<BazaarMessage>;
   }
 
   async deleteAll(filter: FilterObject = {}) {
     return this.withCollection(() =>
       this.api.collectionDeleteAll(this.collectionName, { filter, ...this.collectionOptions }),
-    ) as Promise<RethinkIdMessage>;
+    ) as Promise<BazaarMessage>;
   }
 
   //
@@ -128,7 +120,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
         // TODO: this should be reviewed with real-world usage.
         throw error;
       }
-      if (error instanceof RethinkIDError && error.type == ErrorTypes.CollectionDoesNotExist) {
+      if (error instanceof BazaarError && error.type == ErrorTypes.CollectionDoesNotExist) {
         await this.api.collectionsCreate(this.collectionName);
         if (this.collectionOptions.onCreate) {
           await this.collectionOptions.onCreate();

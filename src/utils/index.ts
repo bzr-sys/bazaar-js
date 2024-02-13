@@ -13,7 +13,7 @@ export const ErrorTypes = {
 /**
  * @internal
  */
-export class RethinkIDError extends Error {
+export class BazaarError extends Error {
   type: number;
 
   constructor(type: number, ...params) {
@@ -21,10 +21,10 @@ export class RethinkIDError extends Error {
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, RethinkIDError);
+      Error.captureStackTrace(this, BazaarError);
     }
 
-    this.name = "RethinkIDError";
+    this.name = "BazaarError";
     this.type = type;
   }
 }

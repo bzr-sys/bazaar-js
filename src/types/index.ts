@@ -1,11 +1,11 @@
-import { RethinkID } from "..";
+import { BazaarApp } from "..";
 import type { API } from "../api/raw";
 
 /**
- * Options for initializing a RethinkID instance
+ * Options for initializing a BazaarApp instance
  * @beta
  */
-export type RethinkIDOptions = {
+export type BazaarOptions = {
   appId: string;
 
   /**
@@ -16,34 +16,34 @@ export type RethinkIDOptions = {
   /**
    * Public URI for the API & OAuth server.
    */
-  rethinkIdUri?: string;
+  bazaarUri?: string;
 
   /**
    * Provide a callback to handle a successful login.
    *
    * e.g. Set state, redirect, etc.
    */
-  onLogin?: (rid: RethinkID) => Promise<void>;
+  onLogin?: (bzr: BazaarApp) => Promise<void>;
 
   /**
    * Provide a callback to handle a failed login. E.g. invalid authorization code.
    *
    * e.g. Set state, redirect, etc.
    */
-  onLoginError?: (rid: RethinkID, message: string) => Promise<void>;
+  onLoginError?: (bzr: BazaarApp, message: string) => Promise<void>;
 
   /**
    * Provide a callback to handle API connections. Will be called after login and any subsequent re-connection.
    */
-  onApiConnect?: (rid: RethinkID) => Promise<void>;
+  onApiConnect?: (bzr: BazaarApp) => Promise<void>;
 
   /**
    * Provide a callback to handle failed data API connections. E.g. unauthorized, or expired token.
    */
-  onApiConnectError?: (rid: RethinkID, message: string) => Promise<void>;
+  onApiConnectError?: (bzr: BazaarApp, message: string) => Promise<void>;
 };
 
-export type AuthOptions = Omit<RethinkIDOptions, "onLogin" | "onLoginError" | "onApiConnect" | "onApiConnectError">;
+export type AuthOptions = Omit<BazaarOptions, "onLogin" | "onLoginError" | "onApiConnect" | "onApiConnectError">;
 
 export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
@@ -150,7 +150,7 @@ export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; old
 /**
  * @beta
  */
-export type RethinkIdMessage = { message: string };
+export type BazaarMessage = { message: string };
 
 /**
  * A FilterComparison is an object, that applies a set of comparison operators.
