@@ -4,6 +4,7 @@ import type {
   GrantedPermission,
   Link,
   NewPermission,
+  Notification,
   PermissionTemplate,
   PermissionType,
   SubscribeListener,
@@ -37,8 +38,8 @@ export class PermissionsAPI {
   /**
    * Creates permission for a collection.
    */
-  async create(permission: NewPermission) {
-    return this.api.permissionsCreate(permission);
+  async create(permission: NewPermission, notification: Notification = { enabled: false }) {
+    return this.api.permissionsCreate(permission, notification);
   }
 
   /**

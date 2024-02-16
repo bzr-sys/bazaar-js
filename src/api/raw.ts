@@ -4,6 +4,7 @@ import type {
   APIOptions,
   Permission,
   NewPermission,
+  Notification,
   SubscribeListener,
   BazaarMessage,
   Contact,
@@ -405,9 +406,11 @@ export class API {
   /**
    * Creates a permission.
    */
-  async permissionsCreate(permission: NewPermission) {
+  async permissionsCreate(permission: NewPermission, notification: Notification) {
     console.log("this", this);
-    return this.asyncEmit(this.version + ":permissions:create", { permission }) as Promise<{ id: string }>;
+    return this.asyncEmit(this.version + ":permissions:create", { permission, notification }) as Promise<{
+      id: string;
+    }>;
   }
 
   /**
