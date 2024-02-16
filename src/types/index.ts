@@ -86,6 +86,14 @@ export enum PermissionType {
 /**
  * @beta
  */
+export type Notification = {
+  enabled: boolean;
+  message?: string;
+};
+
+/**
+ * @beta
+ */
 export type GrantedPermission = {
   id: string;
   /**
