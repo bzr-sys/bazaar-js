@@ -5,7 +5,7 @@ import type {
   Permission,
   NewPermission,
   SubscribeListener,
-  RethinkIdMessage,
+  BazaarMessage,
   Contact,
   User,
   GrantedPermission,
@@ -17,8 +17,8 @@ import type {
   CollectionGetAllOptions,
   CollectionCommonAllOptions,
 } from "../types";
-import { RethinkIDError } from "../utils";
-import { rethinkIdUri, namespacePrefix } from "../constants";
+import { BazaarError } from "../utils";
+import { bazaarUri, namespacePrefix } from "../constants";
 
 /**
  * The class that encapsulates the low level data API
@@ -31,10 +31,9 @@ export class API {
   private version = "v1";
 
   /**
-   * URI for the Data API, RethinkID's realtime data storage service.
-   * Currently implemented with Socket.IO + RethinkDB
+   * URI for the Data API, Bazaar's realtime data storage service.
    */
-  private rethinkIdUri = rethinkIdUri;
+  private bazaarUri = bazaarUri;
 
   /**
    * Local storage key names, namespaced in the constructor
@@ -57,14 +56,14 @@ export class API {
   onConnectError: (message: string) => Promise<void>;
 
   /**
-   * The modal and iframe element to perform actions within the RethinkID context
+   * The modal and iframe element to perform actions within the BazaarApp context
    */
   private modal: HTMLDialogElement;
   private iframe: HTMLIFrameElement;
 
   constructor(options: APIOptions, onConnect: () => Promise<void>, onConnectError: (message: string) => Promise<void>) {
-    if (options.rethinkIdUri) {
-      this.rethinkIdUri = options.rethinkIdUri;
+    if (options.bazaarUri) {
+      this.bazaarUri = options.bazaarUri;
     }
 
     this.onConnect = onConnect;
@@ -105,7 +104,7 @@ export class API {
     // is unsecure like not having a sandbox.
     // We should strive to remove the allow-same-origin by
     // passing/using the auth token via other means
-    // this.iframe.sandbox.add("allow-scripts"); // Required to run the RID page
+    // this.iframe.sandbox.add("allow-scripts"); // Required to run the Bazaar page
     // this.iframe.sandbox.add("allow-same-origin"); // Required to read the token from local storage
     this.iframe.style.width = "100%";
     this.iframe.style.height = "min(700px, 100vh)";
@@ -125,7 +124,7 @@ export class API {
       return;
     }
 
-    this.dataApi = io(this.rethinkIdUri, {
+    this.dataApi = io(this.bazaarUri, {
       auth: { token },
     });
 
@@ -177,7 +176,7 @@ export class API {
     return new Promise((resolve, reject) => {
       this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
-          reject(new RethinkIDError(response.error.type, response.error.message));
+          reject(new BazaarError(response.error.type, response.error.message));
         } else {
           resolve(response);
         }
@@ -244,7 +243,7 @@ export class API {
       const resp = (await this.asyncEmit(
         this.version + ":collection:unsubscribe",
         subscriptionHandle,
-      )) as RethinkIdMessage;
+      )) as BazaarMessage;
       return resp.message;
     };
   }
@@ -275,7 +274,7 @@ export class API {
       const resp = (await this.asyncEmit(
         this.version + ":collection:unsubscribe",
         subscriptionHandle,
-      )) as RethinkIdMessage;
+      )) as BazaarMessage;
       return resp.message;
     };
   }
@@ -307,7 +306,7 @@ export class API {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:updateOne", payload) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":collection:updateOne", payload) as Promise<BazaarMessage>;
   }
 
   /**
@@ -327,7 +326,7 @@ export class API {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":collection:replaceOne", payload) as Promise<BazaarMessage>;
   }
 
   /**
@@ -341,7 +340,7 @@ export class API {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":collection:deleteOne", payload) as Promise<BazaarMessage>;
   }
 
   /**
@@ -354,7 +353,7 @@ export class API {
     const payload = { collectionName };
     Object.assign(payload, options);
 
-    return this.asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":collection:deleteAll", payload) as Promise<BazaarMessage>;
   }
 
   //
@@ -365,14 +364,14 @@ export class API {
    * Creates a collection.
    */
   async collectionsCreate(collectionName: string) {
-    return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<BazaarMessage>;
   }
 
   /**
    * Drops a collection.
    */
   async collectionsDrop(collectionName: string) {
-    return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<BazaarMessage>;
   }
 
   /**
@@ -417,7 +416,7 @@ export class API {
    * @param permissionId - The ID of the permission to delete.
    */
   async permissionsDelete(permissionId: string) {
-    return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<BazaarMessage>;
   }
 
   /**
@@ -466,7 +465,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this.asyncEmit(this.version + ":links:unsubscribe", subscriptionHandle) as Promise<RethinkIdMessage>;
+      return this.asyncEmit(this.version + ":links:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
     };
   }
 
@@ -474,7 +473,7 @@ export class API {
    * Deletes permission links.
    */
   async linksDelete(linkId: string) {
-    return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":links:delete", { linkId }) as Promise<BazaarMessage>;
   }
 
   /**
@@ -520,7 +519,7 @@ export class API {
       return this.asyncEmit(
         this.version + ":granted_permissions:unsubscribe",
         subscriptionHandle,
-      ) as Promise<RethinkIdMessage>;
+      ) as Promise<BazaarMessage>;
     };
   }
 
@@ -531,7 +530,7 @@ export class API {
    */
   async grantedPermissionsDelete(grantedPermissionId: string) {
     const payload = { grantedPermissionId };
-    return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<RethinkIdMessage>;
+    return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<BazaarMessage>;
   }
 
   //
@@ -576,7 +575,7 @@ export class API {
 
     return async () => {
       this.dataApi.off(subscriptionHandle, listener);
-      return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<RethinkIdMessage>;
+      return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
     };
   }
 
@@ -598,7 +597,7 @@ export class API {
    * Opens a modal
    */
   openModal(path: string, onMessage: ((msg: string) => void) | null = null) {
-    this.iframe.src = this.rethinkIdUri + path;
+    this.iframe.src = this.bazaarUri + path;
     this.modal.showModal();
     this.onModalMessage = (event) => {
       // Only handle messages from our iframe

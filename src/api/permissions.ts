@@ -1,4 +1,4 @@
-import { linkPath, rethinkIdUri } from "../constants";
+import { linkPath, bazaarUri } from "../constants";
 import type {
   BasicLink,
   GrantedPermission,
@@ -21,7 +21,7 @@ export class PermissionsAPI {
 
   constructor(api: API, uri: string, appId: string) {
     this.api = api;
-    this.linkUri = (uri || rethinkIdUri) + linkPath;
+    this.linkUri = (uri || bazaarUri) + linkPath;
     this.appId = appId;
   }
 

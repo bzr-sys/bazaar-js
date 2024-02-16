@@ -37,7 +37,7 @@ export class Auth {
    */
   private popupWindow: Window;
 
-  private popupWindowName = "rethinkid-login-window";
+  private popupWindowName = "bazaar-login-window";
 
   /**
    * A reference to the previous URL of the login pop-up window.
@@ -91,7 +91,7 @@ export class Auth {
     this.pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
 
     this.oAuthClient = new OAuth2Client({
-      server: options.rethinkIdUri,
+      server: options.bazaarUri,
       clientId: options.appId,
       tokenEndpoint: "/api/v1/oauth2/token",
       authorizationEndpoint: "/oauth2",
@@ -109,7 +109,7 @@ export class Auth {
   }
 
   /**
-   * Generates a URI to log in a user to RethinkID and authorize an app.
+   * Generates a URI to log in a user to Bazaar and authorize an app.
    * Uses the Authorization Code Flow for single page apps with PKCE code verification.
    * Requests an authorization code.
    */

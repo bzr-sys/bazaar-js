@@ -25,5 +25,5 @@ npm run watch
 Install your locally built package.
 
 ```bash
-npm install <../path/to/rethinkid-js-sdk>
+npm install <../path/to/bazaar>
 ```

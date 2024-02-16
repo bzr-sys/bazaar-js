@@ -3,8 +3,8 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import babel from "@rollup/plugin-babel";
 import typescript from "rollup-plugin-typescript2";
-import replace from '@rollup/plugin-replace';
-import terser from '@rollup/plugin-terser';
+import replace from "@rollup/plugin-replace";
+import terser from "@rollup/plugin-terser";
 import pkg from "./package.json" assert { type: "json" };
 
 /**
@@ -36,10 +36,10 @@ const config = [
     input: "src/index.ts", // entry point
     output: [
       {
-        name: "RethinkID",
-        file: "dist/rethinkid-js-sdk.iife.js",
+        name: "Bazaar",
+        file: "dist/bazaar.iife.js",
         format: "iife",
-        footer: 'RethinkID = RethinkID.RethinkID;',
+        footer: "Bazaar = Bazaar.Bazaar;",
       },
     ],
     plugins: [
@@ -53,7 +53,7 @@ const config = [
         external: [/@babel\/runtime/],
       }),
       replace({
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+        "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "production"),
         preventAssignment: true,
       }),
       terser(),

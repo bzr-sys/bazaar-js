@@ -1,21 +1,21 @@
-# The RethinkID JavaScript SDK
+# The Bazaar JavaScript SDK
 
-A JavaScript SDK client for building SPAs (Single Page Apps) with RethinkID.
+A JavaScript SDK client for building SPAs (Single Page Apps) with Bazaar.
 
 ## Using via NPM
 
 Install with NPM:
 
 ```bash
-npm i @rethinkid/rethinkid-js-sdk
+npm i @bzr/bazaar
 ```
 
 Import the package:
 
 ```js
-import { RethinkID } from "@rethinkid/rethinkid-js-sdk";
+import { BazaarApp } from "@bzr/bazaar";
 
-const rid = new RethinkID({
+const bzr = new BazaarApp({
   /* config... */
 });
 ```
@@ -23,7 +23,7 @@ const rid = new RethinkID({
 ## Load from a CDN
 
 ```html
-<script src="https://unpkg.com/@rethinkid/rethinkid-js-sdk"></script>
+<script src="https://unpkg.com/@bzr/bazaar"></script>
 ```
 
 ## Next.js Caveats
