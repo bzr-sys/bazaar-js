@@ -37,7 +37,7 @@ const config = [
     output: [
       {
         name: "Bazaar",
-        file: "dist/bazaar.iife.js",
+        file: pkg.unpkg,
         format: "iife",
         footer: "Bazaar = Bazaar.Bazaar;",
       },
