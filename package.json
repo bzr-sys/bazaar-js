@@ -1,6 +1,6 @@
 {
   "name": "@bzr/bazaar",
-  "version": "0.15.9",
+  "version": "1.0.0",
   "description": "The Bazaar SDK. Conveniently use Bazaar with your app in the browser.",
   "files": [
     "dist"
@@ -10,7 +10,11 @@
   "jsdelivr": "dist/bazaar.iife.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "github": "",
+  "homepage": "https://github.com/bzr-sys/bazaar-js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bzr-sys/bazaar-js.git"
+  },
   "scripts": {
     "test": "exit 0",
     "build": "npm run clean && rollup -c",
@@ -22,7 +26,7 @@
     "bazaar"
   ],
   "author": "bazaar",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.17.5",
     "@babel/plugin-transform-runtime": "^7.17.0",
