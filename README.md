@@ -26,6 +26,10 @@ const bzr = new BazaarApp({
 <script src="https://unpkg.com/@bzr/bazaar"></script>
 ```
 
+## Environments
+
+The option `bazaarUri` will default to `https://cloud.bzr.dev` unless `NODE_ENV=development`. In a dev environment, it defaults to `http://localhost:3377`, the location of the [mock Bazaar server](https://www.npmjs.com/package/@bzr/bazaar-mock).
+
 ## Next.js Caveats
 
 ### Dynamic Imports
