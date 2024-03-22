@@ -1,3 +1,6 @@
+[![NPM Version](https://img.shields.io/npm/v/bzr/bazaar-js.svg?style=flat)]()
+[![NPM License](https://img.shields.io/npm/l/all-contributors.svg?style=flat)](https://github.com/bzr-sys/bazaar-js/blob/master/LICENSE)
+
 # The Bazaar JavaScript SDK
 
 A JavaScript SDK client for building SPAs (Single Page Apps) with Bazaar.
