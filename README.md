@@ -1,3 +1,6 @@
+[![NPM Version](https://img.shields.io/npm/v/bzr/bazaar-js.svg?style=flat)](https://www.npmjs.com/package/@bzr/bazaar)
+[![NPM License](https://img.shields.io/npm/l/all-contributors.svg?style=flat)](https://github.com/bzr-sys/bazaar-js/blob/master/LICENSE)
+
 # The Bazaar JavaScript SDK
 
 A JavaScript SDK client for building SPAs (Single Page Apps) with Bazaar.
@@ -25,6 +28,10 @@ const bzr = new BazaarApp({
 ```html
 <script src="https://unpkg.com/@bzr/bazaar"></script>
 ```
+
+## Environments
+
+The option `bazaarUri` will default to `https://cloud.bzr.dev` unless `NODE_ENV=development`. In a dev environment, it defaults to `http://localhost:3377`, the location of the [mock Bazaar server](https://www.npmjs.com/package/@bzr/bazaar-mock).
 
 ## Next.js Caveats
 
