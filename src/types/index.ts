@@ -253,6 +253,7 @@ export enum OrderByType {
 export type User = {
   id: string;
   name: string;
+  handle: string;
   email: string | undefined;
 };
 
