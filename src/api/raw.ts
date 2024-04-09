@@ -541,15 +541,10 @@ export class API {
   //
 
   /**
-   * Adds a user ID to your contacts
-   *
-   * @param userID - The ID of the user
+   * Gets the user info for a given ID or handle.
+   * @param payload - The ID or handle of the user, defaults to logged in user's ID.
    */
-  async usersGet(userId?: string) {
-    let payload = {};
-    if (userId) {
-      payload = { userId };
-    }
+  async usersGet(payload: { userId?: string; handle?: string } = {}) {
     return this.asyncEmit(this.version + ":users:get", payload) as Promise<{ data: User }>;
   }
 
