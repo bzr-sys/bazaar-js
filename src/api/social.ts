@@ -25,11 +25,11 @@ export class SocialAPI {
   }
 
   /**
-   * Gets the user info for a given ID.
-   * @param userId - The ID of the user, defaults to logged in user's ID.
+   * Gets the user info for a given ID or handle.
+   * @param query - The ID or handle of the user, defaults to logged in user's ID.
    */
-  async getUser(userId?: string) {
-    const res = await this.api.usersGet(userId);
+  async getUser(query: { userId?: string; handle?: string } = {}) {
+    const res = await this.api.usersGet(query);
     return res.data;
   }
 
