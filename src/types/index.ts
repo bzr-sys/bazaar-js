@@ -117,8 +117,22 @@ export type SharingNotification = {
  * @beta
  */
 export type Notification = {
-  enabled: boolean;
-  message?: string;
+  id: string;
+  //userId: string;
+  //appId: string;
+  senderId: string;
+
+  message: string;
+  hidden: boolean;
+};
+
+/**
+ *
+ */
+export type NotificationTemplate = {
+  userId: string;
+  sendMessage?: SendNotification; // Defaults to never
+  message: string;
 };
 
 /**
