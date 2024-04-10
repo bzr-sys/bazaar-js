@@ -115,7 +115,7 @@ export class BazaarApp {
     );
 
     this.collections = new CollectionsAPI(this.api);
-    this.permissions = new PermissionsAPI(this.api, options.bazaarUri, options.appId);
+    this.permissions = new PermissionsAPI(this.api, options.bazaarUri);
     this.social = new SocialAPI(this.api);
   }
 
