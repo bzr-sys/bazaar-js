@@ -610,7 +610,7 @@ export class API {
     // The ::backdrop psuedo property cannot be added with the `.style` syntax
     style.sheet.insertRule(
       `#${this.modalId}::backdrop {
-        background: rgba(0,0,0,.5);
+        background: rgba(0,0,0,.8);
       } `,
       0,
     );
@@ -620,10 +620,10 @@ export class API {
     button.style.fontWeight = "bold";
     button.style.fontSize = "32px";
     button.style.right = "8px";
-    button.style.top = "4px";
+    button.style.top = "5px";
     button.style.background = "transparent";
     button.style.cursor = "pointer";
-    button.style.position = "absolute";
+    button.style.position = "fixed";
     button.style.zIndex = "10";
     button.style.color = "oklch(.841536 .007965 265.754874)"; // --bc
 
