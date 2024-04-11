@@ -47,6 +47,16 @@ export class API {
   private dataApi;
 
   /**
+   * ID attribute of the dialog HTML element
+   */
+  private modalId = "bazaar-modal";
+
+  /**
+   * ID attribute of the style HTML element for the modal styles
+   */
+  private modalStylesId = "bazaar-modal-styles";
+
+  /**
    * A callback to do something upon Data API connection
    */
   onConnect: () => Promise<void>;
@@ -78,41 +88,6 @@ export class API {
 
     // Make a connection to the Data API if logged in
     this.connect();
-
-    // Initialize modal
-    this.modal = document.createElement("dialog");
-    this.modal.style.width = "min(700px, 100vw)";
-    this.modal.style.borderWidth = "0";
-    this.modal.style.padding = "0";
-    this.modal.style.margin = "auto";
-
-    const header = document.createElement("div");
-    header.style.width = "100%";
-    header.style.display = "flex";
-    header.style.alignItems = "flex-end";
-    this.modal.appendChild(header);
-
-    const button = document.createElement("button");
-    button.style.marginLeft = "auto";
-    button.style.borderWidth = "0";
-    button.style.backgroundColor = "white";
-    button.innerHTML = "X";
-    button.onclick = () => this.closeModal();
-    header.appendChild(button);
-
-    this.iframe = document.createElement("iframe");
-    // Note: using a sandbox with allow-scripts and allow-same-origin
-    // is unsecure like not having a sandbox.
-    // We should strive to remove the allow-same-origin by
-    // passing/using the auth token via other means
-    // this.iframe.sandbox.add("allow-scripts"); // Required to run the Bazaar page
-    // this.iframe.sandbox.add("allow-same-origin"); // Required to read the token from local storage
-    this.iframe.style.width = "100%";
-    this.iframe.style.height = "min(700px, 100vh)";
-    this.iframe.style.borderWidth = "0";
-    this.modal.appendChild(this.iframe);
-
-    document.body.appendChild(this.modal);
   }
 
   /**
@@ -595,6 +570,7 @@ export class API {
    * Opens a modal
    */
   openModal(path: string, onMessage: ((msg: string) => void) | null = null) {
+    this.initializeModal();
     this.iframe.src = this.bazaarUri + path;
     this.modal.showModal();
     this.onModalMessage = (event) => {
@@ -607,5 +583,68 @@ export class API {
     };
     window.addEventListener("message", this.onModalMessage);
     return;
+  }
+
+  /**
+   * Creates and appends a modal to the DOM
+   */
+  initializeModal() {
+    const modal = document.getElementById(this.modalId);
+    if (modal) return;
+
+    // Initialize modal
+    this.modal = document.createElement("dialog");
+    this.modal.setAttribute("id", this.modalId);
+    // Needed to hide a white bar at the bottom of the dialog
+    this.modal.style.backgroundColor = "oklch(.178606 .034249 265.754874)"; // --b3
+    this.modal.style.width = "min(700px, 100vw)";
+    this.modal.style.borderWidth = "0";
+    this.modal.style.padding = "0";
+    this.modal.style.margin = "auto";
+    this.modal.style.borderRadius = "1rem";
+
+    const style = document.createElement("style");
+    style.id = this.modalStylesId;
+    document.head.appendChild(style);
+
+    // The ::backdrop psuedo property cannot be added with the `.style` syntax
+    style.sheet.insertRule(
+      `#${this.modalId}::backdrop {
+        background: rgba(0,0,0,.5);
+      } `,
+      0,
+    );
+
+    const button = document.createElement("button");
+    button.style.borderWidth = "0";
+    button.style.fontWeight = "bold";
+    button.style.fontSize = "32px";
+    button.style.right = "8px";
+    button.style.top = "4px";
+    button.style.background = "transparent";
+    button.style.cursor = "pointer";
+    button.style.position = "absolute";
+    button.style.zIndex = "10";
+    button.style.color = "oklch(.841536 .007965 265.754874)"; // --bc
+
+    button.innerHTML = "&times;";
+    button.autofocus = true;
+    button.ariaLabel = "Close Bazaar modal";
+    button.onclick = () => this.closeModal();
+    this.modal.appendChild(button);
+
+    this.iframe = document.createElement("iframe");
+    // Note: using a sandbox with allow-scripts and allow-same-origin
+    // is unsecure like not having a sandbox.
+    // We should strive to remove the allow-same-origin by
+    // passing/using the auth token via other means
+    // this.iframe.sandbox.add("allow-scripts"); // Required to run the Bazaar page
+    // this.iframe.sandbox.add("allow-same-origin"); // Required to read the token from local storage
+    this.iframe.style.width = "100%";
+    this.iframe.style.minHeight = "80vh";
+    this.iframe.style.borderWidth = "0";
+    this.modal.appendChild(this.iframe);
+
+    document.body.appendChild(this.modal);
   }
 }
