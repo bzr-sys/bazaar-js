@@ -1,5 +1,4 @@
-import { linkPath, bazaarUri } from "../constants";
-import { type SubscribeListener, NotificationTemplate, Notification } from "../types";
+import { type SubscribeListener, CreateNotification, Notification } from "../types";
 import { API } from "./raw";
 
 /**
@@ -16,7 +15,7 @@ export class NotificationsAPI {
   /**
    * Creates notification for a target user.
    */
-  async create(notification: NotificationTemplate) {
+  async create(notification: CreateNotification) {
     return this.api.notificationsCreate(notification);
   }
 
@@ -24,13 +23,28 @@ export class NotificationsAPI {
    * Lists notifications.
    * @returns All notifications for this app and user
    */
-  async list() {
-    const res = await this.api.notificationsList();
+  async list(
+    options: {
+      includeHidden?: boolean;
+      senderId?: string;
+      startTs?: Date;
+      endTs?: Date;
+    } = {},
+  ) {
+    const res = await this.api.notificationsList(options);
     return res.data;
   }
 
-  async subscribe(listener: SubscribeListener<Notification>) {
-    return this.api.notificationsSubscribe(listener);
+  async subscribe(
+    options: {
+      includeHidden?: boolean;
+      senderId?: string;
+      startTs?: Date;
+      endTs?: Date;
+    } = {},
+    listener: SubscribeListener<Notification>,
+  ) {
+    return this.api.notificationsSubscribe(options, listener);
   }
 
   /**
@@ -38,7 +52,7 @@ export class NotificationsAPI {
    * @param notificationId - ID of the notification to hide
    */
   async hide(notificationId: string) {
-    return this.api.notificationsHide(permissionId);
+    return this.api.notificationsHide(notificationId);
   }
 
   /**
@@ -46,6 +60,6 @@ export class NotificationsAPI {
    * @param notificationId - ID of the notification to delete
    */
   async delete(notificationId: string) {
-    return this.api.notificationsDelete(permissionId);
+    return this.api.notificationsDelete(notificationId);
   }
 }

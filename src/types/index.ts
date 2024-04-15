@@ -114,25 +114,25 @@ export type SharingNotification = {
 };
 
 /**
- * @beta
+ *
  */
 export type Notification = {
   id: string;
   //userId: string;
   //appId: string;
   senderId: string;
-
   message: string;
+  ts: Date;
   hidden: boolean;
 };
 
 /**
  *
  */
-export type NotificationTemplate = {
+export type CreateNotification = {
   userId: string;
   sendMessage?: SendNotification; // Defaults to never
-  message: string;
+  message: string; // max 250 chars
 };
 
 /**

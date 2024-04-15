@@ -90,6 +90,10 @@ export class PermissionsAPI {
       return links;
     },
 
+    /**
+     * Subscribes to links changes
+     * @returns an unsubscribe function
+     */
     subscribe: async (
       options: {
         collectionName?: string;
@@ -111,7 +115,7 @@ export class PermissionsAPI {
     },
 
     /**
-     * Deletes permissions for a table
+     * Deletes a link
      */
     delete: async (linkId: string) => {
       return this.api.linksDelete(linkId);

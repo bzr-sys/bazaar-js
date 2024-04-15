@@ -6,6 +6,7 @@ import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { bazaarUri } from "./constants";
 import type { BazaarOptions, CollectionOptions, Doc, LoginType } from "./types";
+import { NotificationsAPI } from "./api/notifications";
 
 /**
  * Types of errors that can return from the API
@@ -28,6 +29,8 @@ export type {
   NewPermission,
   PermissionTemplate,
   GrantedPermission,
+  SendNotification,
+  SharingNotification,
   FilterObject,
   FilterComparison,
   OrderBy,
@@ -64,6 +67,12 @@ export class BazaarApp {
    * Access to the permissions API
    */
   permissions: PermissionsAPI;
+
+  /**
+   * Access to the notifications API
+   * @alpha
+   */
+  private notifications: NotificationsAPI;
 
   /**
    * Access to the social API
@@ -116,6 +125,7 @@ export class BazaarApp {
 
     this.collections = new CollectionsAPI(this.api);
     this.permissions = new PermissionsAPI(this.api, options.bazaarUri);
+    this.notifications = new NotificationsAPI(this.api);
     this.social = new SocialAPI(this.api);
   }
 
