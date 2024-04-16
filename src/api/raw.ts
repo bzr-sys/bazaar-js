@@ -607,7 +607,7 @@ export class API {
     style.id = this.modalStylesId;
     document.head.appendChild(style);
 
-    // The ::backdrop psuedo property cannot be added with the `.style` syntax
+    // The ::backdrop pseudo property cannot be added with the `.style` syntax
     style.sheet.insertRule(
       `#${this.modalId}::backdrop {
         background: rgba(0,0,0,.8);
@@ -634,12 +634,6 @@ export class API {
     this.modal.appendChild(button);
 
     this.iframe = document.createElement("iframe");
-    // Note: using a sandbox with allow-scripts and allow-same-origin
-    // is unsecure like not having a sandbox.
-    // We should strive to remove the allow-same-origin by
-    // passing/using the auth token via other means
-    // this.iframe.sandbox.add("allow-scripts"); // Required to run the Bazaar page
-    // this.iframe.sandbox.add("allow-same-origin"); // Required to read the token from local storage
     this.iframe.style.width = "100%";
     this.iframe.style.minHeight = "80vh";
     this.iframe.style.borderWidth = "0";
