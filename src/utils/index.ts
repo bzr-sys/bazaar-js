@@ -29,6 +29,14 @@ export class BazaarError extends Error {
   }
 }
 
+export function isNoAppUserError(e: Error) {
+  return e instanceof BazaarError && e.type === ErrorTypes.DatabaseDoesNotExist;
+}
+
+export function isNoPermissionError(e: Error) {
+  return e instanceof BazaarError && e.type === ErrorTypes.NoPermission;
+}
+
 /**
  * Generates a secure random string using the browser crypto functions
  */
