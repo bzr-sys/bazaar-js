@@ -40,6 +40,7 @@ export type {
   AnyDoc,
   SubscribeListener,
   BazaarOptions,
+  MirrorOptions,
 } from "./types";
 
 /**

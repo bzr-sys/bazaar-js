@@ -1,5 +1,14 @@
 import { API } from "./raw";
-import type { SubscribeListener, BazaarMessage, CollectionOptions, FilterObject, OrderBy, Doc, AnyDoc } from "../types";
+import type {
+  SubscribeListener,
+  BazaarMessage,
+  CollectionOptions,
+  FilterObject,
+  OrderBy,
+  Doc,
+  AnyDoc,
+  MirrorOptions,
+} from "../types";
 import { ErrorTypes, BazaarError } from "../utils";
 
 /**
@@ -70,6 +79,53 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     return this.withCollection(() =>
       this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionOptions }, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
+  }
+
+  /**
+   * @alpha
+   */
+  private async mirrorAll(filter: FilterObject, data: T[], mirrorOptions: MirrorOptions<T> = {}) {
+    const docs = await this.getAll(filter);
+    if (mirrorOptions.onAdd) {
+      for (const doc of docs) {
+        mirrorOptions.onAdd(doc).catch((err) => console.log("failed onAdd:", err));
+      }
+    }
+
+    data.push(...docs);
+    return await this.subscribeAll(filter, (changes) => {
+      if (!changes.oldDoc) {
+        // New doc
+        data.push(changes.newDoc!);
+        if (mirrorOptions.onAdd) {
+          mirrorOptions.onAdd(changes.newDoc!).catch((err) => console.log("failed onAdd:", err));
+        }
+        return;
+      }
+      const idx = data.findIndex((doc) => doc.id === changes.oldDoc!.id);
+
+      if (!changes.newDoc) {
+        // Deleted doc
+        if (idx > -1) {
+          data.splice(idx, 1);
+        }
+        if (mirrorOptions.onDelete) {
+          mirrorOptions.onDelete(changes.oldDoc!).catch((err) => console.log("failed onDelete:", err));
+        }
+        return;
+      }
+      // Changed doc
+      if (idx > -1) {
+        data[idx] = changes.newDoc!;
+      } else {
+        // It is missing for some reason, add it.
+        data.push(changes.newDoc!);
+      }
+      if (mirrorOptions.onChange) {
+        mirrorOptions.onChange(changes.oldDoc!, changes.newDoc!).catch((err) => console.log("failed onChange:", err));
+      }
+      return;
+    });
   }
 
   /**
