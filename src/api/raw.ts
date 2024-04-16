@@ -4,7 +4,6 @@ import type {
   APIOptions,
   Permission,
   NewPermission,
-  Notification,
   SubscribeListener,
   BazaarMessage,
   Contact,
@@ -17,6 +16,9 @@ import type {
   CollectionCommonOptions,
   CollectionGetAllOptions,
   CollectionCommonAllOptions,
+  SharingNotification,
+  Notification,
+  CreateNotification,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -381,8 +383,7 @@ export class API {
   /**
    * Creates a permission.
    */
-  async permissionsCreate(permission: NewPermission, notification: Notification) {
-    console.log("this", this);
+  async permissionsCreate(permission: NewPermission, notification: SharingNotification) {
     return this.asyncEmit(this.version + ":permissions:create", { permission, notification }) as Promise<{
       id: string;
     }>;
@@ -401,7 +402,6 @@ export class API {
    * Creates a permission link.
    */
   async linksCreate(permission: PermissionTemplate, limit: number = 0) {
-    console.log("this", this);
     return this.asyncEmit(this.version + ":links:create", { permission, limit }) as Promise<{ data: BasicLink }>;
   }
 
@@ -509,6 +509,77 @@ export class API {
   async grantedPermissionsDelete(grantedPermissionId: string) {
     const payload = { grantedPermissionId };
     return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<BazaarMessage>;
+  }
+
+  //
+  // Notifications API
+  //
+
+  /**
+   * Creates a notification.
+   */
+  async notificationsCreate(notification: CreateNotification) {
+    return this.asyncEmit(this.version + ":notifications:create", { notification }) as Promise<{ data: Notification }>;
+  }
+
+  /**
+   * Lists notifications.
+   *
+   * @param options - If no options are set, all non-hidden notifications are returned.
+   * @returns Where `data` is an array of notifications
+   */
+  async notificationsList(
+    options: {
+      includeHidden?: boolean;
+      senderId?: string;
+      startTs?: Date;
+      endTs?: Date;
+    } = {},
+  ) {
+    return this.asyncEmit(this.version + ":notifications:list", options) as Promise<{ data: Notification[] }>;
+  }
+
+  /**
+   * Subscribes to notification changes
+   *
+   * @param options -
+   * @param listener - The callback function that receives notification change events.
+   * @returns An unsubscribe function
+   */
+  async notificationsSubscribe(
+    options: {
+      includeHidden?: boolean;
+      senderId?: string;
+      startTs?: Date;
+      endTs?: Date;
+    } = {},
+    listener: SubscribeListener<Notification>,
+  ) {
+    const response = (await this.asyncEmit(this.version + ":notifications:subscribe", options)) as {
+      data: string;
+    }; // where data is the subscription handle
+    const subscriptionHandle = response.data;
+
+    this.dataApi.on(subscriptionHandle, listener);
+
+    return async () => {
+      this.dataApi.off(subscriptionHandle, listener);
+      return this.asyncEmit(this.version + ":notifications:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
+    };
+  }
+
+  /**
+   * Hides notifications.
+   */
+  async notificationsHide(notificationId: string) {
+    return this.asyncEmit(this.version + ":notifications:hide", { notificationId }) as Promise<BazaarMessage>;
+  }
+
+  /**
+   * Deletes notifications.
+   */
+  async notificationsDelete(notificationId: string) {
+    return this.asyncEmit(this.version + ":notifications:delete", { notificationId }) as Promise<BazaarMessage>;
   }
 
   //

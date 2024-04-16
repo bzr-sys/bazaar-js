@@ -1,13 +1,14 @@
 import { linkPath, bazaarUri } from "../constants";
-import type {
-  BasicLink,
-  GrantedPermission,
-  Link,
-  NewPermission,
-  Notification,
-  PermissionTemplate,
-  PermissionType,
-  SubscribeListener,
+import {
+  SendNotification,
+  type BasicLink,
+  type GrantedPermission,
+  type Link,
+  type NewPermission,
+  type PermissionTemplate,
+  type PermissionType,
+  type SharingNotification,
+  type SubscribeListener,
 } from "../types";
 import { API } from "./raw";
 
@@ -25,9 +26,14 @@ export class PermissionsAPI {
   }
 
   /**
-   * Creates permission for a collection.
+   * Creates permission for a collection query and a user.
+   * @param {NewPermission} permission "Specifies the permission to be created"
+   * @param {SharingNotification} notification "Specifies if/how the user is notified. Defaults to {createNotification: false, sendMessage: SendNotification.Never}"
    */
-  async create(permission: NewPermission, notification: Notification = { enabled: false }) {
+  async create(
+    permission: NewPermission,
+    notification: SharingNotification = { createNotification: false, sendMessage: SendNotification.NEVER },
+  ) {
     return this.api.permissionsCreate(permission, notification);
   }
 
@@ -84,6 +90,10 @@ export class PermissionsAPI {
       return links;
     },
 
+    /**
+     * Subscribes to links changes
+     * @returns an unsubscribe function
+     */
     subscribe: async (
       options: {
         collectionName?: string;
@@ -105,7 +115,7 @@ export class PermissionsAPI {
     },
 
     /**
-     * Deletes permissions for a table
+     * Deletes a link
      */
     delete: async (linkId: string) => {
       return this.api.linksDelete(linkId);

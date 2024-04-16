@@ -84,11 +84,55 @@ export enum PermissionType {
 }
 
 /**
- * @beta
+ * Represents the options for sending notifications.
+ */
+export enum SendNotification {
+  /**
+   * Send an invitation if the target user does not use the app
+   */
+  INVITE_ONLY = "invite-only",
+  /**
+   * Always send an invitation to the target user
+   */
+  ALWAYS = "always",
+  /**
+   * Never send an invitation to the target user
+   */
+  NEVER = "never",
+}
+
+/**
+ *
+ */
+export type SharingNotification = {
+  createNotification: boolean;
+  sendMessage: SendNotification;
+  /**
+   * Defaults to "X shared something with you in app Y"
+   */
+  message?: string;
+};
+
+/**
+ *
  */
 export type Notification = {
-  enabled: boolean;
-  message?: string;
+  id: string;
+  //userId: string;
+  //appId: string;
+  senderId: string;
+  message: string;
+  ts: Date;
+  hidden: boolean;
+};
+
+/**
+ *
+ */
+export type CreateNotification = {
+  userId: string;
+  sendMessage?: SendNotification; // Defaults to never
+  message: string; // max 250 chars
 };
 
 /**
