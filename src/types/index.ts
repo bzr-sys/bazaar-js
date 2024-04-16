@@ -3,7 +3,6 @@ import type { API } from "../api/raw";
 
 /**
  * Options for initializing a BazaarApp instance
- * @beta
  */
 export type BazaarOptions = {
   appId: string;
@@ -49,7 +48,6 @@ export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
 /**
  * Represents a complete permission object which includes both the `id` field and `userId` for user association.
- * @beta
  */
 export type Permission = {
   id: string;
@@ -62,19 +60,17 @@ export type Permission = {
 /**
  * Represents a permission object that is yet to be persisted.
  * It has the same structure as {@link Permission} but without the `id` field.
- * @beta
  */
 export type NewPermission = Omit<Permission, "id">;
 
 /**
  * Represents the foundational structure of a permission template.
  * It's derived from the {@link NewPermission} and does not include user association.
- * @beta
  */
 export type PermissionTemplate = Omit<NewPermission, "userId">;
 
 /**
- * @beta
+ *
  */
 export enum PermissionType {
   READ = "read",
@@ -136,7 +132,7 @@ export type CreateNotification = {
 };
 
 /**
- * @beta
+ *
  */
 export type GrantedPermission = {
   id: string;
@@ -148,7 +144,7 @@ export type GrantedPermission = {
 };
 
 /**
- * @beta
+ *
  */
 export type Link = {
   id: string;
@@ -162,7 +158,6 @@ export type BasicLink = Omit<Link, "url">;
 
 /**
  * The possible login types.
- * @beta
  */
 export enum LoginType {
   /**
@@ -181,26 +176,26 @@ export enum LoginType {
 }
 
 /**
- * @beta
+ *
  */
 export type Doc = {
   id: string;
 };
 
 /**
- * @beta
+ *
  */
 export type AnyDoc = Doc & {
   [key: string | number | symbol]: any;
 };
 
 /**
- * @beta
+ *
  */
 export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
 
 /**
- * @beta
+ *
  */
 export type BazaarMessage = { message: string };
 
@@ -208,7 +203,6 @@ export type BazaarMessage = { message: string };
  * A FilterComparison is an object, that applies a set of comparison operators.
  * Multiple properties are combined with AND. Most comparison operators are self-explanatory
  * logical operators except for contains, which checks if an element is part of an array.
- * @beta
  */
 export type FilterComparison = {
   /** Equal */
@@ -259,8 +253,6 @@ export type FilterComparison = {
  * }
  * ```
  * would result in "((height \> 80 AND height \< 140) OR (weight \> 10 AND weight \< 25)) AND (age \< 12)"
- *
- * @beta
  */
 export type FilterObject = {
   $and?: FilterObject[];
@@ -276,15 +268,13 @@ export type FilterObject = {
  * ```
  * { height: "desc", age: "asc" }
  * ```
- *
- * @beta
  */
 export type OrderBy = {
   [field: string]: OrderByType;
 };
 
 /**
- * @beta
+ *
  */
 export enum OrderByType {
   ASC = "asc",
@@ -292,7 +282,7 @@ export enum OrderByType {
 }
 
 /**
- * @beta
+ *
  */
 export type User = {
   id: string;
@@ -302,7 +292,7 @@ export type User = {
 };
 
 /**
- * @beta
+ *
  */
 export type Contact = {
   id: string;
@@ -350,4 +340,13 @@ export type CollectionCommonAllOptions = {
   filter?: FilterObject;
   /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
   userId?: string;
+};
+
+/**
+ * @alpha
+ */
+export type MirrorOptions<T extends Doc> = {
+  onAdd?: (doc: T) => Promise<void>;
+  onChange?: (oldDoc: T, newDoc: T) => Promise<void>;
+  onDelete?: (doc: T) => Promise<void>;
 };
