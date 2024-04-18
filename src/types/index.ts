@@ -150,6 +150,7 @@ export type Link = {
   id: string;
   permission: PermissionTemplate;
   limit: number;
+  description: string; // max 30 chars
   users: string[];
   url: string;
 };
