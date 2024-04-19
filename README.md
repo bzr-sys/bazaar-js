@@ -1,4 +1,4 @@
-[![NPM Version](https://img.shields.io/npm/v/bzr/bazaar.svg?style=flat)](https://www.npmjs.com/package/@bzr/bazaar)
+[![NPM Version](https://img.shields.io/npm/v/@bzr/bazaar.svg?style=flat)](https://www.npmjs.com/package/@bzr/bazaar)
 [![NPM License](https://img.shields.io/npm/l/all-contributors.svg?style=flat)](https://github.com/bzr-sys/bazaar-js/blob/master/LICENSE)
 
 # The Bazaar JavaScript SDK
