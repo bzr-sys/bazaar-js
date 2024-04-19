@@ -45,7 +45,6 @@ export type {
 
 /**
  * The primary class of the Bazaar JS SDK to help you more easily build web apps with Bazaar.
- * @beta
  */
 export class BazaarApp {
   /**
