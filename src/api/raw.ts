@@ -128,6 +128,10 @@ export class API {
    * Makes sure a connection to the Data API has been made.
    */
   private waitForConnection: () => Promise<true> = () => {
+    if (!this.dataApi) {
+      return Promise.reject(new Error("Uninitialized data API. Possible unauthenticated request"));
+    }
+
     return new Promise((resolve, reject) => {
       if (this.dataApi.connected) {
         resolve(true);
