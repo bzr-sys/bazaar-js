@@ -38,6 +38,7 @@ export type {
   Link,
   Doc,
   AnyDoc,
+  DeepPartial,
   SubscribeListener,
   BazaarOptions,
   MirrorOptions,
