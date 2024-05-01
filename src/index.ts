@@ -11,7 +11,7 @@ import { NotificationsAPI } from "./api/notifications";
 /**
  * Types of errors that can return from the API
  */
-export { ErrorTypes, BazaarError } from "./utils";
+export { ErrorTypes, BazaarError, isNoAppUserError, isNoPermissionError } from "./utils";
 export { CollectionAPI } from "./api/collection";
 export { CollectionsAPI } from "./api/collections";
 export { PermissionsAPI } from "./api/permissions";
