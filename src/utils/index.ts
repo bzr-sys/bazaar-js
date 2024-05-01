@@ -29,11 +29,11 @@ export class BazaarError extends Error {
   }
 }
 
-export function isNoAppUserError(e: Error) {
+export function isNoAppUserError(e: unknown) {
   return e instanceof BazaarError && e.type === ErrorTypes.DatabaseDoesNotExist;
 }
 
-export function isNoPermissionError(e: Error) {
+export function isNoPermissionError(e: unknown) {
   return e instanceof BazaarError && e.type === ErrorTypes.NoPermission;
 }
 
