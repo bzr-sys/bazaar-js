@@ -8,6 +8,7 @@ import type {
   Doc,
   AnyDoc,
   MirrorOptions,
+  DeepPartial,
 } from "../types";
 import { ErrorTypes, BazaarError } from "../utils";
 
@@ -138,7 +139,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     }) as Promise<string>;
   }
 
-  async updateOne(docId: string, doc: Partial<T>) {
+  async updateOne(docId: string, doc: DeepPartial<T>) {
     return this.withCollection(() =>
       this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionOptions),
     ) as Promise<BazaarMessage>;
