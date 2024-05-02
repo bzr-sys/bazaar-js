@@ -20,7 +20,7 @@ export { SocialAPI } from "./api/social";
 /**
  * Enums
  */
-export { OrderByType, PermissionType, LoginType } from "./types";
+export { OrderByType, PermissionType, LoginType, SendNotification } from "./types";
 
 export type {
   User,
@@ -29,7 +29,6 @@ export type {
   NewPermission,
   PermissionTemplate,
   GrantedPermission,
-  SendNotification,
   SharingNotification,
   FilterObject,
   FilterComparison,
