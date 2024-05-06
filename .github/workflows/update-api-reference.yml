@@ -41,10 +41,14 @@ jobs:
           token: ${{ secrets.ACCESS_TOKEN }}
           path: "website"
 
-      - name: Create New Branch
+      - name: Create or Reset Branch
         run: |
           cd website
+          git fetch
+          git checkout main
+          git branch -D update-generated-reference || true  # Delete if exists, ignore error if not
           git checkout -b update-generated-reference
+          git push -u origin update-generated-reference --force
 
       - name: Show current directory and list contents
         run: |
