@@ -31,6 +31,9 @@ jobs:
           npm install
           npx typedoc ./src/index.ts --out ./typedoc-temp
 
+      - name: List output of typedoc
+        run: ls -la typedoc-temp
+
       - name: Checkout Website Repository
         uses: actions/checkout@v4
         with:
@@ -42,6 +45,11 @@ jobs:
         run: |
           cd website
           git checkout -b update-generated-reference
+
+      - name: Show current directory and list contents
+        run: |
+          pwd
+          ls -la
 
       - name: Copy Reference to Website
         run: |
