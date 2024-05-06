@@ -77,4 +77,4 @@ jobs:
           cd website
           gh pr create --title "Update TypeDoc generated API reference" --body "This PR updates the API Reference for the project." --head update-generated-reference --base main
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
