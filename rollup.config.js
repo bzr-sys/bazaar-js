@@ -36,10 +36,10 @@ const config = [
     input: "src/index.ts", // entry point
     output: [
       {
-        name: "Bazaar",
+        name: "BazaarApp",
         file: pkg.unpkg,
         format: "iife",
-        footer: "Bazaar = Bazaar.BazaarApp;",
+        footer: "BazaarApp = Bazaar.BazaarApp;",
       },
     ],
     plugins: [
