@@ -39,7 +39,7 @@ const config = [
         name: "Bazaar",
         file: pkg.unpkg,
         format: "iife",
-        footer: "Bazaar = Bazaar.Bazaar;",
+        footer: "Bazaar = Bazaar.BazaarApp;",
       },
     ],
     plugins: [
