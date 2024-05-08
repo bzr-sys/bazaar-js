@@ -1,0 +1,71 @@
+name: Update API Reference
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate TypeDoc Reference
+        run: |
+          npm install
+          npx typedoc ./src/index.ts --out ./typedoc-temp
+
+      - name: List output of typedoc
+        run: ls -la typedoc-temp
+
+      - name: Checkout Website Repository
+        uses: actions/checkout@v4
+        with:
+          repository: "bzr-sys/bazaar-website"
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: "website"
+
+      - name: Create or Reset Branch
+        run: |
+          cd website
+          git fetch
+          git checkout main
+          git branch -D update-generated-reference || true  # Delete if exists, ignore error if not
+          git checkout -b update-generated-reference
+          git push -u origin update-generated-reference --force
+
+      - name: Show current directory and list contents
+        run: |
+          pwd
+          ls -la
+
+      - name: Copy Reference to Website
+        run: |
+          cp -R typedoc-temp/. website/api/
+
+      - name: Commit Changes
+        run: |
+          cd website
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ./api
+          git commit -m "Update TypeDoc generated API reference"
+
+      - name: Push Changes
+        run: |
+          cd website
+          git push origin update-generated-reference
+
+      - name: Create Pull Request
+        run: |
+          cd website
+          gh pr create --title "(Auto-generated PR) Update TypeDoc generated API reference" --body "This PR was created by a GitHub Action in the `bzr-sys/bazaar-js` repo. An API reference is generated using TypeDoc and committed in this PR." --head update-generated-reference --base main
+        env:
+          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
