@@ -201,7 +201,16 @@ export type DeepPartial<T> = {
 /**
  *
  */
-export type SubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
+export type RawSubscribeListener<T extends Doc> = (changes: { newDoc: T | null; oldDoc: T | null }) => void;
+
+/**
+ *
+ */
+export type SubscribeListener<T extends Doc> = {
+  onAdd?: (doc: T) => void;
+  onChange?: (oldDoc: T, newDoc: T) => void;
+  onDelete?: (doc: T) => void;
+};
 
 /**
  *
@@ -349,13 +358,4 @@ export type CollectionCommonAllOptions = {
   filter?: FilterObject;
   /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
   userId?: string;
-};
-
-/**
- * @alpha
- */
-export type MirrorOptions<T extends Doc> = {
-  onAdd?: (doc: T) => Promise<void>;
-  onChange?: (oldDoc: T, newDoc: T) => Promise<void>;
-  onDelete?: (doc: T) => Promise<void>;
 };

@@ -101,16 +101,25 @@ export class PermissionsAPI {
       } = {},
       listener: SubscribeListener<Link>,
     ) => {
-      const newListener: SubscribeListener<BasicLink> = (newChanges) => {
-        let changes = { oldDoc: null, newDoc: null };
-        if (newChanges.newDoc) {
-          changes.newDoc = { url: this.linkUri + newChanges.newDoc.id, ...newChanges.newDoc };
-        }
-        if (newChanges.oldDoc) {
-          changes.oldDoc = { url: this.linkUri + newChanges.oldDoc.id, ...newChanges.oldDoc };
-        }
-        listener(changes);
-      };
+      const newListener: SubscribeListener<BasicLink> = {};
+      if (listener.onAdd) {
+        newListener.onAdd = (doc) => {
+          return listener.onAdd({ url: this.linkUri + doc.id, ...doc });
+        };
+      }
+      if (listener.onDelete) {
+        newListener.onDelete = (doc) => {
+          return listener.onDelete({ url: this.linkUri + doc.id, ...doc });
+        };
+      }
+      if (listener.onChange) {
+        newListener.onChange = (oldDoc, newDoc) => {
+          return listener.onChange(
+            { url: this.linkUri + oldDoc.id, ...oldDoc },
+            { url: this.linkUri + newDoc.id, ...newDoc },
+          );
+        };
+      }
       return this.api.linksSubscribe(options, newListener);
     },
 
