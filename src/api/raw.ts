@@ -405,7 +405,7 @@ export class API {
   /**
    * Creates a permission link.
    */
-  async linksCreate(permission: PermissionTemplate, description: string = "", limit: number = 0) {
+  async linksCreate(permission: PermissionTemplate, description: string = "", limit: number = 1) {
     return this.asyncEmit(this.version + ":links:create", { permission, description, limit }) as Promise<{
       data: BasicLink;
     }>;
