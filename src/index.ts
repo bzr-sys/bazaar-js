@@ -40,7 +40,6 @@ export type {
   DeepPartial,
   SubscribeListener,
   BazaarOptions,
-  MirrorOptions,
 } from "./types";
 
 /**
