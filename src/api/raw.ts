@@ -19,6 +19,7 @@ import type {
   SharingNotification,
   Notification,
   CreateNotification,
+  RawSubscribeListener,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -218,10 +219,11 @@ export class API {
     const response = (await this.asyncEmit(this.version + ":collection:subscribeOne", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    this.dataApi.on(subscriptionHandle, listener);
+    const rawListener = toRawSubscribeListener(listener);
+    this.dataApi.on(subscriptionHandle, rawListener);
 
     return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, rawListener);
       const resp = (await this.asyncEmit(
         this.version + ":collection:unsubscribe",
         subscriptionHandle,
@@ -249,10 +251,11 @@ export class API {
     const response = (await this.asyncEmit(this.version + ":collection:subscribeAll", payload)) as { data: string }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    this.dataApi.on(subscriptionHandle, listener);
+    const rawListener = toRawSubscribeListener(listener);
+    this.dataApi.on(subscriptionHandle, rawListener);
 
     return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, rawListener);
       const resp = (await this.asyncEmit(
         this.version + ":collection:unsubscribe",
         subscriptionHandle,
@@ -445,10 +448,11 @@ export class API {
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    this.dataApi.on(subscriptionHandle, listener);
+    const rawListener = toRawSubscribeListener(listener);
+    this.dataApi.on(subscriptionHandle, rawListener);
 
     return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, rawListener);
       return this.asyncEmit(this.version + ":links:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
     };
   }
@@ -496,10 +500,11 @@ export class API {
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    this.dataApi.on(subscriptionHandle, listener);
+    const rawListener = toRawSubscribeListener(listener);
+    this.dataApi.on(subscriptionHandle, rawListener);
 
     return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, rawListener);
       return this.asyncEmit(
         this.version + ":granted_permissions:unsubscribe",
         subscriptionHandle,
@@ -566,10 +571,11 @@ export class API {
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    this.dataApi.on(subscriptionHandle, listener);
+    const rawListener = toRawSubscribeListener(listener);
+    this.dataApi.on(subscriptionHandle, rawListener);
 
     return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, rawListener);
       return this.asyncEmit(this.version + ":notifications:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
     };
   }
@@ -621,10 +627,11 @@ export class API {
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
 
-    this.dataApi.on(subscriptionHandle, listener);
+    const rawListener = toRawSubscribeListener(listener);
+    this.dataApi.on(subscriptionHandle, rawListener);
 
     return async () => {
-      this.dataApi.off(subscriptionHandle, listener);
+      this.dataApi.off(subscriptionHandle, rawListener);
       return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
     };
   }
@@ -718,4 +725,18 @@ export class API {
 
     document.body.appendChild(this.modal);
   }
+}
+
+function toRawSubscribeListener<T extends Doc>(listener: SubscribeListener<T>): RawSubscribeListener<T> {
+  return (changes) => {
+    if (!changes.oldDoc && changes.newDoc && listener.onAdd) {
+      return listener.onAdd(changes.newDoc);
+    }
+    if (changes.oldDoc && changes.newDoc && listener.onChange) {
+      return listener.onChange(changes.oldDoc, changes.newDoc);
+    }
+    if (changes.oldDoc && !changes.newDoc && listener.onDelete) {
+      return listener.onDelete(changes.oldDoc);
+    }
+  };
 }

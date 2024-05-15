@@ -7,7 +7,6 @@ import type {
   OrderBy,
   Doc,
   AnyDoc,
-  MirrorOptions,
   DeepPartial,
 } from "../types";
 import { ErrorTypes, BazaarError } from "../utils";
@@ -85,47 +84,46 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   /**
    * @alpha
    */
-  private async mirrorAll(filter: FilterObject, data: T[], mirrorOptions: MirrorOptions<T> = {}) {
+  private async mirrorAll(filter: FilterObject, data: T[], listener: SubscribeListener<T> = {}) {
     const docs = await this.getAll(filter);
-    if (mirrorOptions.onAdd) {
+    data.push(...docs);
+    if (listener.onAdd) {
       for (const doc of docs) {
-        mirrorOptions.onAdd(doc).catch((err) => console.log("failed onAdd:", err));
+        listener.onAdd(doc);
       }
     }
 
-    data.push(...docs);
-    return await this.subscribeAll(filter, (changes) => {
-      if (!changes.oldDoc) {
-        // New doc
-        data.push(changes.newDoc!);
-        if (mirrorOptions.onAdd) {
-          mirrorOptions.onAdd(changes.newDoc!).catch((err) => console.log("failed onAdd:", err));
+    return await this.subscribeAll(filter, {
+      onAdd: (doc) => {
+        data.push(doc);
+        if (listener.onAdd) {
+          listener.onAdd(doc);
         }
         return;
-      }
-      const idx = data.findIndex((doc) => doc.id === changes.oldDoc!.id);
-
-      if (!changes.newDoc) {
-        // Deleted doc
+      },
+      onDelete: (doc) => {
+        const idx = data.findIndex((d) => d.id === doc.id);
         if (idx > -1) {
           data.splice(idx, 1);
         }
-        if (mirrorOptions.onDelete) {
-          mirrorOptions.onDelete(changes.oldDoc!).catch((err) => console.log("failed onDelete:", err));
+        if (listener.onDelete) {
+          listener.onDelete(doc);
         }
         return;
-      }
-      // Changed doc
-      if (idx > -1) {
-        data[idx] = changes.newDoc!;
-      } else {
-        // It is missing for some reason, add it.
-        data.push(changes.newDoc!);
-      }
-      if (mirrorOptions.onChange) {
-        mirrorOptions.onChange(changes.oldDoc!, changes.newDoc!).catch((err) => console.log("failed onChange:", err));
-      }
-      return;
+      },
+      onChange: (oldDoc, newDoc) => {
+        const idx = data.findIndex((d) => d.id === oldDoc.id);
+        if (idx > -1) {
+          data[idx] = newDoc;
+        } else {
+          // It is missing for some reason, add it.
+          data.push(newDoc);
+        }
+        if (listener.onChange) {
+          listener.onChange(oldDoc, newDoc);
+        }
+        return;
+      },
     });
   }
 
