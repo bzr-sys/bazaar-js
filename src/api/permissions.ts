@@ -68,7 +68,7 @@ export class PermissionsAPI {
     /**
      * Creates a link
      */
-    create: async (permission: PermissionTemplate, description: string = "", limit: number = 0) => {
+    create: async (permission: PermissionTemplate, description: string = "", limit: number = 1) => {
       const { data: basicLink } = await this.api.linksCreate(permission, description, limit);
       return { url: this.linkUri + basicLink.id, ...basicLink };
     },
