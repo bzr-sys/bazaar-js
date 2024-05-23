@@ -52,7 +52,7 @@ export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 export type Permission = {
   id: string;
   collectionName: string;
-  userId: string;
+  userId: string; // ID of user or * (all users) or $planId // TODO how about #contacts, #connected, or #groupId
   types: PermissionType[];
   filter?: FilterObject;
 };
