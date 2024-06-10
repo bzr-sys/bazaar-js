@@ -101,6 +101,13 @@ export class PermissionsAPI {
       } = {},
       listener: SubscribeListener<Link>,
     ) => {
+      if (listener.onInitial) {
+        const links = await this.links.list(options);
+        for (const link of links) {
+          listener.onInitial({ url: this.linkUri + link.id, ...link });
+        }
+      }
+
       const newListener: SubscribeListener<BasicLink> = {};
       if (listener.onAdd) {
         newListener.onAdd = (doc) => {
@@ -156,6 +163,12 @@ export class PermissionsAPI {
       } = {},
       listener: SubscribeListener<GrantedPermission>,
     ) => {
+      if (listener.onInitial) {
+        const permissions = await this.granted.list(options);
+        for (const permission of permissions) {
+          listener.onInitial(permission);
+        }
+      }
       return this.api.grantedPermissionsSubscribe(options, listener);
     },
   };

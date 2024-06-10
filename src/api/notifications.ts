@@ -44,6 +44,12 @@ export class NotificationsAPI {
     } = {},
     listener: SubscribeListener<Notification>,
   ) {
+    if (listener.onInitial) {
+      const notifications = await this.list(options);
+      for (const notification of notifications) {
+        listener.onInitial(notification);
+      }
+    }
     return this.api.notificationsSubscribe(options, listener);
   }
 
