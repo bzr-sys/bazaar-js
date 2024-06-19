@@ -55,7 +55,7 @@ jobs:
           cd website
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add ./api
+          git add ./public/api
           git commit -m "Update TypeDoc generated API reference"
 
       - name: Push Changes
