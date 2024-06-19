@@ -48,7 +48,7 @@ jobs:
 
       - name: Copy Reference to Website
         run: |
-          cp -R typedoc-temp/. website/api/
+          cp -R typedoc-temp/. website/public/api/
 
       - name: Commit Changes
         run: |
