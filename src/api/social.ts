@@ -51,6 +51,12 @@ export class SocialAPI {
      * @returns an unsubscribe function
      */
     subscribe: async (listener: SubscribeListener<Contact>) => {
+      if (listener.onInitial) {
+        const contacts = await this.contacts.list();
+        for (const contact of contacts) {
+          listener.onInitial(contact);
+        }
+      }
       return this.api.contactsSubscribe(listener);
     },
   };

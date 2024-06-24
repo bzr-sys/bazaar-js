@@ -1,3 +1,5 @@
+import type { Doc, SubscribeListener } from "../types";
+
 /**
  * Constant of all the error types
  * @internal
@@ -59,4 +61,71 @@ export function popupWindow(url: string, windowName: string, win: Window): Windo
   const y = win.top.outerHeight / 2 + win.top.screenY - h / 2;
   const x = win.top.outerWidth / 2 + win.top.screenX - w / 2;
   return win.open(url, windowName, `popup=yes, width=${w}, height=${h}, top=${y}, left=${x}`);
+}
+
+export function arrayMirrorSubscribeListener<T extends Doc>(data: T[], listener?: SubscribeListener<T>) {
+  return {
+    onInitial: (doc: T) => {
+      data.push(doc);
+      if (listener && listener.onInitial) {
+        listener.onAdd(doc);
+      }
+    },
+    onAdd: (doc: T) => {
+      data.push(doc);
+      if (listener && listener.onAdd) {
+        listener.onAdd(doc);
+      }
+    },
+    onChange: (oldDoc: T, newDoc: T) => {
+      const idx = data.findIndex((d) => d.id === oldDoc.id);
+      if (idx > -1) {
+        data[idx] = newDoc;
+      } else {
+        // It is missing for some reason, add it.
+        data.push(newDoc);
+      }
+      if (listener && listener.onChange) {
+        listener.onChange(oldDoc, newDoc);
+      }
+    },
+    onDelete: (doc: T) => {
+      const idx = data.findIndex((d) => d.id === doc.id);
+      if (idx > -1) {
+        data.splice(idx, 1);
+      }
+      if (listener && listener.onDelete) {
+        listener.onDelete(doc);
+      }
+    },
+  };
+}
+
+export function objectMirrorSubscribeListener<T extends Doc>(data: T | undefined, listener?: SubscribeListener<T>) {
+  return {
+    onInitial: (doc: T) => {
+      data = doc;
+      if (listener && listener.onInitial) {
+        listener.onAdd(doc);
+      }
+    },
+    onAdd: (doc: T) => {
+      data = doc;
+      if (listener && listener.onAdd) {
+        listener.onAdd(doc);
+      }
+    },
+    onChange: (oldDoc: T, newDoc: T) => {
+      data = newDoc;
+      if (listener && listener.onChange) {
+        listener.onChange(oldDoc, newDoc);
+      }
+    },
+    onDelete: (doc: T) => {
+      data = undefined;
+      if (listener && listener.onDelete) {
+        listener.onDelete(doc);
+      }
+    },
+  };
 }

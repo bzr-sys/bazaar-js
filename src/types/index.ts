@@ -84,15 +84,16 @@ export enum PermissionType {
  */
 export enum SendNotification {
   /**
-   * Send an invitation if the target user does not use the app
+   * Send an notification if the target user does not use the app.
+   * This is akin to inviting the target user to use the app.
    */
   INVITE_ONLY = "invite-only",
   /**
-   * Always send an invitation to the target user
+   * Always send an notification to the target user
    */
   ALWAYS = "always",
   /**
-   * Never send an invitation to the target user
+   * Never send an notification to the target user
    */
   NEVER = "never",
 }
@@ -210,6 +211,7 @@ export type SubscribeListener<T extends Doc> = {
   onAdd?: (doc: T) => void;
   onChange?: (oldDoc: T, newDoc: T) => void;
   onDelete?: (doc: T) => void;
+  onInitial?: (doc: T) => void;
 };
 
 /**

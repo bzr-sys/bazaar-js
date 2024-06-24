@@ -67,6 +67,12 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
    * @returns An unsubscribe function
    */
   async subscribeOne(docId: string, listener: SubscribeListener<T>) {
+    if (listener.onInitial) {
+      const doc = await this.getOne(docId);
+      if (doc) {
+        listener.onInitial(doc);
+      }
+    }
     return this.withCollection(() =>
       this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionOptions, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
@@ -76,55 +82,15 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
    * @returns An unsubscribe function
    */
   async subscribeAll(filter: FilterObject, listener: SubscribeListener<T>) {
+    if (listener.onInitial) {
+      const docs = await this.getAll(filter);
+      for (const doc of docs) {
+        listener.onInitial(doc);
+      }
+    }
     return this.withCollection(() =>
       this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionOptions }, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
-  }
-
-  /**
-   * @alpha
-   */
-  private async mirrorAll(filter: FilterObject, data: T[], listener: SubscribeListener<T> = {}) {
-    const docs = await this.getAll(filter);
-    data.push(...docs);
-    if (listener.onAdd) {
-      for (const doc of docs) {
-        listener.onAdd(doc);
-      }
-    }
-
-    return await this.subscribeAll(filter, {
-      onAdd: (doc) => {
-        data.push(doc);
-        if (listener.onAdd) {
-          listener.onAdd(doc);
-        }
-        return;
-      },
-      onDelete: (doc) => {
-        const idx = data.findIndex((d) => d.id === doc.id);
-        if (idx > -1) {
-          data.splice(idx, 1);
-        }
-        if (listener.onDelete) {
-          listener.onDelete(doc);
-        }
-        return;
-      },
-      onChange: (oldDoc, newDoc) => {
-        const idx = data.findIndex((d) => d.id === oldDoc.id);
-        if (idx > -1) {
-          data[idx] = newDoc;
-        } else {
-          // It is missing for some reason, add it.
-          data.push(newDoc);
-        }
-        if (listener.onChange) {
-          listener.onChange(oldDoc, newDoc);
-        }
-        return;
-      },
-    });
   }
 
   /**
