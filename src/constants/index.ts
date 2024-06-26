@@ -1,7 +1,7 @@
 /**
  * The URI of the current Bazaar deployment
  */
-export const bazaarUri = process.env.NODE_ENV == "development" ? "http://localhost:3377" : "https://cloud.bzr.dev";
+export const bazaarUri = process.env.NODE_ENV === "development" ? "http://localhost:3377" : "https://cloud.bzr.dev";
 
 /**
  * The URL path for sharing links
