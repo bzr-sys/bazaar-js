@@ -64,11 +64,13 @@ export function popupWindow(url: string, windowName: string, win: Window): Windo
 }
 
 export function arrayMirrorSubscribeListener<T extends Doc>(data: T[], listener?: SubscribeListener<T>) {
+  // Clear the array before returning the listener
+  data.length = 0;
   return {
     onInitial: (doc: T) => {
       data.push(doc);
       if (listener && listener.onInitial) {
-        listener.onAdd(doc);
+        listener.onInitial(doc);
       }
     },
     onAdd: (doc: T) => {
@@ -106,7 +108,7 @@ export function objectMirrorSubscribeListener<T extends Doc>(data: T | undefined
     onInitial: (doc: T) => {
       data = doc;
       if (listener && listener.onInitial) {
-        listener.onAdd(doc);
+        listener.onInitial(doc);
       }
     },
     onAdd: (doc: T) => {
