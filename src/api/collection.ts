@@ -8,6 +8,7 @@ import type {
   Doc,
   AnyDoc,
   DeepPartial,
+  CollectionIdOptions,
 } from "../types";
 import { ErrorTypes, BazaarError } from "../utils";
 
@@ -17,17 +18,24 @@ import { ErrorTypes, BazaarError } from "../utils";
 export class CollectionAPI<T extends Doc = AnyDoc> {
   private api: API;
   private collectionName: string;
-  private collectionOptions: CollectionOptions;
+  private onCreate: () => Promise<void>;
+  private collectionIdOptions: CollectionIdOptions;
 
   constructor(api: API, collectionName: string, collectionOptions: CollectionOptions = {}) {
     this.api = api;
     this.collectionName = collectionName;
-    this.collectionOptions = collectionOptions;
+    this.onCreate = collectionOptions.onCreate;
+    this.collectionIdOptions = {
+      teamId: collectionOptions.teamId,
+    };
+    if (!collectionOptions.teamId && collectionOptions.userId) {
+      this.collectionIdOptions.teamId = collectionOptions.userId;
+    }
   }
 
   async getOne(docId: string) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.collectionOptions);
+      const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.collectionIdOptions);
       return res.data;
     }) as Promise<T | null>;
   }
@@ -42,7 +50,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   ) {
     return this.withCollection(async () => {
       const res = await this.api.collectionGetAll<T>(this.collectionName, {
-        ...this.collectionOptions,
+        ...this.collectionIdOptions,
         ...options,
         filter,
       });
@@ -74,7 +82,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       }
     }
     return this.withCollection(() =>
-      this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionOptions, listener),
+      this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionIdOptions, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
   }
 
@@ -89,7 +97,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       }
     }
     return this.withCollection(() =>
-      this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionOptions }, listener),
+      this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionIdOptions }, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
   }
 
@@ -98,32 +106,32 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
    */
   async insertOne(doc: Omit<T, "id"> | T) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionOptions);
+      const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionIdOptions);
       return res.data;
     }) as Promise<string>;
   }
 
   async updateOne(docId: string, doc: DeepPartial<T>) {
     return this.withCollection(() =>
-      this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionOptions),
+      this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionIdOptions),
     ) as Promise<BazaarMessage>;
   }
 
   async replaceOne(docId: string, doc: Omit<T, "id"> | T) {
     return this.withCollection(() =>
-      this.api.collectionReplaceOne(this.collectionName, docId, doc, this.collectionOptions),
+      this.api.collectionReplaceOne(this.collectionName, docId, doc, this.collectionIdOptions),
     ) as Promise<BazaarMessage>;
   }
 
   async deleteOne(docId: string) {
     return this.withCollection(() =>
-      this.api.collectionDeleteOne(this.collectionName, docId, this.collectionOptions),
+      this.api.collectionDeleteOne(this.collectionName, docId, this.collectionIdOptions),
     ) as Promise<BazaarMessage>;
   }
 
   async deleteAll(filter: FilterObject = {}) {
     return this.withCollection(() =>
-      this.api.collectionDeleteAll(this.collectionName, { filter, ...this.collectionOptions }),
+      this.api.collectionDeleteAll(this.collectionName, { filter, ...this.collectionIdOptions }),
     ) as Promise<BazaarMessage>;
   }
 
@@ -132,19 +140,10 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     try {
       return await collectionQuery();
     } catch (error) {
-      if (this.collectionOptions.userId) {
-        // We cannot create collections for other users
-        //
-        // Note: userId could be your own ID which would give you permission to create a collection.
-        // However, if userId is set it is safe to say the user does not know if it is the own ID (dynamic)
-        // and thus a collection should not be created.
-        // TODO: this should be reviewed with real-world usage.
-        throw error;
-      }
       if (error instanceof BazaarError && error.type == ErrorTypes.CollectionDoesNotExist) {
-        await this.api.collectionsCreate(this.collectionName);
-        if (this.collectionOptions.onCreate) {
-          await this.collectionOptions.onCreate();
+        await this.api.collectionsCreate(this.collectionName, this.collectionIdOptions);
+        if (this.onCreate) {
+          await this.onCreate();
         }
         return collectionQuery();
       }
