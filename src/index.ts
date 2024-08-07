@@ -89,7 +89,7 @@ export class BazaarApp {
   /**
    * Access to the organizational API
    */
-  org: SocialAPI;
+  org: OrganizationAPI;
 
   constructor(options: BazaarOptions) {
     if (!options.bazaarUri) {
