@@ -33,6 +33,8 @@ export { OrderByType, PermissionType, LoginType, SendNotification } from "./type
 export type {
   User,
   Contact,
+  Team,
+  Org,
   Permission,
   NewPermission,
   PermissionTemplate,
