@@ -13,13 +13,15 @@ import type {
   PermissionTemplate,
   Doc,
   BasicLink,
-  CollectionCommonOptions,
+  CollectionIdOptions,
   CollectionGetAllOptions,
-  CollectionCommonAllOptions,
+  CollectionQueryOptions,
   SharingNotification,
   Notification,
   CreateNotification,
   RawSubscribeListener,
+  Org,
+  Team,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -179,7 +181,7 @@ export class API {
    * @param options - An optional object for specifying query options.
    * @returns Specify a doc ID to get a specific doc, otherwise all docs are returned. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user.
    */
-  async collectionGetOne<T extends Doc>(collectionName: string, docId: string, options: CollectionCommonOptions = {}) {
+  async collectionGetOne<T extends Doc>(collectionName: string, docId: string, options: CollectionIdOptions = {}) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
     return this.asyncEmit(this.version + ":collection:getOne", payload) as Promise<{ data: T | null }>;
@@ -210,7 +212,7 @@ export class API {
   async collectionSubscribeOne<T extends Doc>(
     collectionName: string,
     docId: string,
-    options: CollectionCommonOptions = {},
+    options: CollectionIdOptions = {},
     listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName, docId };
@@ -242,7 +244,7 @@ export class API {
    */
   async collectionSubscribeAll<T extends Doc>(
     collectionName: string,
-    options: CollectionCommonAllOptions = {},
+    options: CollectionQueryOptions = {},
     listener: SubscribeListener<T>,
   ) {
     const payload = { collectionName };
@@ -272,7 +274,7 @@ export class API {
    * @param options - An optional object for specifying query options.
    * @returns Where `data` is the array of new doc IDs (only generated IDs)
    */
-  async collectionInsertOne(collectionName: string, doc: object, options: CollectionCommonOptions = {}) {
+  async collectionInsertOne(collectionName: string, doc: object, options: CollectionIdOptions = {}) {
     const payload = { collectionName, doc };
     Object.assign(payload, options);
 
@@ -287,7 +289,7 @@ export class API {
    * @param doc - Document changes
    * @param options - An optional object for specifying query options.
    */
-  async collectionUpdateOne(collectionName: string, docId: string, doc: object, options: CollectionCommonOptions = {}) {
+  async collectionUpdateOne(collectionName: string, docId: string, doc: object, options: CollectionIdOptions = {}) {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
@@ -302,12 +304,7 @@ export class API {
    * @param doc - The new doc.
    * @param options - An optional object for specifying query options.
    */
-  async collectionReplaceOne(
-    collectionName: string,
-    docId: string,
-    doc: object,
-    options: CollectionCommonOptions = {},
-  ) {
+  async collectionReplaceOne(collectionName: string, docId: string, doc: object, options: CollectionIdOptions = {}) {
     const payload = { collectionName, docId, doc };
     Object.assign(payload, options);
 
@@ -321,7 +318,7 @@ export class API {
    * @param docId - ID of document to delete
    * @param options - An optional object for specifying query options.
    */
-  async collectionDeleteOne(collectionName: string, docId: string, options: CollectionCommonOptions = {}) {
+  async collectionDeleteOne(collectionName: string, docId: string, options: CollectionIdOptions = {}) {
     const payload = { collectionName, docId };
     Object.assign(payload, options);
 
@@ -334,7 +331,7 @@ export class API {
    * @param collectionName - The name of the collection to operate on.
    * @param options - An optional object for specifying query options.
    */
-  async collectionDeleteAll(collectionName: string, options: CollectionCommonAllOptions = {}) {
+  async collectionDeleteAll(collectionName: string, options: CollectionQueryOptions = {}) {
     const payload = { collectionName };
     Object.assign(payload, options);
 
@@ -348,23 +345,27 @@ export class API {
   /**
    * Creates a collection.
    */
-  async collectionsCreate(collectionName: string) {
-    return this.asyncEmit(this.version + ":collections:create", { collectionName }) as Promise<BazaarMessage>;
+  async collectionsCreate(collectionName: string, options: CollectionIdOptions = {}) {
+    const payload = { collectionName };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":collections:create", payload) as Promise<BazaarMessage>;
   }
 
   /**
    * Drops a collection.
    */
-  async collectionsDrop(collectionName: string) {
-    return this.asyncEmit(this.version + ":collections:drop", { collectionName }) as Promise<BazaarMessage>;
+  async collectionsDrop(collectionName: string, options: CollectionIdOptions = {}) {
+    const payload = { collectionName };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":collections:drop", payload) as Promise<BazaarMessage>;
   }
 
   /**
    * Lists all collection names.
    * @returns Where `data` is an array of collection names
    */
-  async collectionsList() {
-    return this.asyncEmit(this.version + ":collections:list", null) as Promise<{ data: string[] }>;
+  async collectionsList(options: CollectionIdOptions = {}) {
+    return this.asyncEmit(this.version + ":collections:list", options) as Promise<{ data: string[] }>;
   }
 
   //
@@ -374,24 +375,34 @@ export class API {
   /**
    * Lists permissions.
    *
-   * @param options - If no options are set, all permissions are returned.
-   * @returns All permissions matching options.
+   * @param query - If no options are set, all permissions are returned.
+   * @param options - database ID options.
+   * @returns All permissions matching query options.
    */
   async permissionsList(
-    options: {
+    query: {
       collectionName?: string;
       userId?: string;
       type?: PermissionType;
     } = {},
+    options: CollectionIdOptions = {},
   ) {
-    return this.asyncEmit(this.version + ":permissions:list", options) as Promise<{ data: Permission[] }>;
+    const payload = { query };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":permissions:list", payload) as Promise<{ data: Permission[] }>;
   }
 
   /**
    * Creates a permission.
    */
-  async permissionsCreate(permission: NewPermission, notification: SharingNotification) {
-    return this.asyncEmit(this.version + ":permissions:create", { permission, notification }) as Promise<{
+  async permissionsCreate(
+    permission: NewPermission,
+    notification: SharingNotification,
+    options: CollectionIdOptions = {},
+  ) {
+    const payload = { permission, notification };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":permissions:create", payload) as Promise<{
       id: string;
     }>;
   }
@@ -401,14 +412,23 @@ export class API {
    *
    * @param permissionId - The ID of the permission to delete.
    */
-  async permissionsDelete(permissionId: string) {
-    return this.asyncEmit(this.version + ":permissions:delete", { permissionId }) as Promise<BazaarMessage>;
+  async permissionsDelete(permissionId: string, options: CollectionIdOptions = {}) {
+    const payload = { permissionId };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":permissions:delete", payload) as Promise<BazaarMessage>;
   }
 
   /**
    * Creates a permission link.
    */
-  async linksCreate(permission: PermissionTemplate, description: string = "", limit: number = 1) {
+  async linksCreate(
+    permission: PermissionTemplate,
+    description: string = "",
+    limit: number = 1,
+    options: CollectionIdOptions = {},
+  ) {
+    const payload = { permission, description, limit };
+    Object.assign(payload, options);
     return this.asyncEmit(this.version + ":links:create", { permission, description, limit }) as Promise<{
       data: BasicLink;
     }>;
@@ -417,33 +437,41 @@ export class API {
   /**
    * Lists permission links.
    *
-   * @param options - If no options are set, all links are returned.
+   * @param query - If no options are set, all links are returned.
+   * @param options - database ID options.
    * @returns Where `data` is an array of links
    */
   async linksList(
-    options: {
+    query: {
       collectionName?: string;
       type?: PermissionType;
     } = {},
+    options: CollectionIdOptions = {},
   ) {
-    return this.asyncEmit(this.version + ":links:list", options) as Promise<{ data: BasicLink[] }>;
+    const payload = { query };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":links:list", payload) as Promise<{ data: BasicLink[] }>;
   }
 
   /**
    * Subscribes to link changes
    *
+   * @param query -
    * @param options -
    * @param listener - The callback function that receives link change events.
    * @returns An unsubscribe function
    */
   async linksSubscribe(
-    options: {
+    query: {
       collectionName?: string;
       type?: PermissionType;
     } = {},
+    options: CollectionIdOptions = {},
     listener: SubscribeListener<BasicLink>,
   ) {
-    const response = (await this.asyncEmit(this.version + ":links:subscribe", options)) as {
+    const payload = { query };
+    Object.assign(payload, options);
+    const response = (await this.asyncEmit(this.version + ":links:subscribe", payload)) as {
       data: string;
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
@@ -634,6 +662,27 @@ export class API {
       this.dataApi.off(subscriptionHandle, rawListener);
       return this.asyncEmit(this.version + ":contacts:unsubscribe", subscriptionHandle) as Promise<BazaarMessage>;
     };
+  }
+
+  //
+  // Organization API
+  //
+
+  /**
+   * Gets the org info for a given ID or handle.
+   * @param payload - The ID or handle of the org, requires one of the two.
+   */
+  async organizationsGet(payload: { userId?: string; handle?: string }) {
+    return this.asyncEmit(this.version + ":organizations:get", payload) as Promise<{ data: Org }>;
+  }
+
+  /**
+   * Lists teams
+   * @returns a list of teams
+   */
+  async teamsList() {
+    const payload = {};
+    return this.asyncEmit(this.version + ":teams:list", payload) as Promise<{ data: Team[] }>;
   }
 
   //

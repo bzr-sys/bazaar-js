@@ -7,6 +7,7 @@ import { Auth } from "./auth";
 import { bazaarUri } from "./constants";
 import type { BazaarOptions, CollectionOptions, Doc, LoginType } from "./types";
 import { NotificationsAPI } from "./api/notifications";
+import { OrganizationAPI } from "./api/organization";
 
 /**
  * Types of errors that can return from the API
@@ -32,6 +33,8 @@ export { OrderByType, PermissionType, LoginType, SendNotification } from "./type
 export type {
   User,
   Contact,
+  Team,
+  Org,
   Permission,
   NewPermission,
   PermissionTemplate,
@@ -85,6 +88,11 @@ export class BazaarApp {
    */
   social: SocialAPI;
 
+  /**
+   * Access to the organizational API
+   */
+  org: OrganizationAPI;
+
   constructor(options: BazaarOptions) {
     if (!options.bazaarUri) {
       options.bazaarUri = bazaarUri;
@@ -133,6 +141,7 @@ export class BazaarApp {
     this.permissions = new PermissionsAPI(this.api, options.bazaarUri);
     this.notifications = new NotificationsAPI(this.api);
     this.social = new SocialAPI(this.api);
+    this.org = new OrganizationAPI(this.api);
   }
 
   /**

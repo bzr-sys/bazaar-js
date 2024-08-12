@@ -326,38 +326,50 @@ export type Contact = {
   user: User;
 };
 
+export type Org = {
+  id: string;
+  name: string;
+  handle: string;
+};
+/**
+ *
+ */
+export type Team = {
+  id: string;
+  name: string;
+  ownerType: "user" | "org";
+  owner: string; // The one that pays. Can be user or org ID, depending on type.
+  primary: boolean; // Specify it as the primary user or org team. Cannot be deleted. User team cannot be modified.
+  admins: string[]; // IDs with read/write access to resources & modify team
+  members: string[]; // IDs with read/write access to resouces
+};
+
 export type CollectionOptions = {
   onCreate?: () => Promise<void>;
-  userId?: string;
+  teamId?: string; // Specify the team the collection belongs to. Defaults to own team/user
+  userId?: string; // An alias for teamId. Cannot be used with teamId.
 };
 
 /**
- * Options for several methods in {@link API}
+ * Options that helps identify the collection. Used for several methods in {@link API}
+ * Note: userId is removed since it is just an alias for teamId
  */
-export type CollectionCommonOptions = {
-  /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
-  userId?: string;
+export type CollectionIdOptions = Omit<CollectionOptions, "onCreate" | "userId">;
+
+/**
+ * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
+ */
+export type CollectionQueryOptions = CollectionIdOptions & {
+  filter?: FilterObject;
 };
 
 /**
  * Options for {@link API.collectionGetAll}
  */
-export type CollectionGetAllOptions = {
+export type CollectionGetAllOptions = CollectionQueryOptions & {
   /** An optional start offset. Default is 0 (inclusive). */
   startOffset?: number;
   /** An optional end offset. Default is `null` (exclusive). */
   endOffset?: number;
   orderBy?: OrderBy;
-  filter?: FilterObject;
-  /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
-  userId?: string;
-};
-
-/**
- * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
- */
-export type CollectionCommonAllOptions = {
-  filter?: FilterObject;
-  /** An optional user ID of the owner of the collection to read. Defaults to own ID. */
-  userId?: string;
 };

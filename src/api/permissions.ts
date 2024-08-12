@@ -9,6 +9,7 @@ import {
   type PermissionType,
   type SharingNotification,
   type SubscribeListener,
+  CollectionIdOptions,
 } from "../types";
 import { API } from "./raw";
 
@@ -33,8 +34,9 @@ export class PermissionsAPI {
   async create(
     permission: NewPermission,
     notification: SharingNotification = { createNotification: false, sendMessage: SendNotification.NEVER },
+    options: CollectionIdOptions,
   ) {
-    return this.api.permissionsCreate(permission, notification);
+    return this.api.permissionsCreate(permission, notification, options);
   }
 
   /**
@@ -43,13 +45,14 @@ export class PermissionsAPI {
    * @returns All permissions are returned if no options are passed.
    */
   async list(
-    options: {
+    query: {
       collectionName?: string;
       userId?: string;
       type?: PermissionType;
     } = {},
+    options: CollectionIdOptions,
   ) {
-    const res = await this.api.permissionsList(options);
+    const res = await this.api.permissionsList(query, options);
     return res.data;
   }
 
@@ -57,8 +60,8 @@ export class PermissionsAPI {
    * Deletes permission with a given ID
    * @param permissionId - ID of the permission to delete
    */
-  async delete(permissionId: string) {
-    return this.api.permissionsDelete(permissionId);
+  async delete(permissionId: string, options: CollectionIdOptions) {
+    return this.api.permissionsDelete(permissionId, options);
   }
 
   /**
@@ -68,8 +71,13 @@ export class PermissionsAPI {
     /**
      * Creates a link
      */
-    create: async (permission: PermissionTemplate, description: string = "", limit: number = 1) => {
-      const { data: basicLink } = await this.api.linksCreate(permission, description, limit);
+    create: async (
+      permission: PermissionTemplate,
+      description: string = "",
+      limit: number = 1,
+      options: CollectionIdOptions,
+    ) => {
+      const { data: basicLink } = await this.api.linksCreate(permission, description, limit, options);
       return { url: this.linkUri + basicLink.id, ...basicLink };
     },
 
@@ -77,12 +85,13 @@ export class PermissionsAPI {
      * Lists links
      */
     list: async (
-      options: {
+      query: {
         collectionName?: string;
         type?: PermissionType;
       } = {},
+      options: CollectionIdOptions,
     ): Promise<Link[]> => {
-      const { data: basicLinks } = await this.api.linksList(options);
+      const { data: basicLinks } = await this.api.linksList(query, options);
       let links: Link[] = [];
       for (let l of basicLinks) {
         links.push({ url: this.linkUri + l.id, ...l });
@@ -95,14 +104,15 @@ export class PermissionsAPI {
      * @returns an unsubscribe function
      */
     subscribe: async (
-      options: {
+      query: {
         collectionName?: string;
         type?: PermissionType;
       } = {},
+      options: CollectionIdOptions,
       listener: SubscribeListener<Link>,
     ) => {
       if (listener.onInitial) {
-        const links = await this.links.list(options);
+        const links = await this.links.list(query, options);
         for (const link of links) {
           listener.onInitial({ url: this.linkUri + link.id, ...link });
         }
@@ -127,7 +137,7 @@ export class PermissionsAPI {
           );
         };
       }
-      return this.api.linksSubscribe(options, newListener);
+      return this.api.linksSubscribe(query, options, newListener);
     },
 
     /**
