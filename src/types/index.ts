@@ -332,6 +332,7 @@ export type Org = {
   handle: string;
   primaryTeam: Team;
   active: boolean;
+  admins: string[];
 };
 /**
  *
