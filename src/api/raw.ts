@@ -665,8 +665,16 @@ export class API {
   }
 
   //
-  // Organization API
+  // Organizations API
   //
+
+  /**
+   * Gets all orgs user is member/admin.
+   */
+  async organizationsList() {
+    const payload = {};
+    return this.asyncEmit(this.version + ":organizations:list", payload) as Promise<{ data: Org[] }>;
+  }
 
   /**
    * Gets the org info for a given ID or handle.
@@ -680,8 +688,7 @@ export class API {
    * Lists teams
    * @returns a list of teams
    */
-  async teamsList() {
-    const payload = {};
+  async teamsList(payload: { type?: "user" | "org" }) {
     return this.asyncEmit(this.version + ":teams:list", payload) as Promise<{ data: Team[] }>;
   }
 
