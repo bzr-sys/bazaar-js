@@ -1,19 +1,19 @@
-import type { Doc, SubscribeListener } from "../types";
+import { type Doc, GranteeType, type SubscribeListener } from "../types";
 
 /**
  * Constant of all the error types
- * @internal
+ *
  */
-export const ErrorTypes = {
-  Unspecified: 1,
-  NoPermission: 2,
-  ReservedCollectionName: 3,
-  CollectionDoesNotExist: 4,
-  DatabaseDoesNotExist: 5,
-};
+export enum ErrorTypes {
+  Unspecified = 1,
+  NoPermission = 2,
+  ReservedCollectionName = 3,
+  CollectionDoesNotExist = 4,
+  DatabaseDoesNotExist = 5,
+}
 
 /**
- * @internal
+ *
  */
 export class BazaarError extends Error {
   type: number;
@@ -130,4 +130,20 @@ export function objectMirrorSubscribeListener<T extends Doc>(data: T | undefined
       }
     },
   };
+}
+
+export function grantee(type?: GranteeType, id?: string): string {
+  switch (type) {
+    case GranteeType.ANY:
+      return type;
+    case GranteeType.GROUP:
+      return `${type}${id}`;
+    case GranteeType.ORG:
+    case GranteeType.USER:
+    default:
+      // if (!id) {
+      //   console.log("Permission user ID missing");
+      // }
+      return id;
+  }
 }

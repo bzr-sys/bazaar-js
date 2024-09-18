@@ -6,10 +6,13 @@ import {
   type Link,
   type NewPermission,
   type PermissionTemplate,
-  type PermissionType,
   type SharingNotification,
   type SubscribeListener,
   CollectionIdOptions,
+  NewPermissionGroup,
+  GrantedPermissionsQuery,
+  LinksQuery,
+  PermissionsQuery,
 } from "../types";
 import { API } from "./raw";
 
@@ -44,14 +47,7 @@ export class PermissionsAPI {
    * @param options - If no optional params are set, all permissions for the user are returned.
    * @returns All permissions are returned if no options are passed.
    */
-  async list(
-    query: {
-      collectionName?: string;
-      userId?: string;
-      type?: PermissionType;
-    } = {},
-    options: CollectionIdOptions,
-  ) {
+  async list(query: PermissionsQuery = {}, options: CollectionIdOptions) {
     const res = await this.api.permissionsList(query, options);
     return res.data;
   }
@@ -84,13 +80,7 @@ export class PermissionsAPI {
     /**
      * Lists links
      */
-    list: async (
-      query: {
-        collectionName?: string;
-        type?: PermissionType;
-      } = {},
-      options: CollectionIdOptions,
-    ): Promise<Link[]> => {
+    list: async (query: LinksQuery = {}, options: CollectionIdOptions): Promise<Link[]> => {
       const { data: basicLinks } = await this.api.linksList(query, options);
       let links: Link[] = [];
       for (let l of basicLinks) {
@@ -103,14 +93,7 @@ export class PermissionsAPI {
      * Subscribes to links changes
      * @returns an unsubscribe function
      */
-    subscribe: async (
-      query: {
-        collectionName?: string;
-        type?: PermissionType;
-      } = {},
-      options: CollectionIdOptions,
-      listener: SubscribeListener<Link>,
-    ) => {
+    subscribe: async (query: LinksQuery = {}, options: CollectionIdOptions, listener: SubscribeListener<Link>) => {
       if (listener.onInitial) {
         const links = await this.links.list(query, options);
         for (const link of links) {
@@ -152,34 +135,67 @@ export class PermissionsAPI {
    * Granted Permissions
    */
   public granted = {
-    list: async (
-      options: {
-        collectionName?: string;
-        ownerId?: string;
-        type?: PermissionType;
-      } = {},
-    ) => {
-      const res = await this.api.grantedPermissionsList(options);
+    list: async (query: GrantedPermissionsQuery = {}, options: CollectionIdOptions) => {
+      const res = await this.api.grantedPermissionsList(query, options);
       return res.data;
     },
-    delete: async (grantedPermissionId: string) => {
-      return this.api.grantedPermissionsDelete(grantedPermissionId);
-    },
+
     subscribe: async (
-      options: {
-        collectionName?: string;
-        ownerId?: string;
-        type?: PermissionType;
-      } = {},
+      query: GrantedPermissionsQuery = {},
+      options: CollectionIdOptions,
       listener: SubscribeListener<GrantedPermission>,
     ) => {
       if (listener.onInitial) {
-        const permissions = await this.granted.list(options);
+        const permissions = await this.granted.list(query, options);
         for (const permission of permissions) {
           listener.onInitial(permission);
         }
       }
-      return this.api.grantedPermissionsSubscribe(options, listener);
+      return this.api.grantedPermissionsSubscribe(query, options, listener);
+    },
+
+    delete: async (grantedPermissionId: string) => {
+      return this.api.grantedPermissionsDelete(grantedPermissionId);
+    },
+  };
+
+  /**
+   * Groups
+   */
+  public groups = {
+    /**
+     * Get group by Id
+     * @returns group for a given ID
+     */
+    get: async (groupId: string, options: CollectionIdOptions) => {
+      const res = await this.api.groupsGet(groupId, options);
+      return res.data;
+    },
+    /**
+     * Lists groups
+     * @returns a list of groups user is part of (in current app)
+     */
+    list: async (options: CollectionIdOptions) => {
+      const res = await this.api.groupsList(options);
+      return res.data;
+    },
+
+    /**
+     * Creates a new group
+     * Groups require at least one member.
+     */
+    create: async (group: NewPermissionGroup, options: CollectionIdOptions) => {
+      return this.api.groupsCreate(group, options);
+    },
+    addMember: async (id: string, userId: string, options: CollectionIdOptions) => {
+      return this.api.groupsAddMember(id, userId);
+    },
+    removeMember: async (id: string, userId: string, options: CollectionIdOptions) => {
+      return this.api.groupsRemoveMember(id, userId);
+    },
+
+    delete: async (groupId: string, options: CollectionIdOptions) => {
+      return this.api.groupsDelete(groupId, options);
     },
   };
 }

@@ -25,12 +25,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     this.api = api;
     this.collectionName = collectionName;
     this.onCreate = collectionOptions.onCreate;
-    this.collectionIdOptions = {
-      teamId: collectionOptions.teamId,
-    };
-    if (!collectionOptions.teamId && collectionOptions.userId) {
-      this.collectionIdOptions.teamId = collectionOptions.userId;
-    }
+    this.collectionIdOptions = collectionOptions;
   }
 
   async getOne(docId: string) {

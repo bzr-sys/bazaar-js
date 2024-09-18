@@ -9,7 +9,6 @@ import type {
   Contact,
   User,
   GrantedPermission,
-  PermissionType,
   PermissionTemplate,
   Doc,
   BasicLink,
@@ -22,6 +21,11 @@ import type {
   RawSubscribeListener,
   Org,
   Team,
+  PermissionGroup,
+  LinksQuery,
+  PermissionsQuery,
+  GrantedPermissionsQuery,
+  NewPermissionGroup,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -369,7 +373,7 @@ export class API {
   }
 
   //
-  // Sharing API (permissions, links, granted_permissions)
+  // Permissions API (permissions, links, granted_permissions, groups)
   //
 
   /**
@@ -379,14 +383,7 @@ export class API {
    * @param options - database ID options.
    * @returns All permissions matching query options.
    */
-  async permissionsList(
-    query: {
-      collectionName?: string;
-      userId?: string;
-      type?: PermissionType;
-    } = {},
-    options: CollectionIdOptions = {},
-  ) {
+  async permissionsList(query: PermissionsQuery = {}, options: CollectionIdOptions = {}) {
     const payload = { query };
     Object.assign(payload, options);
     return this.asyncEmit(this.version + ":permissions:list", payload) as Promise<{ data: Permission[] }>;
@@ -441,13 +438,7 @@ export class API {
    * @param options - database ID options.
    * @returns Where `data` is an array of links
    */
-  async linksList(
-    query: {
-      collectionName?: string;
-      type?: PermissionType;
-    } = {},
-    options: CollectionIdOptions = {},
-  ) {
+  async linksList(query: LinksQuery = {}, options: CollectionIdOptions = {}) {
     const payload = { query };
     Object.assign(payload, options);
     return this.asyncEmit(this.version + ":links:list", payload) as Promise<{ data: BasicLink[] }>;
@@ -462,10 +453,7 @@ export class API {
    * @returns An unsubscribe function
    */
   async linksSubscribe(
-    query: {
-      collectionName?: string;
-      type?: PermissionType;
-    } = {},
+    query: LinksQuery = {},
     options: CollectionIdOptions = {},
     listener: SubscribeListener<BasicLink>,
   ) {
@@ -497,14 +485,10 @@ export class API {
    *
    * @returns a list of granted permissions
    */
-  async grantedPermissionsList(
-    options: {
-      collectionName?: string;
-      ownerId?: string;
-      type?: PermissionType;
-    } = {},
-  ) {
-    return this.asyncEmit(this.version + ":granted_permissions:list", options) as Promise<{
+  async grantedPermissionsList(query: GrantedPermissionsQuery = {}, options: CollectionIdOptions) {
+    const payload = { query };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":granted_permissions:list", payload) as Promise<{
       data: GrantedPermission[];
     }>;
   }
@@ -516,14 +500,13 @@ export class API {
    * @returns An unsubscribe function
    */
   async grantedPermissionsSubscribe(
-    options: {
-      collectionName?: string;
-      ownerId?: string;
-      type?: PermissionType;
-    } = {},
+    query: GrantedPermissionsQuery = {},
+    options: CollectionIdOptions,
     listener: SubscribeListener<GrantedPermission>,
   ) {
-    const response = (await this.asyncEmit(this.version + ":granted_permissions:subscribe", options)) as {
+    const payload = { query };
+    Object.assign(payload, options);
+    const response = (await this.asyncEmit(this.version + ":granted_permissions:subscribe", payload)) as {
       data: string;
     }; // where data is the subscription handle
     const subscriptionHandle = response.data;
@@ -548,6 +531,76 @@ export class API {
   async grantedPermissionsDelete(grantedPermissionId: string) {
     const payload = { grantedPermissionId };
     return this.asyncEmit(this.version + ":granted_permissions:delete", payload) as Promise<BazaarMessage>;
+  }
+
+  /**
+   * Get a group
+   *
+   * @param groupId - The ID of the group to get.
+   */
+  async groupsGet(groupId: string, options: CollectionIdOptions = {}) {
+    const payload = { groupId };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":groups:get", payload) as Promise<{ data: PermissionGroup }>;
+  }
+
+  /**
+   * Lists groups.
+   *
+   * @param options - database ID options.
+   * @returns All groups matching query.
+   */
+  async groupsList(options: CollectionIdOptions = {}) {
+    return this.asyncEmit(this.version + ":groups:list", options) as Promise<{ data: PermissionGroup[] }>;
+  }
+
+  /**
+   * Creates a group.
+   */
+  async groupsCreate(group: NewPermissionGroup, options: CollectionIdOptions = {}) {
+    const payload = { group };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":groups:create", payload) as Promise<{
+      id: string;
+    }>;
+  }
+
+  /**
+   * Add member to a group.
+   *
+   * @param groupId - The ID of the group
+   * @param userId - The ID of the user
+   * @param options - database ID options.
+   */
+  async groupsAddMember(groupId: string, userId: string, options: CollectionIdOptions = {}) {
+    const payload = { groupId, userId };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":groups:addMember", payload) as Promise<BazaarMessage>;
+  }
+
+  /**
+   * Remove member from a group.
+   *
+   * @param groupId - The ID of the group
+   * @param userId - The ID of the user
+   * @param options - database ID options.
+   *
+   */
+  async groupsRemoveMember(groupId: string, userId: string, options: CollectionIdOptions = {}) {
+    const payload = { groupId, userId };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":groups:removeMember", payload) as Promise<BazaarMessage>;
+  }
+
+  /**
+   * Deletes a group.
+   *
+   * @param groupId - The ID of the group to delete.
+   */
+  async groupsDelete(groupId: string, options: CollectionIdOptions = {}) {
+    const payload = { groupId };
+    Object.assign(payload, options);
+    return this.asyncEmit(this.version + ":groups:delete", payload) as Promise<BazaarMessage>;
   }
 
   //

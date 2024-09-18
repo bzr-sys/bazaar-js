@@ -19,6 +19,7 @@ export {
   isNoPermissionError,
   arrayMirrorSubscribeListener,
   objectMirrorSubscribeListener,
+  grantee,
 } from "./utils";
 export { CollectionAPI } from "./api/collection";
 export { CollectionsAPI } from "./api/collections";
@@ -28,7 +29,7 @@ export { SocialAPI } from "./api/social";
 /**
  * Enums
  */
-export { OrderByType, PermissionType, LoginType, SendNotification } from "./types";
+export { OrderByType, PermissionType, LoginType, SendNotification, GranteeType } from "./types";
 
 export type {
   User,
@@ -39,6 +40,7 @@ export type {
   NewPermission,
   PermissionTemplate,
   GrantedPermission,
+  PermissionGroup,
   SharingNotification,
   FilterObject,
   FilterComparison,
