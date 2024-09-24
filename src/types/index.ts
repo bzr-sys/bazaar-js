@@ -59,7 +59,8 @@ export enum GranteeType {
 export type Permission = {
   id: string;
   collectionName: string;
-  grantee: string; // userId | orgId | #groupId, to be constructed with grantee(type: GranteeType, id: string)
+  /** userId | orgId | #groupId, to be constructed with grantee(type: GranteeType, id: string)  */
+  grantee: string;
   types: PermissionType[];
   filter?: FilterObject;
 };
@@ -72,9 +73,9 @@ export type NewPermission = Omit<Permission, "id">;
 
 /**
  * Represents the foundational structure of a permission template.
- * It's derived from the {@link NewPermission} and does not include user association.
+ * It's derived from the {@link NewPermission} and does not include grantee.
  */
-export type PermissionTemplate = Omit<NewPermission, "userId">;
+export type PermissionTemplate = Omit<NewPermission, "grantee">;
 
 /**
  *
