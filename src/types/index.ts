@@ -368,19 +368,20 @@ export type Team = {
 
 export type CollectionOptions = {
   onCreate?: () => Promise<void>;
-  ownerId?: string; // Specify the owner of the collection. Defaults to own user
 };
 
 /**
- * Options that helps identify the collection. Used for several methods in {@link API}
- * Note: userId is removed since it is just an alias for teamId
+ * Options that helps identify the context. Used for several methods in {@link API}
+ * Currently the context is only determined by the ownerId
  */
-export type CollectionIdOptions = Omit<CollectionOptions, "onCreate">;
+export type ContextOptions = {
+  ownerId?: string;
+};
 
 /**
  * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
  */
-export type CollectionQueryOptions = CollectionIdOptions & {
+export type CollectionQueryOptions = ContextOptions & {
   filter?: FilterObject;
 };
 

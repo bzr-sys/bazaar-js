@@ -8,7 +8,7 @@ import type {
   Doc,
   AnyDoc,
   DeepPartial,
-  CollectionIdOptions,
+  ContextOptions,
 } from "../types";
 import { ErrorTypes, BazaarError } from "../utils";
 
@@ -18,19 +18,24 @@ import { ErrorTypes, BazaarError } from "../utils";
 export class CollectionAPI<T extends Doc = AnyDoc> {
   private api: API;
   private collectionName: string;
-  private onCreate: () => Promise<void>;
-  private collectionIdOptions: CollectionIdOptions;
+  private collectionOptions: CollectionOptions;
+  private contextOptions: ContextOptions;
 
-  constructor(api: API, collectionName: string, collectionOptions: CollectionOptions = {}) {
+  constructor(
+    api: API,
+    collectionName: string,
+    collectionOptions: CollectionOptions = {},
+    contextOptions: ContextOptions = {},
+  ) {
     this.api = api;
     this.collectionName = collectionName;
-    this.onCreate = collectionOptions.onCreate;
-    this.collectionIdOptions = collectionOptions;
+    this.collectionOptions = collectionOptions;
+    this.contextOptions = contextOptions;
   }
 
   async getOne(docId: string) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.collectionIdOptions);
+      const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.contextOptions);
       return res.data;
     }) as Promise<T | null>;
   }
@@ -45,7 +50,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   ) {
     return this.withCollection(async () => {
       const res = await this.api.collectionGetAll<T>(this.collectionName, {
-        ...this.collectionIdOptions,
+        ...this.contextOptions,
         ...options,
         filter,
       });
@@ -77,7 +82,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       }
     }
     return this.withCollection(() =>
-      this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.collectionIdOptions, listener),
+      this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.contextOptions, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
   }
 
@@ -92,7 +97,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       }
     }
     return this.withCollection(() =>
-      this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.collectionIdOptions }, listener),
+      this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.contextOptions }, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
   }
 
@@ -101,32 +106,32 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
    */
   async insertOne(doc: Omit<T, "id"> | T) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionInsertOne(this.collectionName, doc, this.collectionIdOptions);
+      const res = await this.api.collectionInsertOne(this.collectionName, doc, this.contextOptions);
       return res.data;
     }) as Promise<string>;
   }
 
   async updateOne(docId: string, doc: DeepPartial<T>) {
     return this.withCollection(() =>
-      this.api.collectionUpdateOne(this.collectionName, docId, doc, this.collectionIdOptions),
+      this.api.collectionUpdateOne(this.collectionName, docId, doc, this.contextOptions),
     ) as Promise<BazaarMessage>;
   }
 
   async replaceOne(docId: string, doc: Omit<T, "id"> | T) {
     return this.withCollection(() =>
-      this.api.collectionReplaceOne(this.collectionName, docId, doc, this.collectionIdOptions),
+      this.api.collectionReplaceOne(this.collectionName, docId, doc, this.contextOptions),
     ) as Promise<BazaarMessage>;
   }
 
   async deleteOne(docId: string) {
     return this.withCollection(() =>
-      this.api.collectionDeleteOne(this.collectionName, docId, this.collectionIdOptions),
+      this.api.collectionDeleteOne(this.collectionName, docId, this.contextOptions),
     ) as Promise<BazaarMessage>;
   }
 
   async deleteAll(filter: FilterObject = {}) {
     return this.withCollection(() =>
-      this.api.collectionDeleteAll(this.collectionName, { filter, ...this.collectionIdOptions }),
+      this.api.collectionDeleteAll(this.collectionName, { filter, ...this.contextOptions }),
     ) as Promise<BazaarMessage>;
   }
 
@@ -136,9 +141,9 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       return await collectionQuery();
     } catch (error) {
       if (error instanceof BazaarError && error.type == ErrorTypes.CollectionDoesNotExist) {
-        await this.api.collectionsCreate(this.collectionName, this.collectionIdOptions);
-        if (this.onCreate) {
-          await this.onCreate();
+        await this.api.collectionsCreate(this.collectionName, this.contextOptions);
+        if (this.collectionOptions.onCreate) {
+          await this.collectionOptions.onCreate();
         }
         return collectionQuery();
       }
