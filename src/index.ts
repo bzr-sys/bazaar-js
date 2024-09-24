@@ -20,6 +20,7 @@ export {
   arrayMirrorSubscribeListener,
   objectMirrorSubscribeListener,
   grantee,
+  noSharingNotification,
 } from "./utils";
 export { CollectionAPI } from "./api/collection";
 export { CollectionsAPI } from "./api/collections";

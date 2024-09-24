@@ -1,4 +1,4 @@
-import { type Doc, GranteeType, type SubscribeListener } from "../types";
+import { type Doc, GranteeType, SendNotification, type SubscribeListener } from "../types";
 
 /**
  * Constant of all the error types
@@ -147,3 +147,5 @@ export function grantee(type?: GranteeType, id?: string): string {
       return id;
   }
 }
+
+export const noSharingNotification = { createNotification: false, sendMessage: SendNotification.NEVER };
