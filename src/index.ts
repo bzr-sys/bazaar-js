@@ -5,7 +5,7 @@ import { PermissionsAPI } from "./api/permissions";
 import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { bazaarUri } from "./constants";
-import type { BazaarOptions, CollectionOptions, Doc, LoginType } from "./types";
+import type { BazaarOptions, CollectionOptions, ContextOptions, Doc, LoginType } from "./types";
 import { NotificationsAPI } from "./api/notifications";
 import { OrganizationsAPI } from "./api/organizations";
 import { BazaarContext } from "./api/context";
@@ -233,7 +233,7 @@ export class BazaarApp {
     return new CollectionAPI<T>(this.api, collectionName, collectionOptions);
   }
 
-  withOwner(ownerId: string): BazaarContext {
-    return new BazaarContext(this.api, this.bazaarUri, { ownerId: ownerId });
+  createContext(options: ContextOptions): BazaarContext {
+    return new BazaarContext(this.api, this.bazaarUri, options);
   }
 }
