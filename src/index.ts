@@ -20,7 +20,6 @@ export {
   isNoPermissionError,
   arrayMirrorSubscribeListener,
   objectMirrorSubscribeListener,
-  grantee,
   noSharingNotification,
 } from "./utils";
 export { CollectionAPI } from "./api/collection";

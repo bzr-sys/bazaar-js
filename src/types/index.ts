@@ -47,35 +47,55 @@ export type AuthOptions = Omit<BazaarOptions, "onLogin" | "onLoginError" | "onAp
 export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
 export enum GranteeType {
-  USER = "",
-  ANY = "*",
-  GROUP = "#",
-  ORG = "", // "@"
+  USER = "user",
+  ANY = "any",
+  GROUP = "group",
+  ORG = "org",
 }
 
-/**
- * Represents a complete permission object which includes both the `id` field and `userId` for user association.
- */
-export type Permission = {
+export type BasePermission = {
   id: string;
   collectionName: string;
-  /** userId | orgId | #groupId, to be constructed with grantee(type: GranteeType, id: string)  */
-  grantee: string;
   types: PermissionType[];
   filter?: FilterObject;
 };
+
+export type AnyPermission = BasePermission & {
+  granteeType: GranteeType.ANY;
+};
+
+export type UserPermission = BasePermission & {
+  granteeType: GranteeType.USER;
+  granteeId: string;
+};
+
+export type GroupPermission = BasePermission & {
+  granteeType: GranteeType.GROUP;
+  granteeId: string;
+};
+
+export type OrgPermission = BasePermission & {
+  granteeType: GranteeType.ORG;
+  granteeId: string;
+};
+
+export type Permission = AnyPermission | UserPermission | GroupPermission | OrgPermission;
 
 /**
  * Represents a permission object that is yet to be persisted.
  * It has the same structure as {@link Permission} but without the `id` field.
  */
-export type NewPermission = Omit<Permission, "id">;
+export type NewPermission =
+  | Omit<AnyPermission, "id">
+  | Omit<UserPermission, "id">
+  | Omit<GroupPermission, "id">
+  | Omit<OrgPermission, "id">;
 
 /**
  * Represents the foundational structure of a permission template.
- * It's derived from the {@link NewPermission} and does not include grantee.
+ * It's derived from the {@link BasePermission} and does not include the ID.
  */
-export type PermissionTemplate = Omit<NewPermission, "grantee">;
+export type PermissionTemplate = Omit<BasePermission, "id">;
 
 /**
  *
@@ -398,7 +418,8 @@ export type CollectionGetAllOptions = CollectionQueryOptions & {
 
 export type PermissionsQuery = {
   collectionName?: string;
-  grantee?: string;
+  granteeType?: GranteeType;
+  granteeId?: string;
   type?: PermissionType;
 };
 

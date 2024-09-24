@@ -132,20 +132,4 @@ export function objectMirrorSubscribeListener<T extends Doc>(data: T | undefined
   };
 }
 
-export function grantee(type?: GranteeType, id?: string): string {
-  switch (type) {
-    case GranteeType.ANY:
-      return type;
-    case GranteeType.GROUP:
-      return `${type}${id}`;
-    case GranteeType.ORG:
-    case GranteeType.USER:
-    default:
-      // if (!id) {
-      //   console.log("Permission user ID missing");
-      // }
-      return id;
-  }
-}
-
 export const noSharingNotification = { createNotification: false, sendMessage: SendNotification.NEVER };
