@@ -38,6 +38,10 @@ export type {
   Contact,
   Team,
   Org,
+  AnyPermission,
+  UserPermission,
+  GroupPermission,
+  OrgPermission,
   Permission,
   NewPermission,
   PermissionTemplate,
@@ -54,6 +58,11 @@ export type {
   DeepPartial,
   SubscribeListener,
   BazaarOptions,
+  CollectionOptions,
+  ContextOptions,
+  PermissionsQuery,
+  LinksQuery,
+  GrantedPermissionsQuery,
 } from "./types";
 
 /**
