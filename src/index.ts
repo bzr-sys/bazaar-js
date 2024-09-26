@@ -111,8 +111,10 @@ export class BazaarApp {
   private bazaarUri: string;
 
   constructor(options: BazaarOptions) {
-    this.bazaarUri = options.bazaarUri;
-    if (!this.bazaarUri) {
+    if (options.bazaarUri) {
+      this.bazaarUri = options.bazaarUri;
+    } else {
+      options.bazaarUri = bazaarUri;
       this.bazaarUri = bazaarUri;
     }
 
