@@ -108,14 +108,13 @@ export class BazaarApp {
   private orgs: OrganizationsAPI;
 
   // URI of this Bazaar instance (used to complete links URLs)
-  private bazaarUri: string;
+  private bazaarUri: string = bazaarUri;
 
   constructor(options: BazaarOptions) {
     if (options.bazaarUri) {
       this.bazaarUri = options.bazaarUri;
     } else {
-      options.bazaarUri = bazaarUri;
-      this.bazaarUri = bazaarUri;
+      options.bazaarUri = this.bazaarUri;
     }
 
     // Initialize API and make a connection to the Data API if logged in
