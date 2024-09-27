@@ -46,28 +46,56 @@ export type AuthOptions = Omit<BazaarOptions, "onLogin" | "onLoginError" | "onAp
 
 export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
 
-/**
- * Represents a complete permission object which includes both the `id` field and `userId` for user association.
- */
-export type Permission = {
+export enum GranteeType {
+  USER = "user",
+  ANY = "any",
+  GROUP = "group",
+  ORG = "org",
+}
+
+export type BasePermission = {
   id: string;
   collectionName: string;
-  userId: string;
   types: PermissionType[];
   filter?: FilterObject;
 };
+
+export type AnyPermission = BasePermission & {
+  granteeType: GranteeType.ANY;
+};
+
+export type UserPermission = BasePermission & {
+  granteeType: GranteeType.USER;
+  granteeId: string;
+};
+
+export type GroupPermission = BasePermission & {
+  granteeType: GranteeType.GROUP;
+  granteeId: string;
+};
+
+export type OrgPermission = BasePermission & {
+  granteeType: GranteeType.ORG;
+  granteeId: string;
+};
+
+export type Permission = AnyPermission | UserPermission | GroupPermission | OrgPermission;
 
 /**
  * Represents a permission object that is yet to be persisted.
  * It has the same structure as {@link Permission} but without the `id` field.
  */
-export type NewPermission = Omit<Permission, "id">;
+export type NewPermission =
+  | Omit<AnyPermission, "id">
+  | Omit<UserPermission, "id">
+  | Omit<GroupPermission, "id">
+  | Omit<OrgPermission, "id">;
 
 /**
  * Represents the foundational structure of a permission template.
- * It's derived from the {@link NewPermission} and does not include user association.
+ * It's derived from the {@link BasePermission} and does not include the ID.
  */
-export type PermissionTemplate = Omit<NewPermission, "userId">;
+export type PermissionTemplate = Omit<BasePermission, "id">;
 
 /**
  *
@@ -78,6 +106,17 @@ export enum PermissionType {
   UPDATE = "update",
   DELETE = "delete",
 }
+
+/**
+ *
+ */
+export type PermissionGroup = {
+  id: string;
+  label: string;
+  members: string[];
+};
+
+export type NewPermissionGroup = Omit<PermissionGroup, "id">;
 
 /**
  * Represents the options for sending notifications.
@@ -115,7 +154,7 @@ export type SharingNotification = {
  */
 export type Notification = {
   id: string;
-  //userId: string;
+  //recipientId: string;
   //appId: string;
   senderId: string;
   message: string;
@@ -127,7 +166,7 @@ export type Notification = {
  *
  */
 export type CreateNotification = {
-  userId: string;
+  recipientId: string;
   sendMessage?: SendNotification; // Defaults to never
   message: string; // max 250 chars
 };
@@ -341,7 +380,7 @@ export type Team = {
   id: string;
   name: string;
   ownerType: "user" | "org";
-  owner: string; // The one that pays. Can be user or org ID, depending on type.
+  ownerId: string; // The one that pays. Can be user or org ID, depending on type.
   primary: boolean; // Specify it as the primary user or org team. Cannot be deleted. User team cannot be modified.
   admins: string[]; // IDs with read/write access to resources & modify team
   members: string[]; // IDs with read/write access to resouces
@@ -349,20 +388,20 @@ export type Team = {
 
 export type CollectionOptions = {
   onCreate?: () => Promise<void>;
-  teamId?: string; // Specify the team the collection belongs to. Defaults to own team/user
-  userId?: string; // An alias for teamId. Cannot be used with teamId.
 };
 
 /**
- * Options that helps identify the collection. Used for several methods in {@link API}
- * Note: userId is removed since it is just an alias for teamId
+ * Options that helps identify the context. Used for several methods in {@link API}
+ * Currently the context is only determined by the ownerId
  */
-export type CollectionIdOptions = Omit<CollectionOptions, "onCreate" | "userId">;
+export type ContextOptions = {
+  ownerId?: string;
+};
 
 /**
  * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
  */
-export type CollectionQueryOptions = CollectionIdOptions & {
+export type CollectionQueryOptions = ContextOptions & {
   filter?: FilterObject;
 };
 
@@ -375,4 +414,22 @@ export type CollectionGetAllOptions = CollectionQueryOptions & {
   /** An optional end offset. Default is `null` (exclusive). */
   endOffset?: number;
   orderBy?: OrderBy;
+};
+
+export type PermissionsQuery = {
+  collectionName?: string;
+  granteeType?: GranteeType;
+  granteeId?: string;
+  type?: PermissionType;
+};
+
+export type LinksQuery = {
+  collectionName?: string;
+  type?: PermissionType;
+};
+
+export type GrantedPermissionsQuery = {
+  collectionName?: string;
+  ownerId?: string;
+  type?: PermissionType;
 };

@@ -5,9 +5,10 @@ import { PermissionsAPI } from "./api/permissions";
 import { SocialAPI } from "./api/social";
 import { Auth } from "./auth";
 import { bazaarUri } from "./constants";
-import type { BazaarOptions, CollectionOptions, Doc, LoginType } from "./types";
+import type { BazaarOptions, CollectionOptions, ContextOptions, Doc, LoginType } from "./types";
 import { NotificationsAPI } from "./api/notifications";
 import { OrganizationsAPI } from "./api/organizations";
+import { BazaarContext } from "./api/context";
 
 /**
  * Types of errors that can return from the API
@@ -19,26 +20,33 @@ export {
   isNoPermissionError,
   arrayMirrorSubscribeListener,
   objectMirrorSubscribeListener,
+  noSharingNotification,
 } from "./utils";
 export { CollectionAPI } from "./api/collection";
 export { CollectionsAPI } from "./api/collections";
 export { PermissionsAPI } from "./api/permissions";
 export { SocialAPI } from "./api/social";
+export { BazaarContext } from "./api/context";
 
 /**
  * Enums
  */
-export { OrderByType, PermissionType, LoginType, SendNotification } from "./types";
+export { OrderByType, PermissionType, LoginType, SendNotification, GranteeType } from "./types";
 
 export type {
   User,
   Contact,
   Team,
   Org,
+  AnyPermission,
+  UserPermission,
+  GroupPermission,
+  OrgPermission,
   Permission,
   NewPermission,
   PermissionTemplate,
   GrantedPermission,
+  PermissionGroup,
   SharingNotification,
   FilterObject,
   FilterComparison,
@@ -50,6 +58,11 @@ export type {
   DeepPartial,
   SubscribeListener,
   BazaarOptions,
+  CollectionOptions,
+  ContextOptions,
+  PermissionsQuery,
+  LinksQuery,
+  GrantedPermissionsQuery,
 } from "./types";
 
 /**
@@ -94,9 +107,14 @@ export class BazaarApp {
    */
   private orgs: OrganizationsAPI;
 
+  // URI of this Bazaar instance (used to complete links URLs)
+  private bazaarUri: string = bazaarUri;
+
   constructor(options: BazaarOptions) {
-    if (!options.bazaarUri) {
-      options.bazaarUri = bazaarUri;
+    if (options.bazaarUri) {
+      this.bazaarUri = options.bazaarUri;
+    } else {
+      options.bazaarUri = this.bazaarUri;
     }
 
     // Initialize API and make a connection to the Data API if logged in
@@ -139,7 +157,7 @@ export class BazaarApp {
     );
 
     this.collections = new CollectionsAPI(this.api);
-    this.permissions = new PermissionsAPI(this.api, options.bazaarUri);
+    this.permissions = new PermissionsAPI(this.api, this.bazaarUri);
     this.notifications = new NotificationsAPI(this.api);
     this.social = new SocialAPI(this.api);
     this.orgs = new OrganizationsAPI(this.api);
@@ -219,9 +237,13 @@ export class BazaarApp {
   /**
    * Gets a collection interface (API access to the specified collection)
    * @param collectionName - The name of the collection to create the interface for.
-   * @param collectionOptions - An optional object for specifying a user ID & onCreate hook. Specify a user ID to operate on a collection owned by that user ID. Otherwise operates on a collection owned by the authenticated user. The onCreate hook sets up a collection when it is created (e.g., to set up permissions)
+   * @param collectionOptions - An optional object for specifying an onCreate hook. The onCreate hook sets up a collection when it is created (e.g., to set up permissions)
    */
   collection<T extends Doc>(collectionName: string, collectionOptions?: CollectionOptions): CollectionAPI<T> {
     return new CollectionAPI<T>(this.api, collectionName, collectionOptions);
+  }
+
+  createContext(options: ContextOptions): BazaarContext {
+    return new BazaarContext(this.api, this.bazaarUri, options);
   }
 }

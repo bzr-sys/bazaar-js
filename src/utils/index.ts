@@ -1,19 +1,19 @@
-import type { Doc, SubscribeListener } from "../types";
+import { type Doc, GranteeType, SendNotification, type SubscribeListener } from "../types";
 
 /**
  * Constant of all the error types
- * @internal
+ *
  */
-export const ErrorTypes = {
-  Unspecified: 1,
-  NoPermission: 2,
-  ReservedCollectionName: 3,
-  CollectionDoesNotExist: 4,
-  DatabaseDoesNotExist: 5,
-};
+export enum ErrorTypes {
+  Unspecified = 1,
+  NoPermission = 2,
+  ReservedCollectionName = 3,
+  CollectionDoesNotExist = 4,
+  DatabaseDoesNotExist = 5,
+}
 
 /**
- * @internal
+ *
  */
 export class BazaarError extends Error {
   type: number;
@@ -131,3 +131,5 @@ export function objectMirrorSubscribeListener<T extends Doc>(data: T | undefined
     },
   };
 }
+
+export const noSharingNotification = { createNotification: false, sendMessage: SendNotification.NEVER };

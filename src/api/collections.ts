@@ -1,4 +1,4 @@
-import { CollectionIdOptions } from "../types";
+import { ContextOptions } from "../types";
 import type { API } from "./raw";
 
 /**
@@ -7,31 +7,33 @@ import type { API } from "./raw";
  */
 export class CollectionsAPI {
   private api: API;
+  private contextOptions: ContextOptions;
 
-  constructor(api: API) {
+  constructor(api: API, contextOptions: ContextOptions = {}) {
     this.api = api;
+    this.contextOptions = contextOptions;
   }
 
   /**
    * Creates a collection.
    */
-  async create(collectionName: string, options: CollectionIdOptions = {}) {
-    return this.api.collectionsCreate(collectionName, options);
+  async create(collectionName: string) {
+    return this.api.collectionsCreate(collectionName, this.contextOptions);
   }
 
   /**
    * Drops a collection.
    */
-  async drop(collectionName: string, options: CollectionIdOptions = {}) {
-    return this.api.collectionsDrop(collectionName, options);
+  async drop(collectionName: string) {
+    return this.api.collectionsDrop(collectionName, this.contextOptions);
   }
 
   /**
    * Lists all collection names.
    * @returns Where `data` is an array of collection names
    */
-  async list(options: CollectionIdOptions = {}) {
-    const res = await this.api.collectionsList(options);
+  async list() {
+    const res = await this.api.collectionsList(this.contextOptions);
     return res.data;
   }
 }
