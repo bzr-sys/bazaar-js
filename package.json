@@ -1,6 +1,6 @@
 {
   "name": "@bzr/bazaar",
-  "version": "1.3",
+  "version": "1.3.0",
   "description": "The Bazaar SDK. Conveniently use Bazaar with your app in the browser.",
   "files": [
     "dist"
