@@ -742,11 +742,16 @@ export class API {
   //
 
   private onModalMessage: (event: MessageEvent) => void;
+  private onModalClose: () => void;
 
   private closeModal() {
     if (this.onModalMessage) {
       window.removeEventListener("message", this.onModalMessage);
       this.onModalMessage = undefined;
+    }
+    if (this.onModalClose) {
+      this.onModalClose();
+      this.onModalClose = undefined;
     }
     this.modal.close();
   }
@@ -754,10 +759,15 @@ export class API {
   /**
    * Opens a modal
    */
-  openModal(path: string, onMessage: ((msg: string) => void) | null = null) {
+  openModal(
+    path: string,
+    onMessage: ((msg: string) => void) | undefined = undefined,
+    onClose: (() => void) | undefined = undefined,
+  ) {
     this.initializeModal();
     this.iframe.src = this.bazaarUri + path;
     this.modal.showModal();
+    this.onModalClose = onClose;
     this.onModalMessage = (event) => {
       // Only handle messages from our iframe
       if (this.iframe && event.source !== this.iframe.contentWindow) return;

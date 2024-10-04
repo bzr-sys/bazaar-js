@@ -15,12 +15,12 @@ export class SocialAPI {
   /**
    * Opens the social modal
    */
-  openModal(withId: ((userId: string) => void) | null = null) {
+  openModal(withId: ((userId: string) => void) | null = null, onClose: (() => void) | null = null) {
     if (withId && typeof withId === "function") {
-      this.api.openModal("/m/social?hasOnMessage", withId);
+      this.api.openModal("/m/social?hasOnMessage", withId, onClose);
       return;
     }
-    this.api.openModal("/m/social");
+    this.api.openModal("/m/social", null, onClose);
     return;
   }
 
