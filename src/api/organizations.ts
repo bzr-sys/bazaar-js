@@ -14,12 +14,12 @@ export class OrganizationsAPI {
   /**
    * Opens the org modal
    */
-  openModal(withId: ((teamId: string) => void) | null = null) {
+  openModal(withId: ((teamId: string) => void) | null = null, onClose: (() => void) | null = null) {
     if (withId && typeof withId === "function") {
-      this.api.openModal("/m/org?hasOnMessage", withId);
+      this.api.openModal("/m/org?hasOnMessage", withId, onClose);
       return;
     }
-    this.api.openModal("/m/org");
+    this.api.openModal("/m/org", null, onClose);
     return;
   }
 
