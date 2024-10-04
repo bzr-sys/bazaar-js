@@ -433,3 +433,18 @@ export type GrantedPermissionsQuery = {
   ownerId?: string;
   type?: PermissionType;
 };
+
+export type EmailMessage = {
+  userIds: string[];
+  subject: string;
+  message: string;
+};
+
+export type EmailEvent = {
+  userIds: string[];
+  eventName: string;
+  message: string;
+  startTs: Date;
+  endTs: Date;
+  location?: string;
+};
