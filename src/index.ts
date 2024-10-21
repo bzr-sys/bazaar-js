@@ -243,7 +243,7 @@ export class BazaarApp {
     return new CollectionAPI<T>(this.api, collectionName, collectionOptions);
   }
 
-  createContext(options: ContextOptions): BazaarContext {
+  async createContext(options: ContextOptions) {
     return new BazaarContext(this.api, this.bazaarUri, options);
   }
 }
