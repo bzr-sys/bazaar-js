@@ -60,24 +60,32 @@ export type BasePermission = {
   filter?: FilterObject;
 };
 
-export type AnyPermission = BasePermission & {
-  granteeType: GranteeType.ANY;
-};
+export type AnyPermission = Prettify<
+  BasePermission & {
+    granteeType: GranteeType.ANY;
+  }
+>;
 
-export type UserPermission = BasePermission & {
-  granteeType: GranteeType.USER;
-  granteeId: string;
-};
+export type UserPermission = Prettify<
+  BasePermission & {
+    granteeType: GranteeType.USER;
+    granteeId: string;
+  }
+>;
 
-export type GroupPermission = BasePermission & {
-  granteeType: GranteeType.GROUP;
-  granteeId: string;
-};
+export type GroupPermission = Prettify<
+  BasePermission & {
+    granteeType: GranteeType.GROUP;
+    granteeId: string;
+  }
+>;
 
-export type OrgPermission = BasePermission & {
-  granteeType: GranteeType.ORG;
-  granteeId: string;
-};
+export type OrgPermission = Prettify<
+  BasePermission & {
+    granteeType: GranteeType.ORG;
+    granteeId: string;
+  }
+>;
 
 export type Permission = AnyPermission | UserPermission | GroupPermission | OrgPermission;
 
@@ -226,9 +234,11 @@ export type Doc = {
 /**
  *
  */
-export type AnyDoc = Doc & {
-  [key: string | number | symbol]: any;
-};
+export type AnyDoc = Prettify<
+  Doc & {
+    [key: string | number | symbol]: any;
+  }
+>;
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
@@ -398,23 +408,31 @@ export type ContextOptions = {
   ownerId?: string;
 };
 
+// Potential future context
+//   appId?: string; // points to the app one wants to access. Defaults to current app.
+//   appOwned?: boolean; // Whether it is the apps own DB. Defaults to false. Cannot be used with userId or teamId.
+
 /**
  * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
  */
-export type CollectionQueryOptions = ContextOptions & {
-  filter?: FilterObject;
-};
+export type CollectionQueryOptions = Prettify<
+  ContextOptions & {
+    filter?: FilterObject;
+  }
+>;
 
 /**
  * Options for {@link API.collectionGetAll}
  */
-export type CollectionGetAllOptions = CollectionQueryOptions & {
-  /** An optional start offset. Default is 0 (inclusive). */
-  startOffset?: number;
-  /** An optional end offset. Default is `null` (exclusive). */
-  endOffset?: number;
-  orderBy?: OrderBy;
-};
+export type CollectionGetAllOptions = Prettify<
+  CollectionQueryOptions & {
+    /** An optional start offset. Default is 0 (inclusive). */
+    startOffset?: number;
+    /** An optional end offset. Default is `null` (exclusive). */
+    endOffset?: number;
+    orderBy?: OrderBy;
+  }
+>;
 
 export type PermissionsQuery = {
   collectionName?: string;
@@ -433,3 +451,7 @@ export type GrantedPermissionsQuery = {
   ownerId?: string;
   type?: PermissionType;
 };
+
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
