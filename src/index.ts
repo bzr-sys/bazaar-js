@@ -244,6 +244,7 @@ export class BazaarApp {
   }
 
   async createContext(options: ContextOptions) {
+    await this.api.createContext(options);
     return new BazaarContext(this.api, this.bazaarUri, options);
   }
 }
