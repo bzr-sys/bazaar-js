@@ -173,6 +173,19 @@ export class API {
     });
   };
 
+  /**
+   * Create context
+   *
+   * @param options - An optional object for specifying query options.
+   * @returns BazaarMessage
+   */
+  async createContext(options: ContextOptions = {}) {
+    if (!options.ownerId) {
+      return { message: "Own user context exists" };
+    }
+    return this.asyncEmit(this.version + ":createContext", options) as Promise<BazaarMessage>;
+  }
+
   //
   // Collection API
   //
