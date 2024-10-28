@@ -165,7 +165,9 @@ export class API {
     return new Promise((resolve, reject) => {
       this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
-          reject(new BazaarError(response.error.type, response.error.message));
+          reject(
+            new BazaarError(response.error.type, `${response.error.message} (event: ${event}, payload: ${payload})`),
+          );
         } else {
           resolve(response);
         }
