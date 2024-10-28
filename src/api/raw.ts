@@ -26,6 +26,8 @@ import type {
   PermissionsQuery,
   GrantedPermissionsQuery,
   NewPermissionGroup,
+  EmailMessage,
+  EmailEvent,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -750,6 +752,22 @@ export class API {
    */
   async teamsList(payload: { type?: "user" | "org" }) {
     return this.asyncEmit(this.version + ":teams:list", payload) as Promise<{ data: Team[] }>;
+  }
+
+  /**
+   * Send email message
+   * @returns
+   */
+  async emailSendMessage(emailMessage: EmailMessage) {
+    return this.asyncEmit(this.version + ":email:sendMessage", emailMessage) as Promise<{ message: string }>;
+  }
+
+  /**
+   * Send email event
+   * @returns
+   */
+  async emailSendEvent(emailEvent: EmailEvent) {
+    return this.asyncEmit(this.version + ":email:sendEvent", emailEvent) as Promise<{ message: string }>;
   }
 
   //
