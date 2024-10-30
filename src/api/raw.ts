@@ -807,6 +807,11 @@ export class API {
     this.onModalMessage = (event) => {
       // Only handle messages from our iframe
       if (this.iframe && event.source !== this.iframe.contentWindow) return;
+      if (event.data && event.data.command) {
+        // On the login screen there are a lot of events with
+        // event.data.command==="calculateSubFramePositioning"
+        return;
+      }
       if (onMessage && typeof onMessage === "function") {
         onMessage(event.data);
       }
