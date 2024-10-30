@@ -168,7 +168,10 @@ export class API {
       this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
           reject(
-            new BazaarError(response.error.type, `${response.error.message} (event: ${event}, payload: ${payload})`),
+            new BazaarError(
+              response.error.type,
+              `${response.error.message} (event: ${event}, payload: ${JSON.stringify(payload)})`,
+            ),
           );
         } else {
           resolve(response);
