@@ -64,7 +64,7 @@ export type {
   PermissionsQuery,
   LinksQuery,
   GrantedPermissionsQuery,
-  EmailEvent,
+  CalendarInvite,
   EmailMessage,
 } from "./types";
 

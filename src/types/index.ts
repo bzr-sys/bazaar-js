@@ -471,7 +471,7 @@ export type EmailMessage = {
   icalEvent?: IcalEvent;
 };
 
-export type EmailEvent = {
+export type CalendarInvite = {
   userIds: string[];
   eventName: string;
   message: string;

@@ -1,4 +1,4 @@
-import { EmailEvent, EmailMessage } from "../types";
+import { CalendarInvite, EmailMessage } from "../types";
 import type { API } from "./raw";
 
 /**
@@ -23,7 +23,7 @@ export class EmailAPI {
   /**
    * Send an email with a calendar invite
    */
-  async sendEvent(emailEvent: EmailEvent) {
-    return this.api.emailSendEvent(emailEvent);
+  async sendCalendarInvite(calendarInvite: CalendarInvite) {
+    return this.api.emailSendCalendarInvite(calendarInvite);
   }
 }

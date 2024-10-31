@@ -27,7 +27,7 @@ import type {
   GrantedPermissionsQuery,
   NewPermissionGroup,
   EmailMessage,
-  EmailEvent,
+  CalendarInvite,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -769,8 +769,8 @@ export class API {
    * Send email event
    * @returns
    */
-  async emailSendEvent(emailEvent: EmailEvent) {
-    return this.asyncEmit(this.version + ":email:sendEvent", emailEvent) as Promise<{ message: string }>;
+  async emailSendCalendarInvite(calendarInvite: CalendarInvite) {
+    return this.asyncEmit(this.version + ":email:sendCalendarInvite", calendarInvite) as Promise<{ message: string }>;
   }
 
   //
