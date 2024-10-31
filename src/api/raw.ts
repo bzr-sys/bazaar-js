@@ -26,6 +26,8 @@ import type {
   PermissionsQuery,
   GrantedPermissionsQuery,
   NewPermissionGroup,
+  EmailMessage,
+  CalendarInvite,
 } from "../types";
 import { BazaarError } from "../utils";
 import { bazaarUri, namespacePrefix } from "../constants";
@@ -166,7 +168,10 @@ export class API {
       this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
           reject(
-            new BazaarError(response.error.type, `${response.error.message} (event: ${event}, payload: ${payload})`),
+            new BazaarError(
+              response.error.type,
+              `${response.error.message} (event: ${event}, payload: ${JSON.stringify(payload)})`,
+            ),
           );
         } else {
           resolve(response);
@@ -752,6 +757,22 @@ export class API {
     return this.asyncEmit(this.version + ":teams:list", payload) as Promise<{ data: Team[] }>;
   }
 
+  /**
+   * Send email message
+   * @returns
+   */
+  async emailSendMessage(emailMessage: EmailMessage) {
+    return this.asyncEmit(this.version + ":email:sendMessage", emailMessage) as Promise<{ message: string }>;
+  }
+
+  /**
+   * Send email event
+   * @returns
+   */
+  async emailSendCalendarInvite(calendarInvite: CalendarInvite) {
+    return this.asyncEmit(this.version + ":email:sendCalendarInvite", calendarInvite) as Promise<{ message: string }>;
+  }
+
   //
   // Modal
   //
@@ -786,6 +807,11 @@ export class API {
     this.onModalMessage = (event) => {
       // Only handle messages from our iframe
       if (this.iframe && event.source !== this.iframe.contentWindow) return;
+      if (event.data && event.data.command) {
+        // On the login screen there are a lot of events with
+        // event.data.command==="calculateSubFramePositioning"
+        return;
+      }
       if (onMessage && typeof onMessage === "function") {
         onMessage(event.data);
       }

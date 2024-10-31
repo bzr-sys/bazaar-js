@@ -9,6 +9,7 @@ import type { BazaarOptions, CollectionOptions, ContextOptions, Doc, LoginType }
 import { NotificationsAPI } from "./api/notifications";
 import { OrganizationsAPI } from "./api/organizations";
 import { BazaarContext } from "./api/context";
+import { EmailAPI } from "./api/email";
 
 /**
  * Types of errors that can return from the API
@@ -63,6 +64,8 @@ export type {
   PermissionsQuery,
   LinksQuery,
   GrantedPermissionsQuery,
+  CalendarInvite,
+  EmailMessage,
 } from "./types";
 
 /**
@@ -106,6 +109,12 @@ export class BazaarApp {
    * @alpha
    */
   private orgs: OrganizationsAPI;
+
+  /**
+   * Access to the email API
+   * @alpha
+   */
+  private email: EmailAPI;
 
   // URI of this Bazaar instance (used to complete links URLs)
   private bazaarUri: string = bazaarUri;
@@ -161,6 +170,7 @@ export class BazaarApp {
     this.notifications = new NotificationsAPI(this.api);
     this.social = new SocialAPI(this.api);
     this.orgs = new OrganizationsAPI(this.api);
+    this.email = new EmailAPI(this.api);
   }
 
   /**

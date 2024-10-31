@@ -452,6 +452,34 @@ export type GrantedPermissionsQuery = {
   type?: PermissionType;
 };
 
+export type EmailAttachement = {
+  filename: string;
+  content: string;
+};
+
+export type IcalEvent = {
+  method: "publish" | "request" | "reply" | "cancel";
+  content: string;
+};
+
+export type EmailMessage = {
+  toUserIds: string[];
+  subject: string;
+  text?: string;
+  html?: string;
+  attachements?: EmailAttachement[];
+  icalEvent?: IcalEvent;
+};
+
+export type CalendarInvite = {
+  userIds: string[];
+  eventName: string;
+  message: string;
+  startTs: Date;
+  endTs: Date;
+  location?: string;
+};
+
 type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
