@@ -141,9 +141,15 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       return await collectionQuery();
     } catch (error) {
       if (error instanceof BazaarError && error.type == ErrorTypes.CollectionDoesNotExist) {
-        await this.api.collectionsCreate(this.collectionName, this.contextOptions);
-        if (this.collectionOptions.onCreate) {
-          await this.collectionOptions.onCreate();
+        try {
+          await this.api.collectionsCreate(this.collectionName, this.contextOptions);
+          if (this.collectionOptions.onCreate) {
+            await this.collectionOptions.onCreate();
+          }
+        } catch (createError) {
+          if (!(error instanceof BazaarError && createError.type == ErrorTypes.AlreadyExists)) {
+            throw createError;
+          }
         }
         return collectionQuery();
       }
