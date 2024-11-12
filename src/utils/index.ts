@@ -1,15 +1,26 @@
-import { type Doc, GranteeType, SendNotification, type SubscribeListener } from "../types";
+import { type Doc, SendNotification, type SubscribeListener } from "../types";
 
 /**
  * Constant of all the error types
  *
  */
 export enum ErrorTypes {
+  BadRequest = 0,
   Unspecified = 1,
   NoPermission = 2,
   ReservedCollectionName = 3,
   CollectionDoesNotExist = 4,
   DatabaseDoesNotExist = 5,
+  AlreadyExists = 6,
+
+  // Entity does not exist
+  UserDoesNotExist = 11,
+  OrgDoesNotExist = 12,
+  TeamDoesNotExist = 13,
+
+  // Limits
+  NoSpace = 21,
+  RequestLimit = 22,
 }
 
 /**
