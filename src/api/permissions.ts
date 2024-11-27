@@ -1,6 +1,5 @@
 import { linkPath, bazaarUri } from "../constants";
 import {
-  SendNotification,
   type BasicLink,
   type GrantedPermission,
   type Link,
@@ -12,7 +11,6 @@ import {
   GrantedPermissionsQuery,
   LinksQuery,
   PermissionsQuery,
-  ContextOptions,
 } from "../types";
 import { noSharingNotification } from "../utils";
 import { API } from "./raw";
@@ -24,12 +22,10 @@ import { API } from "./raw";
 export class PermissionsAPI {
   private api: API;
   private linkUri: string;
-  private contextOptions: ContextOptions;
 
-  constructor(api: API, uri: string, contextOptions: ContextOptions = {}) {
+  constructor(api: API, uri: string) {
     this.api = api;
     this.linkUri = (uri || bazaarUri) + linkPath;
-    this.contextOptions = contextOptions;
   }
 
   /**
@@ -38,7 +34,7 @@ export class PermissionsAPI {
    * @param {SharingNotification} notification "Specifies if/how the user is notified. Defaults to {createNotification: false, sendMessage: SendNotification.Never}"
    */
   async create(permission: NewPermission, notification: SharingNotification = noSharingNotification) {
-    return this.api.permissionsCreate(permission, notification, this.contextOptions);
+    return this.api.permissionsCreate(permission, notification);
   }
 
   /**
@@ -47,7 +43,7 @@ export class PermissionsAPI {
    * @returns All permissions are returned if no options are passed.
    */
   async list(query: PermissionsQuery = {}) {
-    const res = await this.api.permissionsList(query, this.contextOptions);
+    const res = await this.api.permissionsList(query);
     return res.data;
   }
 
@@ -56,7 +52,7 @@ export class PermissionsAPI {
    * @param permissionId - ID of the permission to delete
    */
   async delete(permissionId: string) {
-    return this.api.permissionsDelete(permissionId, this.contextOptions);
+    return this.api.permissionsDelete(permissionId);
   }
 
   /**
@@ -67,7 +63,7 @@ export class PermissionsAPI {
      * Creates a link
      */
     create: async (permission: PermissionTemplate, description: string = "", limit: number = 1) => {
-      const { data: basicLink } = await this.api.linksCreate(permission, description, limit, this.contextOptions);
+      const { data: basicLink } = await this.api.linksCreate(permission, description, limit);
       return { url: this.linkUri + basicLink.id, ...basicLink };
     },
 
@@ -75,7 +71,7 @@ export class PermissionsAPI {
      * Lists links
      */
     list: async (query: LinksQuery = {}): Promise<Link[]> => {
-      const { data: basicLinks } = await this.api.linksList(query, this.contextOptions);
+      const { data: basicLinks } = await this.api.linksList(query);
       let links: Link[] = [];
       for (let l of basicLinks) {
         links.push({ url: this.linkUri + l.id, ...l });
@@ -114,7 +110,7 @@ export class PermissionsAPI {
           );
         };
       }
-      return this.api.linksSubscribe(query, this.contextOptions, newListener);
+      return this.api.linksSubscribe(query, newListener);
     },
 
     /**
@@ -130,7 +126,7 @@ export class PermissionsAPI {
    */
   public granted = {
     list: async (query: GrantedPermissionsQuery = {}) => {
-      const res = await this.api.grantedPermissionsList(query, this.contextOptions);
+      const res = await this.api.grantedPermissionsList(query);
       return res.data;
     },
 
@@ -141,7 +137,7 @@ export class PermissionsAPI {
           listener.onInitial(permission);
         }
       }
-      return this.api.grantedPermissionsSubscribe(query, this.contextOptions, listener);
+      return this.api.grantedPermissionsSubscribe(query, listener);
     },
 
     delete: async (grantedPermissionId: string) => {
@@ -159,7 +155,7 @@ export class PermissionsAPI {
      * @returns group for a given ID
      */
     get: async (groupId: string) => {
-      const res = await this.api.groupsGet(groupId, this.contextOptions);
+      const res = await this.api.groupsGet(groupId);
       return res.data;
     },
     /**
@@ -167,7 +163,7 @@ export class PermissionsAPI {
      * @returns a list of groups user is part of (in current app)
      */
     list: async () => {
-      const res = await this.api.groupsList(this.contextOptions);
+      const res = await this.api.groupsList();
       return res.data;
     },
 
@@ -176,17 +172,17 @@ export class PermissionsAPI {
      * Groups require at least one member.
      */
     create: async (group: NewPermissionGroup) => {
-      return this.api.groupsCreate(group, this.contextOptions);
+      return this.api.groupsCreate(group);
     },
     addMember: async (groupId: string, userId: string) => {
-      return this.api.groupsAddMember(groupId, userId, this.contextOptions);
+      return this.api.groupsAddMember(groupId, userId);
     },
     removeMember: async (groupId: string, userId: string) => {
-      return this.api.groupsRemoveMember(groupId, userId, this.contextOptions);
+      return this.api.groupsRemoveMember(groupId, userId);
     },
 
     delete: async (groupId: string) => {
-      return this.api.groupsDelete(groupId, this.contextOptions);
+      return this.api.groupsDelete(groupId);
     },
   };
 }

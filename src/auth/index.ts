@@ -1,20 +1,19 @@
 import { OAuth2Client, OAuth2Token, generateCodeVerifier } from "@badgateway/oauth2-client";
 
-import type { AuthOptions } from "../types";
+import type { AuthOptions, BzrJwtPayload } from "../types";
 import { LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
-import { namespacePrefix } from "../constants";
+import { tokenKeyName, namespacePrefix } from "../constants";
 
 /**
  * The class that deals with login and authentication
  */
 export class Auth {
   /**
-   * Local storage key names, namespaced in the constructor
+   * Local storage key names
    */
-  private tokenKeyName: string;
-  private pkceStateKeyName: string;
-  private pkceCodeVerifierKeyName: string;
+  private pkceStateKeyName: string = `${namespacePrefix}pkce_state`;
+  private pkceCodeVerifierKeyName: string = `${namespacePrefix}pkce_code_verifier`;
 
   private oAuthClient: OAuth2Client;
 
@@ -81,14 +80,6 @@ export class Auth {
 
     // Cache the bound event listener for consistent reference and reliable removal later
     this.boundPopupMessageListener = this.popupMessageListener.bind(this);
-
-    /**
-     * Namespace local storage key names
-     */
-    const namespace = namespacePrefix + options.appId;
-    this.tokenKeyName = `${namespace}_token`;
-    this.pkceStateKeyName = `${namespace}_pkce_state`;
-    this.pkceCodeVerifierKeyName = `${namespace}_pkce_code_verifier`;
 
     this.oAuthClient = new OAuth2Client({
       server: options.bazaarUri,
@@ -332,7 +323,7 @@ export class Auth {
     }
 
     // Store token in local storage
-    localStorage.setItem(this.tokenKeyName, token);
+    localStorage.setItem(tokenKeyName, token);
 
     // Clean these up since we don't need them anymore
     localStorage.removeItem(this.pkceStateKeyName);
@@ -349,7 +340,7 @@ export class Auth {
    * i.e. if an access token is in local storage.
    */
   isLoggedIn(): boolean {
-    const token = localStorage.getItem(this.tokenKeyName);
+    const token = localStorage.getItem(tokenKeyName);
     if (token) {
       return true;
     }
@@ -374,8 +365,8 @@ export class Auth {
    * Logs out a user.
    */
   logOut(): void {
-    if (localStorage.getItem(this.tokenKeyName)) {
-      localStorage.removeItem(this.tokenKeyName);
+    if (localStorage.getItem(tokenKeyName)) {
+      localStorage.removeItem(tokenKeyName);
       location.reload();
     }
   }

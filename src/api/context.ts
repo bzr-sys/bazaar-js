@@ -1,4 +1,4 @@
-import { CollectionOptions, ContextOptions, Doc } from "../types";
+import { APIOptions, CollectionOptions, Doc } from "../types";
 import { CollectionAPI } from "./collection";
 import { CollectionsAPI } from "./collections";
 import { PermissionsAPI } from "./permissions";
@@ -9,8 +9,6 @@ import { API } from "./raw";
  */
 export class BazaarContext {
   private api: API;
-  private contextOptions: ContextOptions;
-  // private bazaarUri: string
 
   /**
    * Access to the collections API
@@ -22,13 +20,10 @@ export class BazaarContext {
    */
   permissions: PermissionsAPI;
 
-  constructor(api: API, bazaarUri: string, contextOptions: ContextOptions) {
-    this.api = api;
-    this.contextOptions = contextOptions;
-    // this.bazaarUri = bazaarUri
-
-    this.collections = new CollectionsAPI(this.api, contextOptions);
-    this.permissions = new PermissionsAPI(this.api, bazaarUri, contextOptions);
+  constructor(options: APIOptions, onConnect: () => Promise<void>, onConnectError: (message: string) => Promise<void>) {
+    this.api = new API(options, onConnect, onConnectError);
+    this.collections = new CollectionsAPI(this.api);
+    this.permissions = new PermissionsAPI(this.api, options.bazaarUri);
   }
 
   /**
@@ -37,6 +32,6 @@ export class BazaarContext {
    * @param collectionOptions - An optional object for specifying an onCreate hook. The onCreate hook sets up a collection when it is created (e.g., to set up permissions)
    */
   collection<T extends Doc>(collectionName: string, collectionOptions?: CollectionOptions): CollectionAPI<T> {
-    return new CollectionAPI<T>(this.api, collectionName, collectionOptions, this.contextOptions);
+    return new CollectionAPI<T>(this.api, collectionName, collectionOptions);
   }
 }

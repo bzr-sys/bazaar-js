@@ -118,17 +118,17 @@ export class BazaarApp {
 
   // URI of this Bazaar instance (used to complete links URLs)
   private bazaarUri: string = bazaarUri;
+  private appId: string;
 
   constructor(options: BazaarOptions) {
+    this.appId = options.appId;
     if (options.bazaarUri) {
       this.bazaarUri = options.bazaarUri;
-    } else {
-      options.bazaarUri = this.bazaarUri;
     }
 
     // Initialize API and make a connection to the Data API if logged in
     this.api = new API(
-      options,
+      { bazaarUri: this.bazaarUri },
       async () => {
         if (options.onApiConnect) {
           await options.onApiConnect(this);
@@ -147,7 +147,7 @@ export class BazaarApp {
 
     // Initialize authentication (auto-login or auto-complete-login if possible)
     this.auth = new Auth(
-      options,
+      { appId: this.appId, bazaarUri: this.bazaarUri, loginRedirectUri: options.loginRedirectUri },
       async () => {
         this.api.connect();
         if (options.onLogin) {
@@ -254,7 +254,11 @@ export class BazaarApp {
   }
 
   async createContext(options: ContextOptions) {
-    await this.api.createContext(options);
-    return new BazaarContext(this.api, this.bazaarUri, options);
+    const ctx = await this.api.createContext(options);
+    return new BazaarContext(
+      { bazaarUri: ctx.uri || this.bazaarUri, context: options },
+      this.api.onConnect,
+      this.api.onConnectError,
+    );
   }
 }
