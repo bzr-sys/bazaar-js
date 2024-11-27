@@ -12,3 +12,8 @@ export const linkPath = "/l/";
  * The prefix when namespacing local storage variables
  */
 export const namespacePrefix = "bazaar_";
+
+/**
+ * The key name of the JWT token
+ */
+export const tokenKeyName = `${namespacePrefix}token`;

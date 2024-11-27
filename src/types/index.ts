@@ -42,9 +42,21 @@ export type BazaarOptions = {
   onApiConnectError?: (bzr: BazaarApp, message: string) => Promise<void>;
 };
 
-export type AuthOptions = Omit<BazaarOptions, "onLogin" | "onLoginError" | "onApiConnect" | "onApiConnectError">;
+export type AuthOptions = {
+  appId: string;
+  loginRedirectUri: string;
+  bazaarUri: string;
+};
 
-export type APIOptions = Omit<AuthOptions, "loginRedirectUri">;
+export type APIOptions = {
+  bazaarUri: string;
+  context?: ContextOptions;
+};
+
+export type BzrJwtPayload = {
+  sub: string;
+  uri?: string;
+};
 
 export enum GranteeType {
   USER = "user",
@@ -415,11 +427,9 @@ export type ContextOptions = {
 /**
  * Options for {@link API.collectionSubscribeAll} and {@link API.collectionDeleteAll}
  */
-export type CollectionQueryOptions = Prettify<
-  ContextOptions & {
-    filter?: FilterObject;
-  }
->;
+export type CollectionQueryOptions = {
+  filter?: FilterObject;
+};
 
 /**
  * Options for {@link API.collectionGetAll}

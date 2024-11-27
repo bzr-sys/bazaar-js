@@ -8,7 +8,6 @@ import type {
   Doc,
   AnyDoc,
   DeepPartial,
-  ContextOptions,
 } from "../types";
 import { ErrorTypes, BazaarError } from "../utils";
 
@@ -19,23 +18,16 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   private api: API;
   private collectionName: string;
   private collectionOptions: CollectionOptions;
-  private contextOptions: ContextOptions;
 
-  constructor(
-    api: API,
-    collectionName: string,
-    collectionOptions: CollectionOptions = {},
-    contextOptions: ContextOptions = {},
-  ) {
+  constructor(api: API, collectionName: string, collectionOptions: CollectionOptions = {}) {
     this.api = api;
     this.collectionName = collectionName;
     this.collectionOptions = collectionOptions;
-    this.contextOptions = contextOptions;
   }
 
   async getOne(docId: string) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionGetOne<T>(this.collectionName, docId, this.contextOptions);
+      const res = await this.api.collectionGetOne<T>(this.collectionName, docId);
       return res.data;
     }) as Promise<T | null>;
   }
@@ -50,7 +42,6 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
   ) {
     return this.withCollection(async () => {
       const res = await this.api.collectionGetAll<T>(this.collectionName, {
-        ...this.contextOptions,
         ...options,
         filter,
       });
@@ -82,7 +73,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       }
     }
     return this.withCollection(() =>
-      this.api.collectionSubscribeOne<T>(this.collectionName, docId, this.contextOptions, listener),
+      this.api.collectionSubscribeOne<T>(this.collectionName, docId, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
   }
 
@@ -97,7 +88,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
       }
     }
     return this.withCollection(() =>
-      this.api.collectionSubscribeAll<T>(this.collectionName, { filter, ...this.contextOptions }, listener),
+      this.api.collectionSubscribeAll<T>(this.collectionName, { filter }, listener),
     ) as Promise<() => Promise<BazaarMessage>>;
   }
 
@@ -106,32 +97,32 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
    */
   async insertOne(doc: Omit<T, "id"> | T) {
     return this.withCollection(async () => {
-      const res = await this.api.collectionInsertOne(this.collectionName, doc, this.contextOptions);
+      const res = await this.api.collectionInsertOne(this.collectionName, doc);
       return res.data;
     }) as Promise<string>;
   }
 
   async updateOne(docId: string, doc: DeepPartial<T>) {
     return this.withCollection(() =>
-      this.api.collectionUpdateOne(this.collectionName, docId, doc, this.contextOptions),
+      this.api.collectionUpdateOne(this.collectionName, docId, doc),
     ) as Promise<BazaarMessage>;
   }
 
   async replaceOne(docId: string, doc: Omit<T, "id"> | T) {
     return this.withCollection(() =>
-      this.api.collectionReplaceOne(this.collectionName, docId, doc, this.contextOptions),
+      this.api.collectionReplaceOne(this.collectionName, docId, doc),
     ) as Promise<BazaarMessage>;
   }
 
   async deleteOne(docId: string) {
     return this.withCollection(() =>
-      this.api.collectionDeleteOne(this.collectionName, docId, this.contextOptions),
+      this.api.collectionDeleteOne(this.collectionName, docId),
     ) as Promise<BazaarMessage>;
   }
 
   async deleteAll(filter: FilterObject = {}) {
     return this.withCollection(() =>
-      this.api.collectionDeleteAll(this.collectionName, { filter, ...this.contextOptions }),
+      this.api.collectionDeleteAll(this.collectionName, { filter }),
     ) as Promise<BazaarMessage>;
   }
 
@@ -142,7 +133,7 @@ export class CollectionAPI<T extends Doc = AnyDoc> {
     } catch (error) {
       if (error instanceof BazaarError && error.type == ErrorTypes.CollectionDoesNotExist) {
         try {
-          await this.api.collectionsCreate(this.collectionName, this.contextOptions);
+          await this.api.collectionsCreate(this.collectionName);
           if (this.collectionOptions.onCreate) {
             await this.collectionOptions.onCreate();
           }
