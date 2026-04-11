@@ -1,9 +1,9 @@
 import { OAuth2Client, OAuth2Token, generateCodeVerifier } from "@badgateway/oauth2-client";
 
-import type { AuthOptions, BzrJwtPayload } from "../types";
+import type { AuthOptions } from "../types";
 import { LoginType } from "../types";
 import { generateRandomString, popupWindow } from "../utils";
-import { tokenKeyName, namespacePrefix } from "../constants";
+import { tokenKeyName, namespacePrefix, apiUriKeyName } from "../constants";
 
 /**
  * The class that deals with login and authentication
@@ -328,6 +328,14 @@ export class Auth {
     // Clean these up since we don't need them anymore
     localStorage.removeItem(this.pkceStateKeyName);
     localStorage.removeItem(this.pkceCodeVerifierKeyName);
+
+    // Store API URI if avaiable
+    console.log(loginQueryParams);
+    const params = new URLSearchParams(loginQueryParams);
+    const apiUri = params.get("uri");
+    if (apiUri) {
+      localStorage.setItem(apiUriKeyName, apiUri);
+    }
 
     /**
      * Do after login actions

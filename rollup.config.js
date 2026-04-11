@@ -21,7 +21,7 @@ const config = [
         exports: "auto",
       },
     ],
-    external: ["@badgateway/oauth2-client", "jwt-decode", "socket.io-client"],
+    external: ["@badgateway/oauth2-client", "socket.io-client"],
     plugins: [
       typescript(),
       babel({

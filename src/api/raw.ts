@@ -1,7 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
 import type {
-  BzrJwtPayload,
   APIOptions,
   Permission,
   NewPermission,
@@ -29,10 +28,13 @@ import type {
   NewPermissionGroup,
   EmailMessage,
   CalendarInvite,
+  PurchaseType,
+  NewProduct,
+  Purchase,
+  Product,
 } from "../types";
 import { BazaarError } from "../utils";
-import { tokenKeyName } from "../constants";
-import { jwtDecode } from "jwt-decode";
+import { apiUriKeyName, tokenKeyName } from "../constants";
 
 /**
  * The class that encapsulates the low level data API
@@ -101,19 +103,18 @@ export class API {
   /**
    * Creates a Data API connection with an auth token
    */
-  connect(uri: string | undefined = undefined): void {
+  connect(): void {
     const token = localStorage.getItem(tokenKeyName);
-
     if (!token) {
       return;
     }
 
-    if (!uri) {
-      const decodedToken = jwtDecode<BzrJwtPayload>(token);
-      uri = decodedToken.uri || this.bazaarUri;
+    let apiUri = localStorage.getItem(apiUriKeyName);
+    if (!apiUri) {
+      apiUri = this.bazaarUri;
     }
 
-    this.dataApi = io(uri, {
+    this.dataApi = io(apiUri, {
       auth: { token },
     });
 
@@ -169,6 +170,8 @@ export class API {
     return new Promise((resolve, reject) => {
       this.dataApi.emit(event, payload, (response: any) => {
         if (response.error) {
+          // TODO: if error is limit reached, open modal explaining it to user
+          // TODO what if not bazaar error with type and message?
           reject(
             new BazaarError(
               response.error.type,
@@ -758,6 +761,43 @@ export class API {
    */
   async emailSendCalendarInvite(calendarInvite: CalendarInvite) {
     return this.asyncEmit(this.version + ":email:sendCalendarInvite", calendarInvite) as Promise<{ message: string }>;
+  }
+
+  //
+  // Monetization API
+  //
+
+  /**
+   * Create new product
+   * @returns the created product
+   */
+  async productsCreate(product: NewProduct) {
+    const payload = { product };
+    return this.asyncEmit(this.version + ":products:create", payload) as Promise<{ data: Product }>;
+  }
+
+  /**
+   * List products
+   * @returns a list of products
+   */
+  async productsList(payload: { sellerId?: string }) {
+    return this.asyncEmit(this.version + ":products:list", payload) as Promise<{ data: Product[] }>;
+  }
+
+  /**
+   * Delete product
+   */
+  async productsDelete(productId: string) {
+    const payload = { productId };
+    return this.asyncEmit(this.version + ":products:delete", payload) as Promise<{ message: string }>;
+  }
+
+  /**
+   * Lists purchases
+   * @returns a list of purchases
+   */
+  async purchasesList(payload: { type?: PurchaseType }) {
+    return this.asyncEmit(this.version + ":pruchases:list", payload) as Promise<{ data: Purchase[] }>;
   }
 
   //

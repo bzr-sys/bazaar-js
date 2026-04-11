@@ -42,6 +42,10 @@ export class BazaarError extends Error {
   }
 }
 
+export function isUserDoesNotExistError(e: unknown) {
+  return e instanceof BazaarError && e.type === ErrorTypes.UserDoesNotExist;
+}
+
 export function isNoAppUserError(e: unknown) {
   return e instanceof BazaarError && e.type === ErrorTypes.DatabaseDoesNotExist;
 }

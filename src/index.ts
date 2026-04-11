@@ -10,6 +10,7 @@ import { NotificationsAPI } from "./api/notifications";
 import { OrganizationsAPI } from "./api/organizations";
 import { BazaarContext } from "./api/context";
 import { EmailAPI } from "./api/email";
+import { MonetizationAPI } from "./api/monetization";
 
 /**
  * Types of errors that can return from the API
@@ -17,6 +18,7 @@ import { EmailAPI } from "./api/email";
 export {
   ErrorTypes,
   BazaarError,
+  isUserDoesNotExistError,
   isNoAppUserError,
   isNoPermissionError,
   arrayMirrorSubscribeListener,
@@ -32,7 +34,15 @@ export { BazaarContext } from "./api/context";
 /**
  * Enums
  */
-export { OrderByType, PermissionType, LoginType, SendNotification, GranteeType } from "./types";
+export {
+  OrderByType,
+  PermissionType,
+  LoginType,
+  SendNotification,
+  GranteeType,
+  PurchaseType,
+  ProductRepeatInterval,
+} from "./types";
 
 export type {
   User,
@@ -66,6 +76,12 @@ export type {
   GrantedPermissionsQuery,
   CalendarInvite,
   EmailMessage,
+  Product,
+  NewProduct,
+  PurchaseCommon,
+  SubscriptionPurchase,
+  SinglePurchase,
+  Purchase,
 } from "./types";
 
 /**
@@ -115,6 +131,12 @@ export class BazaarApp {
    * @alpha
    */
   private email: EmailAPI;
+
+  /**
+   * Access to the monetization API
+   * @beta
+   */
+  monetization: MonetizationAPI;
 
   // URI of this Bazaar instance (used to complete links URLs)
   private bazaarUri: string = bazaarUri;
@@ -171,6 +193,7 @@ export class BazaarApp {
     this.social = new SocialAPI(this.api);
     this.orgs = new OrganizationsAPI(this.api);
     this.email = new EmailAPI(this.api);
+    this.monetization = new MonetizationAPI(this.api, this.appId);
   }
 
   /**
@@ -261,4 +284,14 @@ export class BazaarApp {
       this.api.onConnectError,
     );
   }
+
+  // TODO fold into createContext?
+  // Guest context needs to have the same interface as BazaarApp
+  // async createGuestContext(options: ContextOptions) {
+  //   return new BazaarGuestContext(
+  //     { bazaarUri: this.bazaarUri, context: options },
+  //     this.api.onConnect,
+  //     this.api.onConnectError,
+  //   );
+  // }
 }

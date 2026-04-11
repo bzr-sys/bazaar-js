@@ -14,6 +14,11 @@ export const linkPath = "/l/";
 export const namespacePrefix = "bazaar_";
 
 /**
- * The key name of the JWT token
+ * The key name of the access token
  */
 export const tokenKeyName = `${namespacePrefix}token`;
+
+/**
+ * The key name of the API URI
+ */
+export const apiUriKeyName = `${namespacePrefix}api_uri`;

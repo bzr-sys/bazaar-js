@@ -53,11 +53,6 @@ export type APIOptions = {
   context?: ContextOptions;
 };
 
-export type BzrJwtPayload = {
-  sub: string;
-  uri?: string;
-};
-
 export enum GranteeType {
   USER = "user",
   ANY = "any",
@@ -256,8 +251,8 @@ export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? DeepPartial<U>[]
     : T[P] extends object | undefined
-    ? DeepPartial<T[P]>
-    : T[P];
+      ? DeepPartial<T[P]>
+      : T[P];
 };
 
 /**
@@ -477,7 +472,7 @@ export type EmailMessage = {
   subject: string;
   text?: string;
   html?: string;
-  attachements?: EmailAttachement[];
+  attachments?: EmailAttachement[];
   icalEvent?: IcalEvent;
 };
 
@@ -489,6 +484,58 @@ export type CalendarInvite = {
   endTs: Date;
   location?: string;
 };
+
+export enum ProductRepeatInterval {
+  NEVER = "never",
+  DAY = "day",
+  WEEK = "week",
+  MONTH = "month",
+  YEAR = "year",
+}
+
+export type Product = {
+  id: string; // The Stripe ID
+  sellerId: string;
+  appId: string;
+  costInCents: number; // must be an integer
+  repeatInterval: ProductRepeatInterval;
+  name: string;
+  description: string;
+  group: string;
+  purchases: Purchase[]; // Expanded, without the recursive product
+};
+
+export type NewProduct = Prettify<Omit<Product, "id" | "sellerId" | "appId" | "group"> & { group?: string }>;
+
+export enum PurchaseType {
+  SINGLE = "single",
+  SUBSCRIPTION = "subscription",
+}
+
+export type PurchaseCommon = {
+  id: string;
+  productId: string;
+  buyerId: string;
+  appId: string;
+  product: Product; // Expanded, without the recursive purchase
+};
+
+export type SinglePurchase = Prettify<
+  PurchaseCommon & {
+    type: PurchaseType.SINGLE;
+  }
+>;
+
+export type SubscriptionPurchase = Prettify<
+  PurchaseCommon & {
+    type: PurchaseType.SUBSCRIPTION;
+    // status: "active" | "past_due";
+    nextInvoice: Date;
+    canceled: boolean;
+  }
+>;
+
+export type Purchase = SinglePurchase | SubscriptionPurchase;
 
 type Prettify<T> = {
   [K in keyof T]: T[K];
