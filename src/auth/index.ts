@@ -224,6 +224,7 @@ export class Auth {
       // different from what we originally opened, for example).
       if (event.origin !== this.baseUrl) {
         this.onLoginError(`Login failed: Request origin doesn't match configured loginRedirectUri origin`);
+        return;
       }
 
       // If we trust the sender and the source is our pop-up
@@ -320,6 +321,7 @@ export class Auth {
     // e.g. the response body contains `accessToken` instead of `access_token`.
     if (!token) {
       this.onLoginError("No token");
+      return;
     }
 
     // Store token in local storage
@@ -330,7 +332,6 @@ export class Auth {
     localStorage.removeItem(this.pkceCodeVerifierKeyName);
 
     // Store API URI if avaiable
-    console.log(loginQueryParams);
     const params = new URLSearchParams(loginQueryParams);
     const apiUri = params.get("uri");
     if (apiUri) {

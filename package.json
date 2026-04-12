@@ -16,11 +16,15 @@
     "url": "https://github.com/bzr-sys/bazaar-js.git"
   },
   "scripts": {
-    "test": "exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "build": "npm run clean && rollup -c",
     "watch": "npm run clean && rollup -c -w",
     "clean": "rm -rf dist",
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "lint": "eslint src --ext .ts",
+    "prepare": "husky"
   },
   "keywords": [
     "bazaar"
@@ -38,13 +42,19 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^22.10.1",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "@vitest/coverage-v8": "^2.1.0",
     "eslint": "^9.15.0",
+    "husky": "^9.1.0",
+    "jsdom": "^25.0.0",
+    "lint-staged": "^15.2.0",
     "rollup": "^4.27.4",
     "rollup-plugin-polyfill-node": "^0.13.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.8.1",
     "typedoc": "^0.27.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.0"
   },
   "dependencies": {
     "@badgateway/oauth2-client": "^2.4.2",
@@ -59,5 +69,12 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": "prettier --write"
   }
 }

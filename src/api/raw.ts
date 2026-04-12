@@ -84,8 +84,8 @@ export class API {
   /**
    * The modal and iframe element to perform actions within the BazaarApp context
    */
-  private modal: HTMLDialogElement;
-  private iframe: HTMLIFrameElement;
+  private modal: HTMLDialogElement | null = null;
+  private iframe: HTMLIFrameElement | null = null;
 
   constructor(options: APIOptions, onConnect: () => Promise<void>, onConnectError: (message: string) => Promise<void>) {
     this.bazaarUri = options.bazaarUri;
@@ -433,7 +433,7 @@ export class API {
   async linksCreate(permission: PermissionTemplate, description: string = "", limit: number = 1) {
     const payload = { permission, description, limit };
     Object.assign(payload, this.context);
-    return this.asyncEmit(this.version + ":links:create", { permission, description, limit }) as Promise<{
+    return this.asyncEmit(this.version + ":links:create", payload) as Promise<{
       data: BasicLink;
     }>;
   }
@@ -797,7 +797,7 @@ export class API {
    * @returns a list of purchases
    */
   async purchasesList(payload: { type?: PurchaseType }) {
-    return this.asyncEmit(this.version + ":pruchases:list", payload) as Promise<{ data: Purchase[] }>;
+    return this.asyncEmit(this.version + ":purchases:list", payload) as Promise<{ data: Purchase[] }>;
   }
 
   //
@@ -816,7 +816,9 @@ export class API {
       this.onModalClose();
       this.onModalClose = undefined;
     }
-    this.modal.close();
+    if (this.modal) {
+      this.modal.close();
+    }
   }
 
   /**
